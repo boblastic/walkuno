@@ -80,4 +80,77 @@ struct ExplorerTests {
             }
         }
     }
+
+    @Test func weeklyCalendarUsesMondayThroughSundayAcrossMonthAndDST() {
+        var sundayCalendar = calendar
+        sundayCalendar.firstWeekday = 1
+        let now = date("2026-03-29T12:00:00Z")
+        let page = ExplorerActivity(period: .week, anchor: now, available: [], goals: .init(), now: now, calendar: sundayCalendar)
+        #expect(page.calendarDays.count == 7)
+        #expect(page.calendarOffset == 0)
+        #expect(calendar.component(.weekday, from: page.calendarDays.first!.date) == 2)
+        #expect(calendar.component(.weekday, from: page.calendarDays.last!.date) == 1)
+        #expect(page.interval.duration == 167 * 3600)
+        let current = ExplorerActivity(period: .week, anchor: date("2026-11-05T12:00:00Z"), available: [], goals: .init(),
+                                       now: date("2026-11-05T12:00:00Z"), calendar: calendar)
+        #expect(current.calendarDays.count == 7)
+        #expect(current.calendarDays.suffix(3).allSatisfy { $0.steps == nil })
+    }
+
+    @Test func periodTotalsUseIndependentMeasurementsAndAccessibleElapsedDays() {
+        let now = date("2026-11-05T12:00:00Z")
+        let today = calendar.startOfDay(for: now)
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+        let days: [ActivityDay] = [
+            .init(date: yesterday, steps: 1_000, meters: 700, kilocalories: 50, exerciseMinutes: 20, floors: 3),
+            .init(date: today, meters: 500, exerciseMinutes: 10, floors: 0),
+            .init(date: tomorrow, steps: 99_000, kilocalories: 999, exerciseMinutes: 999, floors: 999)
+        ]
+        for period in [ActivityPeriod.week, .month, .year] {
+            let page = ExplorerActivity(period: period, anchor: now, available: days, goals: .init(), now: now, calendar: calendar)
+            #expect(page.total(for: .distance) == 1_200)
+            #expect(page.total(for: .energy) == 50)
+            #expect(page.total(for: .exerciseTime) == 30)
+            #expect(page.total(for: .floors) == 3)
+            let restricted = ExplorerActivity(period: period, anchor: now, available: days, goals: .init(), earliest: today, now: now, calendar: calendar)
+            #expect(restricted.total(for: .energy) == nil)
+            #expect(restricted.total(for: .floors) == 0)
+        }
+    }
+
+    @Test func annualCalendarScoresTwelveMonthsUsingHistoricalGoals() throws {
+        let now = date("2026-03-05T12:00:00Z")
+        let jan = calendar.startOfDay(for: date("2026-01-10T12:00:00Z"))
+        let feb = calendar.startOfDay(for: date("2026-02-10T12:00:00Z"))
+        let march = calendar.startOfDay(for: now)
+        var goals = GoalHistory()
+        goals.set(4_000, on: jan, calendar: calendar)
+        goals.set(10_000, on: feb, calendar: calendar)
+        let page = ExplorerActivity(period: .year, anchor: now, available: [
+            .init(date: jan, steps: 2_000), .init(date: feb, steps: 10_000), .init(date: march, steps: 0),
+            .init(date: date("2026-04-01T00:00:00Z"), steps: 99_000)
+        ], goals: goals, now: now, calendar: calendar)
+        #expect(page.calendarMonths.count == 12)
+        #expect(page.calendarMonths[0].progress == 0.5)
+        #expect(page.calendarMonths[1].progress == 1)
+        #expect(page.calendarMonths[2].progress == 0)
+        #expect(page.calendarMonths.dropFirst(3).allSatisfy { $0.progress == nil && $0.summary.total == nil })
+    }
+
+    @Test func hourlySlotsPreserveMissingZeroAndFutureValuesAcrossDST() {
+        for (day, count) in [("2026-03-29T12:00:00Z", 23), ("2026-10-25T12:00:00Z", 25)] {
+            let date = date(day)
+            let start = calendar.startOfDay(for: date)
+            let next = calendar.date(byAdding: .hour, value: 1, to: start)!
+            let activity = ExplorerHourlyActivity(date: date, available: [.init(date: start, steps: 0), .init(date: next, steps: 2_000)],
+                                                   now: self.date("2027-01-01T00:00:00Z"), calendar: calendar)
+            #expect(activity.hours.count == count)
+            #expect(activity.hours[0].steps == 0)
+            #expect(activity.hours[1].steps == 2_000)
+            #expect(activity.hours.dropFirst(2).allSatisfy { $0.steps == nil })
+            let current = ExplorerHourlyActivity(date: date, available: [.init(date: next, steps: 2_000)], now: start, calendar: calendar)
+            #expect(current.hours.allSatisfy { $0.steps == nil })
+        }
+    }
 }

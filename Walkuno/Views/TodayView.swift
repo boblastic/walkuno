@@ -343,7 +343,7 @@ struct TodayView: View {
         let destination = period.interval(containing: date, calendar: calendar).contains(.now) ? .now : date
         guard !reduceMotion, paging.width > 0 else { selectAnchor(destination); return }
         paging.isSliding = true
-        withAnimation(.easeOut(duration: 0.22), completionCriteria: .logicallyComplete) {
+        withAnimation(.easeInOut(duration: 0.5), completionCriteria: .logicallyComplete) {
             paging.offset = offset < 0 ? paging.width : -paging.width
         } completion: {
             selectAnchor(destination)
@@ -363,7 +363,7 @@ struct TodayView: View {
     }
 
     private func settleCounter() {
-        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.18)) { paging.offset = 0 }
+        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.3)) { paging.offset = 0 }
     }
 
     private struct PageRequest: Equatable {
@@ -579,13 +579,21 @@ private struct TodayCounterCarousel<Current: View, Neighbor: View>: View {
     var body: some View {
         GeometryReader { geometry in
             HStack(spacing: 0) {
-                previous.frame(width: geometry.size.width)
-                current.frame(width: geometry.size.width)
-                next.frame(width: geometry.size.width)
+                page(previous, position: -1, width: geometry.size.width)
+                page(current, position: 0, width: geometry.size.width)
+                page(next, position: 1, width: geometry.size.width)
             }
             .offset(x: -geometry.size.width + paging.offset)
             .onChange(of: geometry.size.width, initial: true) { _, width in paging.width = width }
         }
+    }
+
+    private func page<Content: View>(_ content: Content, position: CGFloat, width: CGFloat) -> some View {
+        let displacement = min(1, max(-1, position + paging.offset / max(width, 1)))
+        return content
+            .frame(width: width)
+            .scaleEffect(1 - abs(displacement) * 0.08)
+            .rotation3DEffect(.degrees(Double(displacement) * -20), axis: (x: 0, y: 1, z: 0), perspective: 0.5)
     }
 }
 

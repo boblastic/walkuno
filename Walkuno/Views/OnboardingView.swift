@@ -40,20 +40,6 @@ struct OnboardingView: View {
                     Text("goal.note").font(.caption).foregroundStyle(.secondary)
                 }
                 if step == 3 {
-                    HStack(spacing: 14) {
-                        ForEach(Appearance.allCases, id: \.self) { appearance in
-                            Button {
-                                model.preferences.appearance = appearance
-                            } label: {
-                                VStack(spacing: 10) {
-                                    Image(systemName: appearance == .dark ? "moon.fill" : appearance == .light ? "sun.max.fill" : "circle.lefthalf.filled").font(.title2)
-                                    Text(L("appearance.\(appearance.rawValue)")).font(.caption)
-                                }.frame(maxWidth: .infinity, minHeight: 80).padding(8)
-                                    .background(theme.tint(for: scheme).opacity(model.preferences.appearance == appearance ? 0.2 : 0.04), in: RoundedRectangle(cornerRadius: 18))
-                            }.buttonStyle(.plain)
-                                .accessibilityAddTraits(model.preferences.appearance == appearance ? [.isSelected] : [])
-                        }
-                    }
                     Text("onboarding.themes.note").font(.caption).foregroundStyle(.secondary)
                 }
                 if let error = model.errorMessage { Text(error).font(.caption).foregroundStyle(.secondary) }

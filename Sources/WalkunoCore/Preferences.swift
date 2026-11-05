@@ -59,6 +59,7 @@ public struct Preferences: Codable, Equatable, Sendable {
     public var goals = GoalHistory()
     public var theme: WalkunoTheme = .mint
     public var unit: DistanceUnit = .kilometers
+    // Retained for compatibility with saved preferences; the app always uses dark mode.
     public var appearance: Appearance = .dark
     public var counterStyle: CounterStyle = .ring
     public var animatePeriodChanges = false

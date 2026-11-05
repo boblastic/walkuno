@@ -208,3 +208,70 @@ La version de développement Walkuno 1.0.0 (3), incluant le panneau Explorer fix
 Les **76 tests Foundation passent** ; les **360 textes**, autorisations Santé et ressources sont validés dans les sept langues. Le dossier local est initialisé avec Git sur la branche `main` et associé au dépôt `https://github.com/boblastic/walkuno`, initialement vide. Le premier commit contient les sources, ressources, tests et documents du projet ; les produits de compilation et préférences Xcode locales sont exclus par `.gitignore`.
 
 Preuves locales : `/tmp/walkuno-publish-device-install.log`, `/tmp/walkuno-publish-iphone-app.json`, `/tmp/walkuno-publish-watch-app.json` et `/tmp/walkuno-publish-core.log`.
+
+## Basculement du compteur d’accueil — 5 novembre 2026
+
+Le glissement de l’accueil se termine en 0,5 seconde au lieu de 0,22, avec une courbe progressive au départ et à l’arrivée. Les compteurs s’inclinent légèrement en perspective et diminuent de taille en s’éloignant du centre. Un geste annulé revient en place en 0,3 seconde. La réduction des animations conserve le changement immédiat de période.
+
+Compilation Debug simulateur réussie des quatre cibles et **2 tests UI réussis sous iOS 27** : navigation jour/semaine/mois, limite des dates futures, retour à aujourd’hui et parcours des quatre périodes avec le remplissage du cercle activé puis désactivé. Les images extraites d’un enregistrement confirment la présence des deux compteurs pendant le basculement.
+
+Preuves : `/tmp/walkuno-home-swipe-build.log`, `/tmp/walkuno-home-swipe-ui.xcresult`, `/tmp/walkuno-home-swipe-ui.log`, `/tmp/walkuno-home-swipe.mp4` et `/tmp/walkuno-home-swipe-frames.png`. Aucune installation sur appareil physique effectuée.
+
+
+## Repères horaires et semaine en courbe — 5 novembre 2026
+
+**Pas par heure** affiche désormais l’heure locale toutes les trois heures, en petits chiffres sous les barres, y compris dans la complication rectangulaire. Les repères suivent les vraies heures de la fenêtre glissante (00, 03, 06…), avec un affichage sur deux chiffres sans suffixe afin de rester lisibles sur les petits cadrans.
+
+**Semaine** devient **Semaine en barre** ; son identifiant de configuration reste conservé. **Semaine courbe** ajoute une courbe lissée, un point pour chaque jour renseigné et un point plus grand sur le jour courant, également repéré sous le graphique. Les totaux du jour et des sept jours restent en pied. La variante existe dans les grands widgets et complications rectangulaires, ainsi que dans les petits widgets et complications circulaires. Les jours sans mesure interrompent la courbe ; zéro reste une mesure valide.
+
+- Compilation Debug simulateur réussie pour les quatre cibles sur les sources finales, sans erreur ni avertissement du compilateur.
+- **76 tests Foundation réussis** ; **361 textes** et les traductions compilées des quatre bundles sont validés dans les sept langues.
+- Rendus des vues SwiftUI contrôlés aux formats rectangulaires 158 × 64 et 130 × 58, circulaire 44 pt, petit, moyen et grand. Contrôle supplémentaire du passage à minuit, des jours absents, des sept jours à zéro et de l’absence totale de mesures.
+
+Preuves : `/tmp/walkuno-widget-hours-build.log`, `/tmp/walkuno-widget-hours-tests.log` et `/tmp/walkuno-widget-hours-preview/hours-*.png`. Les rendus utilisent des données synthétiques et ne remplacent pas une recette sur cadran réel. Aucune installation sur appareil physique effectuée pendant cette intervention.
+
+
+## Lisibilité des cartes Explorer — 5 novembre 2026
+
+Le total quotidien est intégré à la carte horaire. Le graphique affiche une échelle chiffrée à gauche, des lignes de repère discrètes et de petits pointillés gris aux heures sans activité ou sans mesure. L’objectif quotidien est retiré de ce détail. Les créneaux couvrent la journée locale entière, y compris ses 23 ou 25 heures lors des changements d’heure ; une mesure absente reste distincte de zéro.
+
+Le récapitulatif semaine/mois/année ajoute les cumuls d’étages, d’énergie active (selon le réglage de visibilité) et de temps d’exercice. La meilleure journée réunit date et nombre de pas sur une ligne. La semaine présente sept cases du lundi au dimanche, même à cheval sur deux mois ; les jours futurs restent neutres et désactivés. Le calendrier mensuel est conservé. L’année présente douze cases mensuelles, colorées selon le rapport entre les pas et les objectifs historiques des journées renseignées ; toucher un mois ouvre sa vue mensuelle.
+
+- Compilation Debug simulateur réussie des quatre cibles et **80 tests Foundation réussis**, dont quatre nouveaux cas couvrant cumuls indépendants, limites d’accès, lundi/dimanche, mois futurs, objectifs datés et changements d’heure.
+- **Trois parcours UI distincts réussis sous iOS 26.3**, sans échec : nouvelles cartes et calendriers, capitalisation et ouverture d’un détail mensuel, panneau fixe et balayage des quatre périodes. Le parcours des nouvelles cartes passe également sur le rendu définitif des pointillés gris.
+- **362 textes** validés dans les sept langues ; les traductions compilées des quatre bundles correspondent aux sources.
+- Captures contrôlées : total/échelle horaire, meilleure journée sur une ligne, cumuls et semaine complète. Rendu SwiftUI supplémentaire du graphique renseigné et vide, en clair et sombre.
+
+Preuves : `/tmp/walkuno-explorer-polish-core-final.log`, `/tmp/walkuno-explorer-polish-ui.xcresult`, `/tmp/walkuno-explorer-polish-final.xcresult`, `/tmp/walkuno-explorer-polish-final-captures/` et `/tmp/walkuno-explorer-polish-preview/hourly.png`. Validation avec données de démonstration/synthétiques sur simulateur ; aucune installation physique effectuée.
+
+
+## Installation des repères horaires et de Semaine courbe sur Watch — 5 novembre 2026
+
+La version Debug signée 1.0.0 (3), contenant les heures toutes les trois heures, le nom **Semaine en barre** et la nouvelle variante **Semaine courbe**, est installée sur l’Apple Watch physique. Le schéma Watch et son extension de complications sont compilés ; la signature complète et les traductions des deux bundles sont vérifiées. L’installation est effectuée sans désinstallation ni modification de l’application iPhone.
+
+La première tentative échoue lors de la connexion aux services de développement. Après rétablissement de ces services et confirmation par l’utilisateur que la montre et l’iPhone sont déverrouillés à proximité, la nouvelle tentative réussit. Le résultat d’installation confirme le bundle attendu et un nouvel emplacement de bundle par rapport au relevé précédent. Le lancement automatique et la seconde lecture des métadonnées échouent ensuite sur une expiration de la connexion réseau ; le lancement sur la montre reste manuel et aucun contrôle du cadran réel n’est revendiqué.
+
+Preuves : `/tmp/walkuno-widget-hours-device-build.log`, `/tmp/walkuno-widget-hours-watch-before.json`, `/tmp/walkuno-widget-hours-watch-ddi.json`, `/tmp/walkuno-widget-hours-watch-install-retry.json` et `/tmp/walkuno-widget-hours-watch-launch.log`.
+
+## Cartes des victoires et borne de l’historique — 5 novembre 2026
+
+Les explications des semaines, mois et années parfaits sont placées en petits caractères sous leur titre. Les six cartes des victoires partagent une hauteur commune mesurée sur leur contenu, avec un espace de titre compact et des textes qui peuvent grandir.
+
+Le cumul des traversées ne possède aucun plafond à 24 000 km : il additionne uniquement les distances marche/course disponibles dans les journées chargées. La borne initiale de la lecture Santé dépend désormais de la plus ancienne mesure accessible des cinq types, au lieu du seul premier relevé de pas. Cela évite d’écarter des distances plus anciennes ou accessibles sans autorisation de lecture des pas. Aucun total personnel n’a été consulté ni certifié.
+
+- **81 tests Foundation réussis**, dont un cas de distance cumulée supérieure à 24 000 km, de journées sans pas et d’exclusion du futur.
+- Compilation Debug des quatre cibles réussie. Le parcours Succès réussit sous iOS 27 sur la version finale, avec comparaison des hauteurs des six cartes à un point près et ouverture de la collection complète.
+- Captures finales des périodes parfaites contrôlées visuellement en mode démonstration. Aucune installation physique effectuée ; la correction de la borne Santé est compilée, sans validation sur données Santé réelles.
+
+Preuves : `/tmp/walkuno-trophy-layout-core.log`, `/tmp/walkuno-trophy-layout-final.xcresult`, `/tmp/walkuno-trophy-layout-final-ui.log` et `/tmp/walkuno-trophy-layout-final-captures/`.
+
+
+## Version 1.0.0 (4) installée sur iPhone — 5 novembre 2026
+
+La version Debug de développement 1.0.0 (4) réunit les dernières modifications des cartes Succès et de la borne de lecture Santé, les cartes et calendriers Explorer, le basculement du compteur, les widgets avec repères horaires et Semaine courbe, ainsi que le mode sombre permanent. Le numéro de build est mis à jour pour les quatre cibles et dans le générateur de projet.
+
+Les **81 tests Foundation réussissent** sur les sources préparées. La compilation signée des quatre cibles, la vérification complète de signature et le contrôle des **362 textes dans les sept langues** des quatre bundles réussissent. Les sources n’ont pas changé entre le début de cette compilation et l’installation. Le dernier parcours Succès sur simulateur, avec comparaison des six hauteurs de cartes, est documenté ci-dessus.
+
+Walkuno est mis à jour sur l’iPhone physique sans désinstallation et lancé sans argument de démonstration. Les métadonnées de l’appareil confirment le passage du build 3 au build 4 et le nouvel emplacement du bundle. Aucun contenu des préférences ni aucune donnée Santé personnelle n’est lu pour cette vérification. Aucune installation directe sur la Watch n’est effectuée pendant cette opération.
+
+Preuves : `/tmp/walkuno-release-4-build.log`, `/tmp/walkuno-release-4-tests.log`, `/tmp/walkuno-release-4-install.json`, `/tmp/walkuno-release-4-launch.json`, `/tmp/walkuno-release-iphone-before.json` et `/tmp/walkuno-release-4-iphone-after.json`.

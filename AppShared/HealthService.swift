@@ -47,7 +47,7 @@ final class HealthService {
         guard isAvailable else { throw HealthFailure.unavailable }
         let first: Date
         if let requestedStart { first = requestedStart }
-        else { first = try await firstStepDate() ?? now }
+        else { first = try await firstActivityDate() ?? now }
         let start = calendar.startOfDay(for: min(first, now))
         async let stepQuery = quantities(.stepCount, unit: .count(), from: start, to: now, hourly: false, calendar: calendar)
         async let distanceQuery = quantities(.distanceWalkingRunning, unit: .meter(), from: start, to: now, hourly: false, calendar: calendar)
@@ -153,9 +153,23 @@ final class HealthService {
         return try await (hours, previous[start])
     }
 
-    private func firstStepDate() async throws -> Date? {
+    private func firstActivityDate() async throws -> Date? {
+        // Distance and other measurements may predate steps or have separate read permissions.
+        try await withThrowingTaskGroup(of: Date?.self) { group in
+            for identifier in identifiers {
+                group.addTask { @MainActor in try await self.firstSampleDate(for: identifier) }
+            }
+            var earliest: Date?
+            for try await date in group {
+                if let date { earliest = min(earliest ?? date, date) }
+            }
+            return earliest
+        }
+    }
+
+    private func firstSampleDate(for identifier: HKQuantityTypeIdentifier) async throws -> Date? {
         try await performQuery { complete in
-            let query = HKSampleQuery(sampleType: HKQuantityType(.stepCount), predicate: nil, limit: 1,
+            let query = HKSampleQuery(sampleType: HKQuantityType(identifier), predicate: nil, limit: 1,
                                       sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, samples, error in
                 if let error { complete(.failure(error)) }
                 else { complete(.success(samples?.first?.startDate)) }

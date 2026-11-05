@@ -149,7 +149,7 @@
 "onboarding.2.title" = "Dein Tempo,\ndein Ziel.";
 "onboarding.2.body" = "Starte mit 8.000 Schritten oder wähle ein Ziel, das zu dir passt. Du kannst es jederzeit ändern.";
 "onboarding.3.title" = "Ein Look\nfür dich.";
-"onboarding.3.body" = "Leuchtendes Grün und Türkis. Wähle die helle oder dunkle Darstellung oder übernimm die Geräteeinstellung.";
+"onboarding.3.body" = "Leuchtendes Grün und Türkis auf dunklem Hintergrund bringen deine Aktivität zur Geltung.";
 "onboarding.permission.steps" = "Schritte · Zähler und Verlauf";
 "onboarding.permission.distance" = "Distanz · wie weit du gehst";
 "onboarding.permission.energy" = "Aktivitätsenergie · ein optionales Extra";
@@ -197,7 +197,8 @@
 "widget.style" = "Anzeige";
 "widget.style.ring" = "Schritte";
 "widget.style.numbers" = "Schritte · große Zahlen";
-"widget.style.weekly" = "Woche";
+"widget.style.weekly" = "Woche als Balken";
+"widget.style.weeklyLine" = "Woche als Kurve";
 "widget.name" = "Walkuno · Zähler";
 "widget.description" = "Schritte, Distanz, Fortschritt und Stockwerke mit abgekürzten Zahlen auf kleinen Flächen.";
 "widget.open" = "Walkuno zum Aktualisieren öffnen";
@@ -365,3 +366,5 @@
 "widget.chart.hourly.accessibility" = "Schritte pro Stunde der letzten 24 Stunden. Gestern in Grau, heute in deiner Themenfarbe.";
 "widget.chart.goal.accessibility" = "Kumulierte Schritte von Mitternacht bis Mitternacht. Heute als durchgezogene Linie, gewohnte Aktivität gestrichelt.";
 "widget.goal.short" = "Ziel";
+
+"calendar.legend.months" = "Je kräftiger die Farbe, desto näher ist das Monatsziel. Ein Punkt kennzeichnet einen Monat ohne verfügbare Daten.";

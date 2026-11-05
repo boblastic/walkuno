@@ -17,7 +17,11 @@ struct ExplorerView: View {
     @State private var preparedHours: [Date: DayDetailHours] = [:]
     @State private var hoursRevision: HoursRevision?
     private var accent: Color { model.effectiveTheme.accent }
-    private var calendar: Calendar { .current }
+    private var calendar: Calendar {
+        var calendar = Calendar.current
+        if period == .week { calendar.firstWeekday = 2 }
+        return calendar
+    }
     private var interval: DateInterval { period.interval(containing: anchor, calendar: calendar) }
     private var earliestFree: Date { calendar.date(byAdding: .day, value: -30, to: calendar.startOfDay(for: .now))! }
     private var earliest: Date? { model.purchases.isPremium ? nil : earliestFree }
@@ -155,13 +159,27 @@ struct ExplorerView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("statistics.highlights").font(.headline)
                         LabeledContent("metric.distance", value: distanceText(page.summary.meters, unit: model.preferences.unit))
-                        LabeledContent("statistics.best", value: stepsText(page.summary.best?.steps))
+                        LabeledContent("statistics.best") {
+                            if let best = page.summary.best {
+                                Text("\(best.date.formatted(.dateTime.day().month(.abbreviated))) · \(stepsText(best.steps)) \(L("today.steps"))")
+                                    .lineLimit(1).minimumScaleFactor(0.7)
+                            } else { Text("—") }
+                        }
+                        .font(.subheadline)
+                        .accessibilityIdentifier("explorer.best.day")
+                        LabeledContent("metric.floors", value: ActivityMetric.floors.text(page.total(for: .floors), unit: model.preferences.unit))
+                            .accessibilityIdentifier("explorer.total.floors")
+                        if model.preferences.showEnergy {
+                            LabeledContent("metric.energy", value: ActivityMetric.energy.text(page.total(for: .energy), unit: model.preferences.unit))
+                                .accessibilityIdentifier("explorer.total.energy")
+                        }
+                        LabeledContent("metric.exercise", value: ActivityMetric.exerciseTime.text(page.total(for: .exerciseTime), unit: model.preferences.unit))
+                            .accessibilityIdentifier("explorer.total.exercise")
                         if period == .year, let bestMonth = page.bestMonth {
                             LabeledContent("statistics.best.month") {
                                 Text(bestMonth.formatted(dateStyle.month(.wide))).accessibilityIdentifier("explorer.best.month")
                             }
                         }
-                        if let best = page.summary.best { Text(best.date.formatted(date: .abbreviated, time: .omitted)).font(.caption).foregroundStyle(.secondary) }
                         Text("statistics.coverage \(page.summary.observedDays)").font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -306,32 +324,107 @@ struct ExplorerView: View {
         WalkunoCard {
             VStack(alignment: .leading, spacing: 16) {
                 Text("calendar.title").font(.headline)
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
-                    ForEach(0..<page.calendarOffset, id: \.self) { _ in Color.clear.frame(minHeight: 40).accessibilityHidden(true) }
-                    ForEach(page.calendarDays) { day in
-                        let locked = !model.purchases.isPremium && day.date < earliestFree
-                        let progress = ActivityMath.progress(steps: day.steps, goal: model.preferences.goals.value(on: day.date))
-                        Button {
-                            if locked { showPremium = true } else { detailDate = day.date }
-                        } label: {
-                            Text(day.date.formatted(.dateTime.day())).font(.caption.weight(.medium)).frame(maxWidth: .infinity, minHeight: 40)
-                                .foregroundStyle(!locked && day.steps != nil && progress > 0.55 ? WalkunoStyle.ink : scheme == .dark ? .white : .primary)
-                                .background(locked || day.steps == nil ? Color.primary.opacity(0.035) : accent.opacity(0.12 + min(progress, 1) * 0.6), in: RoundedRectangle(cornerRadius: 9))
-                                .overlay(alignment: .bottom) {
-                                    if day.steps == nil { Circle().fill(.secondary).frame(width: 3, height: 3).padding(.bottom, 4) }
+                if period == .year {
+                    monthGrid(page)
+                } else {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
+                        ForEach(0..<page.calendarOffset, id: \.self) { _ in Color.clear.frame(minHeight: 40).accessibilityHidden(true) }
+                        ForEach(page.calendarDays) { day in
+                            let locked = !model.purchases.isPremium && day.date < earliestFree
+                            let progress = ActivityMath.progress(steps: day.steps, goal: model.preferences.goals.value(on: day.date))
+                            Button {
+                                if locked { showPremium = true } else { detailDate = day.date }
+                            } label: {
+                                VStack(spacing: 6) {
+                                    if period == .week {
+                                        Text(day.date.formatted(.dateTime.weekday(.abbreviated))).font(.caption2.weight(.semibold))
+                                    }
+                                    Text(day.date.formatted(.dateTime.day())).font(.caption.weight(.medium))
                                 }
-                        }.buttonStyle(.plain)
-                            .accessibilityIdentifier("explorer.calendar.day.\(Calendar.current.component(.day, from: day.date))")
-                            .accessibilityLabel(Text("\(day.date.formatted(date: .complete, time: .omitted)), \(locked ? L("premium.title") : day.steps.map { $0.formatted() + " " + L("today.steps") } ?? L("chart.no.data"))"))
+                                    .frame(maxWidth: .infinity, minHeight: period == .week ? 60 : 40)
+                                    .foregroundStyle(!locked && day.steps != nil && progress > 0.55 ? WalkunoStyle.ink : scheme == .dark ? .white : .primary)
+                                    .background(locked || day.steps == nil ? Color.primary.opacity(0.035) : accent.opacity(0.12 + min(progress, 1) * 0.6), in: RoundedRectangle(cornerRadius: 9))
+                                    .overlay(alignment: .bottom) {
+                                        if day.steps == nil { Circle().fill(.secondary).frame(width: 3, height: 3).padding(.bottom, 4) }
+                                    }
+                            }.buttonStyle(.plain)
+                                .disabled(day.date > Date.now)
+                                .accessibilityIdentifier("explorer.calendar.day.\(Calendar.current.component(.day, from: day.date))")
+                                .accessibilityLabel(Text("\(day.date.formatted(date: .complete, time: .omitted)), \(locked ? L("premium.title") : day.steps.map { $0.formatted() + " " + L("today.steps") } ?? L("chart.no.data"))"))
+                        }
                     }
                 }
-                Text("calendar.legend").font(.caption2).foregroundStyle(.secondary)
+                Text(period == .year ? "calendar.legend.months" : "calendar.legend").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func monthGrid(_ page: ExplorerActivity) -> some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+            ForEach(page.calendarMonths) { month in
+                let progress = month.progress ?? 0
+                Button {
+                    anchor = month.date; period = .month; selectedDate = nil; pageOffset = 0
+                } label: {
+                    Text(month.date.formatted(dateStyle.month(.abbreviated)))
+                        .font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .foregroundStyle(month.progress != nil && progress > 0.55 ? WalkunoStyle.ink : scheme == .dark ? .white : .primary)
+                        .background(month.progress == nil ? Color.primary.opacity(0.035) : accent.opacity(0.12 + min(progress, 1) * 0.6), in: RoundedRectangle(cornerRadius: 9))
+                        .overlay(alignment: .bottom) {
+                            if month.progress == nil { Circle().fill(.secondary).frame(width: 3, height: 3).padding(.bottom, 4) }
+                        }
+                }
+                .buttonStyle(.plain)
+                .disabled(month.date > Date.now)
+                .accessibilityIdentifier("explorer.calendar.month.\(calendar.component(.month, from: month.date))")
+                .accessibilityLabel(Text("\(month.date.formatted(dateStyle.month(.wide).year())), \(stepsText(month.summary.total)) \(L("today.steps")), \(month.progress.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? L("chart.no.data"))"))
             }
         }
     }
 }
 
 private struct SelectedDay: Identifiable { var date: Date; var id: Date { date } }
+
+private struct ExplorerHourlyChart: View {
+    var date: Date
+    var hours: [HourActivity]
+    var accent: Color
+
+    var body: some View {
+        let activity = ExplorerHourlyActivity(date: date, available: hours)
+        let maximum = max(1_000, Double(activity.hours.compactMap(\.steps).max() ?? 0) * 1.15)
+        Chart(activity.hours) { hour in
+            if let steps = hour.steps, steps > 0 {
+                BarMark(x: .value(L("chart.hour"), hour.date, unit: .hour), y: .value(L("today.steps"), steps))
+                    .foregroundStyle(accent.gradient).cornerRadius(3)
+            } else {
+                // A decorative dash occupies the empty hour without inventing a step count.
+                RuleMark(xStart: .value(L("chart.hour"), hour.date.addingTimeInterval(900)),
+                         xEnd: .value(L("chart.hour"), hour.date.addingTimeInterval(2_700)), y: .value(L("today.steps"), 0))
+                    .foregroundStyle(Color.secondary.opacity(0.4))
+                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, dash: [1, 3]))
+                    .accessibilityLabel(Text(hour.date.formatted(.dateTime.hour())))
+                    .accessibilityValue(Text(hour.steps == nil ? L("chart.no.data") : "0 " + L("today.steps")))
+            }
+        }
+        .chartXScale(domain: activity.interval.start...activity.interval.end.addingTimeInterval(-1))
+        .chartYScale(domain: 0...maximum)
+        .chartXAxis {
+            AxisMarks(values: .stride(by: .hour, count: 6)) { _ in
+                AxisValueLabel(format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { _ in
+                AxisGridLine(stroke: StrokeStyle(dash: [2, 4])).foregroundStyle(Color.primary.opacity(0.08))
+                AxisValueLabel()
+            }
+        }
+        .accessibilityLabel(Text("chart.hourly"))
+        .accessibilityIdentifier("explorer.day.hourly")
+    }
+}
 
 struct DayDetailView: View {
     var date: Date
@@ -367,12 +460,15 @@ struct DayDetailContent: View {
     private var day: ActivityDay? { model.days.first { Calendar.current.isDate($0.date, inSameDayAs: date) } }
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text(stepsText(day?.steps)).font(.system(.largeTitle, design: .rounded, weight: .bold))
-            Text("today.steps").foregroundStyle(.secondary)
             WalkunoCard {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("chart.hourly").font(.headline)
-                    HourlyChart(hours: hours, accent: model.effectiveTheme.tint(for: scheme)).frame(height: 180)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(stepsText(day?.steps)).font(.system(.largeTitle, design: .rounded, weight: .bold))
+                            .contentTransition(.numericText()).accessibilityIdentifier("explorer.day.total")
+                        Text("today.steps").font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    ExplorerHourlyChart(date: date, hours: hours, accent: model.effectiveTheme.tint(for: scheme)).frame(height: 180)
                     if loading { ProgressView() }
                     if error { Text("health.refresh.error").font(.caption).foregroundStyle(.secondary) }
                     if !loading && hours.allSatisfy({ $0.steps == nil }) { Text("chart.no.data").font(.caption).foregroundStyle(.secondary) }
@@ -384,7 +480,6 @@ struct DayDetailContent: View {
             }
             LabeledContent("metric.exercise", value: ActivityMetric.exerciseTime.text(day?.exerciseMinutes, unit: model.preferences.unit))
             LabeledContent("metric.floors", value: ActivityMetric.floors.text(day?.floors, unit: model.preferences.unit))
-            LabeledContent("goal.title", value: model.preferences.goals.value(on: date).formatted())
             if let peak = hours.filter({ $0.steps != nil }).max(by: { ($0.steps ?? 0) < ($1.steps ?? 0) }) {
                 LabeledContent("statistics.peak", value: peak.date.formatted(.dateTime.hour()))
             }

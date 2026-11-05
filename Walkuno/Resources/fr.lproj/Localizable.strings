@@ -149,7 +149,7 @@
 "onboarding.2.title" = "Votre rythme,\nvotre objectif.";
 "onboarding.2.body" = "Commencez avec 8 000 pas ou choisissez un objectif qui vous ressemble. Vous pourrez le changer à tout moment.";
 "onboarding.3.title" = "Une touche\nbien à vous.";
-"onboarding.3.body" = "Vert électrique et turquoise. Choisissez l’apparence claire ou sombre, ou suivez celle de votre appareil.";
+"onboarding.3.body" = "Vert électrique et turquoise sur fond sombre pour mettre votre activité en lumière.";
 "onboarding.permission.steps" = "Pas · compteur et historique";
 "onboarding.permission.distance" = "Distance · le chemin parcouru";
 "onboarding.permission.energy" = "Énergie active · une mesure complémentaire";
@@ -197,7 +197,8 @@
 "widget.style" = "Affichage";
 "widget.style.ring" = "Pas";
 "widget.style.numbers" = "Pas · grands chiffres";
-"widget.style.weekly" = "Semaine";
+"widget.style.weekly" = "Semaine en barre";
+"widget.style.weeklyLine" = "Semaine courbe";
 "widget.name" = "Walkuno · Compteurs";
 "widget.description" = "Pas, distance, progression et étages, avec des nombres abrégés dans les petits formats.";
 "widget.open" = "Ouvrez Walkuno pour actualiser";
@@ -366,3 +367,5 @@
 "widget.chart.hourly.accessibility" = "Pas par heure sur les 24 dernières heures. La veille en gris, le jour en cours dans la couleur du thème.";
 "widget.chart.goal.accessibility" = "Pas cumulés de minuit à 24 heures. Le jour en trait plein, les habitudes en pointillés.";
 "widget.goal.short" = "Objectif";
+
+"calendar.legend.months" = "Plus la couleur est intense, plus l’objectif du mois est proche. Un point indique un mois sans données accessibles.";

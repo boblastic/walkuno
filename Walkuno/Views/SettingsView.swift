@@ -34,9 +34,6 @@ struct SettingsView: View {
                 Toggle("settings.energy", isOn: $model.preferences.showEnergy)
             }
             Section("settings.appearance") {
-                Picker("settings.mode", selection: $model.preferences.appearance) {
-                    ForEach(Appearance.allCases, id: \.self) { Text(L("appearance.\($0.rawValue)")).tag($0) }
-                }
                 NavigationLink {
                     ThemePaletteView().appHeader()
                 } label: {

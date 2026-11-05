@@ -5,12 +5,12 @@ import Charts
 
 // Original identifiers remain valid for installed small widgets.
 enum WidgetDisplayStyle: String, AppEnum {
-    case ring, numbers, distance, distanceAndSteps, comparison, floors, weekly
+    case ring, numbers, distance, distanceAndSteps, comparison, floors, weekly, weeklyLine
     static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "widget.style")
     static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
         .ring: "widget.style.ring", .numbers: "widget.style.numbers", .distance: "widget.style.distance",
         .distanceAndSteps: "widget.style.distanceAndSteps", .comparison: "widget.style.comparison",
-        .floors: "widget.style.floors", .weekly: "widget.style.weekly"
+        .floors: "widget.style.floors", .weekly: "widget.style.weekly", .weeklyLine: "widget.style.weeklyLine"
     ]
     var title: String { L("widget.style.\(rawValue)") }
     var symbol: String {
@@ -18,7 +18,7 @@ enum WidgetDisplayStyle: String, AppEnum {
         case .distance, .distanceAndSteps: "figure.walk"
         case .comparison: "arrow.up.right"
         case .floors: "stairs"
-        case .weekly: "calendar"
+        case .weekly, .weeklyLine: "calendar"
         default: "shoeprints.fill"
         }
     }
@@ -26,12 +26,18 @@ enum WidgetDisplayStyle: String, AppEnum {
 }
 
 enum WidgetChartStyle: String, AppEnum {
-    case hourly, goalTracking, weekly
+    case hourly, goalTracking, weekly, weeklyLine
     static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "widget.style")
     static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
-        .hourly: "widget.chart.hourly", .goalTracking: "widget.chart.goalTracking", .weekly: "widget.style.weekly"
+        .hourly: "widget.chart.hourly", .goalTracking: "widget.chart.goalTracking",
+        .weekly: "widget.style.weekly", .weeklyLine: "widget.style.weeklyLine"
     ]
-    var title: String { self == .weekly ? L("widget.style.weekly") : L("widget.chart.\(rawValue)") }
+    var title: String {
+        switch self {
+        case .weekly, .weeklyLine: L("widget.style.\(rawValue)")
+        default: L("widget.chart.\(rawValue)")
+        }
+    }
 }
 
 struct WalkunoWidgetIntent: WidgetConfigurationIntent {
@@ -122,14 +128,14 @@ struct WalkunoWidgetView: View {
         case .distance: return entry.snapshot?.today.meters.map { unit.convert(meters: $0).formatted(.number.precision(.fractionLength(1))) } ?? "—"
         case .floors: return stepsText(entry.snapshot?.today.floors.map { Int($0.rounded()) })
         case .comparison: return widgetChangeText(entry.snapshot?.change(for: .steps))
-        case .weekly: return stepsText(weeklySteps)
+        case .weekly, .weeklyLine: return stepsText(weeklySteps)
         default: return stepsText(steps)
         }
     }
     private var compactValue: String {
         switch entry.style {
         case .ring, .numbers, .distanceAndSteps: WidgetNumbers.steps(steps)
-        case .weekly: WidgetNumbers.steps(weeklySteps)
+        case .weekly, .weeklyLine: WidgetNumbers.steps(weeklySteps)
         case .floors: WidgetNumbers.steps(entry.snapshot?.today.floors.map { Int($0.rounded()) })
         case .comparison: WidgetNumbers.percentageChange(entry.snapshot?.change(for: .steps))
         default: fullValue
@@ -175,10 +181,15 @@ struct WalkunoWidgetView: View {
                     .lineLimit(1).minimumScaleFactor(0.45)
                 if entry.style == .distanceAndSteps {
                     Text(distanceText(entry.snapshot?.today.meters, unit: unit)).font(.system(size: 8)).lineLimit(1).minimumScaleFactor(0.6)
-                } else if entry.style == .weekly {
+                } else if entry.style == .weekly || entry.style == .weeklyLine {
                     Text("widget.sevenDays.short").font(.system(size: 8))
-                    WidgetWeekBars(days: week, today: entry.date, accent: theme.accent, showsDays: false)
-                        .frame(height: 12)
+                    Group {
+                        if entry.style == .weeklyLine {
+                            WidgetWeekCurve(days: week, today: entry.date, accent: theme.accent, compact: true, showsDays: false)
+                        } else {
+                            WidgetWeekBars(days: week, today: entry.date, accent: theme.accent, showsDays: false)
+                        }
+                    }.frame(height: 12)
                 } else {
                     Text(valueUnit).font(.system(size: 8)).lineLimit(1).minimumScaleFactor(0.6)
                 }
@@ -215,6 +226,8 @@ struct WalkunoWidgetView: View {
             }
             if entry.style == .weekly {
                 WidgetWeekBars(days: week, today: entry.date, accent: theme.accent)
+            } else if entry.style == .weeklyLine {
+                WidgetWeekCurve(days: week, today: entry.date, accent: theme.accent, compact: true)
             } else if entry.style == .comparison {
                 Text("widget.sameTime").font(.system(size: 9)).foregroundStyle(.secondary)
             }
@@ -247,8 +260,10 @@ struct WalkunoChartWidgetView: View {
             switch entry.style {
             case .weekly:
                 WidgetWeekBars(days: week, today: entry.date, accent: theme.accent)
+            case .weeklyLine:
+                WidgetWeekCurve(days: week, today: entry.date, accent: theme.accent, compact: compact)
             case .hourly:
-                WidgetHourlyBars(activity: entry.snapshot?.activity, accent: theme.accent, showsAxes: !compact)
+                WidgetHourlyBars(activity: entry.snapshot?.activity, accent: theme.accent, compact: compact)
             case .goalTracking:
                 WidgetGoalChart(snapshot: entry.snapshot, accent: theme.accent, compact: compact)
             }
@@ -265,7 +280,7 @@ struct WalkunoChartWidgetView: View {
     }
     @ViewBuilder private var footer: some View {
         switch entry.style {
-        case .weekly:
+        case .weekly, .weeklyLine:
             VStack(alignment: .leading, spacing: 1) {
                 Text("\(L("tab.today")) · \(stepsText(steps)) \(L("today.steps"))")
                 Text("\(L("widget.sevenDays.short")) · \(stepsText(weeklySteps)) \(L("today.steps"))").foregroundStyle(.secondary)
@@ -294,7 +309,7 @@ private func widgetChangeText(_ change: Double?) -> String {
 private struct WidgetHourlyBars: View {
     var activity: WidgetActivityDetail?
     var accent: Color
-    var showsAxes: Bool
+    var compact: Bool
     var body: some View {
         let buckets = activity?.last24Hours() ?? []
         Group {
@@ -310,19 +325,24 @@ private struct WidgetHourlyBars: View {
                         }
                     }
                 }
-                .chartXScale(domain: 0.0...24.0)
+                .chartXScale(domain: 0.0...24.0, range: .plotDimension(padding: 0))
                 .chartYScale(domain: .automatic(includesZero: true))
                 .chartYAxis(.hidden).chartLegend(.hidden)
-                .chartXAxis {
-                    if showsAxes {
-                        AxisMarks(values: [0.5, 6.5, 12.5, 18.5, 23.5]) { value in
-                            AxisValueLabel {
-                                if let index = value.as(Double.self).map({ Int($0) }), buckets.indices.contains(index) {
-                                    Text(buckets[index].date.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)))).font(.system(size: 8))
-                                }
+                .chartXAxis(.hidden)
+                .padding(.bottom, compact ? 8 : 12)
+                .overlay(alignment: .bottom) {
+                    GeometryReader { geometry in
+                        ForEach(Array(buckets.enumerated()), id: \.element.id) { index, bucket in
+                            let hour = Calendar.current.component(.hour, from: bucket.date)
+                            if hour.isMultiple(of: 3) {
+                                Text(hour, format: .number.precision(.integerLength(2)))
+                                    .font(.system(size: compact ? 6 : 8, design: .rounded)).monospacedDigit()
+                                    .foregroundStyle(.secondary).fixedSize()
+                                    .position(x: geometry.size.width * (Double(index) + 0.5) / 24,
+                                              y: geometry.size.height / 2)
                             }
                         }
-                    }
+                    }.frame(height: compact ? 8 : 12).accessibilityHidden(true)
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text("widget.chart.hourly.accessibility"))
@@ -428,6 +448,62 @@ private struct WidgetWeekBars: View {
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
+    }
+}
+
+private struct WidgetWeekCurve: View {
+    var days: [ActivityDay]
+    var today: Date
+    var accent: Color
+    var compact = false
+    var showsDays = true
+    var body: some View {
+        let maximum = Double(max(1, days.compactMap(\.steps).max() ?? 1))
+        Chart {
+            ForEach(Array(days.enumerated()), id: \.element.id) { index, day in
+                if let steps = day.steps {
+                    let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
+                    // Missing days break the line instead of inventing a zero or a connecting value.
+                    let segment = days.prefix(index).filter { $0.steps == nil }.count
+                    LineMark(x: .value("Day", Double(index) + 0.5), y: .value("Steps", steps),
+                             series: .value("Segment", segment))
+                        .foregroundStyle(accent.opacity(0.7))
+                        .lineStyle(StrokeStyle(lineWidth: compact ? 1.5 : 2.5, lineCap: .round))
+                        .interpolationMethod(.monotone)
+                    PointMark(x: .value("Day", Double(index) + 0.5), y: .value("Steps", steps))
+                        .foregroundStyle(accent.opacity(isToday ? 1 : 0.7))
+                        .symbolSize(showsDays ? (isToday ? (compact ? 18 : 40) : (compact ? 8 : 20)) : 5)
+                }
+            }
+        }
+        .chartXScale(domain: 0.0...Double(max(1, days.count)), range: .plotDimension(padding: 0))
+        .chartYScale(domain: 0.0...(maximum * 1.15), range: .plotDimension(padding: showsDays ? 3 : 1))
+        .chartXAxis(.hidden).chartYAxis(.hidden).chartLegend(.hidden)
+        .overlay {
+            if days.compactMap(\.steps).isEmpty {
+                Text("—").font(.system(size: 9)).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.bottom, showsDays ? 14 : 0)
+        .overlay(alignment: .bottom) {
+            if showsDays {
+                HStack(spacing: 0) {
+                    ForEach(days) { day in
+                        let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
+                        Text(day.date.formatted(.dateTime.weekday(.narrow)))
+                            .font(.system(size: 9, weight: isToday ? .heavy : .regular))
+                            .foregroundStyle(isToday ? .primary : .secondary).frame(minWidth: 0, maxWidth: .infinity)
+                            .background(isToday ? accent.opacity(0.25) : .clear, in: Capsule())
+                    }
+                }.accessibilityHidden(true)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("widget.style.weeklyLine"))
+        .accessibilityValue(days.map {
+            "\($0.date.formatted(.dateTime.weekday(.wide).day().month())): \(stepsText($0.steps)) \(L("today.steps"))"
+        }.joined(separator: ", "))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

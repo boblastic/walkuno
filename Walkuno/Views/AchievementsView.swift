@@ -7,6 +7,7 @@ struct AchievementsView: View {
     @State private var showPremium = false
     @State private var showShare = false
     @State private var showAllJourneys = false
+    @State private var goalCardHeight: CGFloat = 0
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
     private var columns: [GridItem] { Array(repeating: GridItem(.flexible(), alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2) }
 
@@ -90,7 +91,8 @@ struct AchievementsView: View {
                         symbol: ["target", "bolt.fill", "bolt.shield.fill"][goal.multiplier - 1],
                         rank: goal.multiplier, count: goal.count, progress: goal.progress,
                         detail: String(format: L("trophies.steps.progress"), stepsText(goal.steps), stepsText(goal.target)),
-                        context: L("insights.today"), accent: accent, available: goal.steps != nil
+                        context: L("insights.today"), accent: accent, minimumHeight: goalCardHeight,
+                        available: goal.steps != nil
                     ).accessibilityIdentifier("trophies.goal.\(goal.multiplier)")
                 }
                 ForEach(summary.perfectPeriods) { period in
@@ -100,11 +102,12 @@ struct AchievementsView: View {
                         rank: period.period == .week ? 1 : period.period == .month ? 2 : 3,
                         count: period.count, progress: period.progress,
                         detail: String(format: L("trophies.days.progress"), period.achievedDays, period.requiredDays),
-                        context: L("trophies.current.\(period.id)"), accent: accent,
+                        context: L("trophies.current.\(period.id)"), accent: accent, minimumHeight: goalCardHeight,
                         note: period.canComplete ? L("trophies.perfect.possible") : String(format: L("trophies.perfect.restart"), period.nextStart.formatted(date: .abbreviated, time: .omitted))
                     ).accessibilityIdentifier("trophies.perfect.\(period.id)")
                 }
             }
+            .onPreferenceChange(TrophyCardHeightKey.self) { goalCardHeight = $0 }
         }
     }
 
@@ -205,7 +208,15 @@ struct AchievementsView: View {
     }
 }
 
+private struct TrophyCardHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat { 0 }
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 private struct TrophyProgressCard: View {
+    @ScaledMetric(relativeTo: .subheadline) private var titleHeight = 50
     var title: String
     var symbol: String
     var rank: Int
@@ -214,6 +225,7 @@ private struct TrophyProgressCard: View {
     var detail: String
     var context: String
     var accent: Color
+    var minimumHeight: CGFloat
     var available = true
     var note: String? = nil
     var body: some View {
@@ -221,8 +233,15 @@ private struct TrophyProgressCard: View {
             VStack(spacing: 12) {
                 TrophyMedallion(symbol: symbol, rank: rank, unlocked: count > 0, accent: accent)
                     .frame(width: 78, height: 90)
-                Text(title).font(.subheadline.weight(.semibold)).multilineTextAlignment(.center)
-                    .frame(minHeight: 38, alignment: .top)
+                VStack(spacing: 4) {
+                    Text(title).font(.subheadline.weight(.semibold))
+                    if let note {
+                        Text(note).font(.caption2).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, minHeight: titleHeight, alignment: .top)
                 Text(String(format: L("trophies.times"), count)).font(.system(.headline, design: .rounded))
                     .foregroundStyle(count > 0 ? accent : .secondary)
                 VStack(alignment: .leading, spacing: 7) {
@@ -230,9 +249,16 @@ private struct TrophyProgressCard: View {
                     TrophyProgressBar(progress: progress, accent: accent)
                     Text(detail).font(.caption2.weight(.medium)).monospacedDigit()
                     if !available { Text("chart.no.data").font(.caption2).foregroundStyle(.secondary) }
-                    if let note { Text(note).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                 }.frame(maxWidth: .infinity, alignment: .leading)
-            }.frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
+            .background {
+                GeometryReader { geometry in
+                    Color.clear.preference(key: TrophyCardHeightKey.self, value: geometry.size.height)
+                }
+            }
+            .frame(minHeight: minimumHeight, alignment: .top)
         }.accessibilityElement(children: .combine)
     }
 }

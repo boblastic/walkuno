@@ -58,7 +58,7 @@ struct WalkunoApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
-                .preferredColorScheme(model.preferences.appearance == .system ? nil : model.preferences.appearance == .dark ? .dark : .light)
+                .preferredColorScheme(.dark)
                 .task { await model.start() }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {

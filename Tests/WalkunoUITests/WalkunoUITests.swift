@@ -411,12 +411,58 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertEqual(String(monthName.prefix(1)), monthName.prefix(1).uppercased())
         XCTAssertEqual(String(monthName.dropFirst()), monthName.dropFirst().lowercased())
         capture("Explorer-Annee-Meilleur-mois")
+        picker.buttons["Mois"].tap()
         let calendarDay = app.buttons["explorer.calendar.day.\(Calendar.current.component(.day, from: .now))"]
         app.swipeUp()
         reveal(calendarDay, in: app)
         calendarDay.tap()
         XCTAssertTrue(app.navigationBars[formatter.string(from: .now)].waitForExistence(timeout: 5))
         app.buttons["Terminé"].firstMatch.tap()
+    }
+
+    func testExplorerHourlyTotalsPeriodHighlightsAndAdaptiveCalendars() {
+        let app = launch(pro: true)
+        app.tabBars.buttons["Explorer"].tap()
+        let picker = app.segmentedControls["statistics.explorer.period"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+
+        picker.buttons["Jour"].tap()
+        XCTAssertTrue(app.staticTexts["explorer.day.total"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["explorer.day.total"].label.filter(\.isNumber), "6432")
+        XCTAssertTrue(app.descendants(matching: .any)["explorer.day.hourly"].firstMatch.exists)
+        XCTAssertFalse(app.staticTexts["Objectif quotidien"].exists)
+        capture("Explorer-Jour-Total-Echelle")
+
+        for period in ["Semaine", "Mois", "Année"] {
+            picker.buttons[period].tap()
+            let floors = app.descendants(matching: .any)["explorer.total.floors"].firstMatch
+            reveal(floors, in: app)
+            XCTAssertTrue(floors.exists)
+            XCTAssertTrue(app.descendants(matching: .any)["explorer.total.energy"].firstMatch.exists)
+            XCTAssertTrue(app.descendants(matching: .any)["explorer.total.exercise"].firstMatch.exists)
+            let best = app.descendants(matching: .any)["explorer.best.day"].firstMatch
+            XCTAssertTrue(best.exists)
+            capture("Explorer-\(period)-Cumuls")
+            if period == "Semaine" {
+                let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "explorer.calendar.day.")).firstMatch
+                reveal(first, in: app)
+                let cells = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "explorer.calendar.day."))
+                XCTAssertEqual(cells.count, 7)
+                XCTAssertTrue(cells.element(boundBy: 0).label.hasPrefix("lundi"))
+                XCTAssertTrue(cells.element(boundBy: 6).label.hasPrefix("dimanche"))
+                XCTAssertEqual(cells.element(boundBy: 0).frame.minY, cells.element(boundBy: 6).frame.minY, accuracy: 1)
+                capture("Explorer-Semaine-Lundi-Dimanche")
+            } else if period == "Année" {
+                let january = app.buttons["explorer.calendar.month.1"]
+                reveal(january, in: app)
+                XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "explorer.calendar.month.")).count, 12)
+                XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "explorer.calendar.day.")).count, 0)
+                capture("Explorer-Annee-Douze-Mois")
+                january.tap()
+                XCTAssertTrue(picker.buttons["Mois"].isSelected)
+                XCTAssertTrue(app.staticTexts["explorer.period.title"].label.hasPrefix("Janvier"))
+            }
+        }
     }
 
     func testExplorerPinsGlassControlsAndSwipesEveryPeriod() {
@@ -525,6 +571,12 @@ final class WalkunoUITests: XCTestCase {
         reveal(perfect, in: app)
         XCTAssertTrue(perfect.label.contains("Année parfaite"))
         capture("Trophees-Periodes-parfaites")
+        let goalHeight = goal.frame.height
+        for id in ["goal.1", "goal.2", "goal.3", "perfect.week", "perfect.month", "perfect.year"] {
+            let card = app.descendants(matching: .any)["trophies.\(id)"].firstMatch
+            reveal(card, in: app)
+            XCTAssertEqual(card.frame.height, goalHeight, accuracy: 1, "Hauteur de \(id)")
+        }
         let streak = app.descendants(matching: .any)["trophies.streak.30"].firstMatch
         reveal(streak, in: app)
         XCTAssertTrue(streak.label.contains("30 jours d’affilée"))

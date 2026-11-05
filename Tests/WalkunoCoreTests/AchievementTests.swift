@@ -75,6 +75,17 @@ struct AchievementTests {
         #expect(summary(inflated, now: "2027-01-03").perfectPeriods[0].count == 0)
     }
 
+    @Test func cumulativeDistanceIncludesOlderDistanceOnlyDaysWithoutACap() {
+        let rows = [ActivityDay(date: date("2014-01-01"), meters: 24_000_000),
+                    ActivityDay(date: date("2026-11-01"), steps: 8_000, meters: 12_345),
+                    ActivityDay(date: date("2026-11-02"), steps: 16_000),
+                    ActivityDay(date: date("2026-11-03"), meters: 50_000)]
+        let result = summary(rows, now: "2026-11-02")
+        #expect(result.totalMeters == 24_012_345)
+        #expect(result.totalSteps == 24_000)
+        #expect(DistanceTrophy.catalog.first { $0.id == "europe" }?.progress(totalMeters: result.totalMeters).completed == 2)
+    }
+
     @Test func partialPeriodAndTodayCannotBeAwardedPrematurely() {
         let rows = days(from: "2026-11-02", count: 6)
         let result = summary(rows, now: "2026-11-08").perfectPeriods[0]

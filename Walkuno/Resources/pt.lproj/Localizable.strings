@@ -149,7 +149,7 @@
 "onboarding.2.title" = "O teu ritmo,\no teu objetivo.";
 "onboarding.2.body" = "Começa com 8 000 passos ou escolhe um objetivo à tua medida. Podes alterá-lo a qualquer momento.";
 "onboarding.3.title" = "Um estilo\nmesmo teu.";
-"onboarding.3.body" = "Verde elétrico e turquesa. Escolhe o modo claro ou escuro, ou usa o modo do dispositivo.";
+"onboarding.3.body" = "Verde elétrico e turquesa sobre um fundo escuro para destacar a tua atividade.";
 "onboarding.permission.steps" = "Passos · contador e histórico";
 "onboarding.permission.distance" = "Distância · até onde vais";
 "onboarding.permission.energy" = "Energia ativa · um extra opcional";
@@ -197,7 +197,8 @@
 "widget.style" = "Exibição";
 "widget.style.ring" = "Passos";
 "widget.style.numbers" = "Passos · números grandes";
-"widget.style.weekly" = "Semana";
+"widget.style.weekly" = "Semana em barras";
+"widget.style.weeklyLine" = "Semana em curva";
 "widget.name" = "Walkuno · Contadores";
 "widget.description" = "Passos, distância, progresso e andares subidos, com números abreviados nos formatos pequenos.";
 "widget.open" = "Abre o Walkuno para atualizar";
@@ -365,3 +366,5 @@
 "widget.chart.hourly.accessibility" = "Passos por hora nas últimas 24 horas. Ontem em cinzento, hoje na cor do tema.";
 "widget.chart.goal.accessibility" = "Passos acumulados da meia-noite à meia-noite. Hoje com linha contínua, atividade habitual a tracejado.";
 "widget.goal.short" = "Objetivo";
+
+"calendar.legend.months" = "Quanto mais intensa a cor, mais próxima está a meta mensal. Um ponto indica um mês sem dados acessíveis.";

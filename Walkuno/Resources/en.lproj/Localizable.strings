@@ -149,7 +149,7 @@
 "onboarding.2.title" = "Your pace,\nyour goal.";
 "onboarding.2.body" = "Start with 8,000 steps or choose a goal that suits you. You can change it at any time.";
 "onboarding.3.title" = "A look\nto call your own.";
-"onboarding.3.body" = "Electric green and teal. Choose light or dark mode, or match your device.";
+"onboarding.3.body" = "Electric green and teal on a dark background bring your activity to life.";
 "onboarding.permission.steps" = "Steps · counter and history";
 "onboarding.permission.distance" = "Distance · how far you go";
 "onboarding.permission.energy" = "Active energy · an optional extra";
@@ -197,7 +197,8 @@
 "widget.style" = "Display";
 "widget.style.ring" = "Steps";
 "widget.style.numbers" = "Steps · big numbers";
-"widget.style.weekly" = "Week";
+"widget.style.weekly" = "Week bars";
+"widget.style.weeklyLine" = "Week curve";
 "widget.name" = "Walkuno · Counters";
 "widget.description" = "Steps, distance, progress and flights climbed, with compact numbers in small spaces.";
 "widget.open" = "Open Walkuno to refresh";
@@ -366,3 +367,5 @@
 "widget.chart.hourly.accessibility" = "Steps in each of the last 24 hours. Yesterday is grey; today uses your theme color.";
 "widget.chart.goal.accessibility" = "Cumulative steps from midnight to midnight. Today is a solid line; usual activity is dashed.";
 "widget.goal.short" = "Goal";
+
+"calendar.legend.months" = "The stronger the color, the closer the monthly goal. A dot marks a month without accessible data.";

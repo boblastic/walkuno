@@ -20,7 +20,7 @@ for name in ['Walkuno', 'WalkunoWidgets', 'WalkunoWatch', 'WalkunoWatchWidgets']
         if watch:
             info.update(WKApplication=True, WKCompanionAppBundleIdentifier='fr.orbelio.walkuno', WKRunsIndependentlyOfCompanionApp=True)
         else:
-            info.update(LSRequiresIPhoneOS=True, UILaunchScreen={}, UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait'],
+            info.update(LSRequiresIPhoneOS=True, UILaunchScreen={}, UIUserInterfaceStyle='Dark', UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait'],
                         CFBundleURLTypes=[dict(CFBundleURLName='fr.orbelio.walkuno', CFBundleURLSchemes=['walkuno'])],
                         UIApplicationSceneManifest=dict(UIApplicationSupportsMultipleScenes=False))
     with open(ROOT / 'Config' / (name + '-Info.plist'), 'wb') as stream:

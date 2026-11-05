@@ -149,7 +149,7 @@
 "onboarding.2.title" = "Il tuo ritmo,\nil tuo obiettivo.";
 "onboarding.2.body" = "Inizia con 8.000 passi o scegli un obiettivo adatto a te. Puoi cambiarlo in qualsiasi momento.";
 "onboarding.3.title" = "Uno stile\ntutto tuo.";
-"onboarding.3.body" = "Verde elettrico e turchese. Scegli il tema chiaro o scuro oppure segui le impostazioni del dispositivo.";
+"onboarding.3.body" = "Verde elettrico e turchese su uno sfondo scuro per dare risalto alla tua attività.";
 "onboarding.permission.steps" = "Passi · contatore e cronologia";
 "onboarding.permission.distance" = "Distanza · quanta strada fai";
 "onboarding.permission.energy" = "Energia attiva · un extra facoltativo";
@@ -197,7 +197,8 @@
 "widget.style" = "Visualizzazione";
 "widget.style.ring" = "Passi";
 "widget.style.numbers" = "Passi · cifre grandi";
-"widget.style.weekly" = "Settimana";
+"widget.style.weekly" = "Settimana a barre";
+"widget.style.weeklyLine" = "Settimana a curva";
 "widget.name" = "Walkuno · Contatori";
 "widget.description" = "Passi, distanza, progresso e piani saliti, con numeri abbreviati nei formati piccoli.";
 "widget.open" = "Apri Walkuno per aggiornare";
@@ -365,3 +366,5 @@
 "widget.chart.hourly.accessibility" = "Passi orari nelle ultime 24 ore. Ieri in grigio, oggi nel colore del tema.";
 "widget.chart.goal.accessibility" = "Passi cumulativi da mezzanotte a mezzanotte. Oggi con linea continua, attività abituale tratteggiata.";
 "widget.goal.short" = "Obiettivo";
+
+"calendar.legend.months" = "Più intenso è il colore, più vicino è l’obiettivo mensile. Un punto indica un mese senza dati accessibili.";

@@ -11,6 +11,7 @@ Les maxima quotidiens des pas, de l’énergie active, de la distance marche/cou
 - **Objectif atteint**, **200 %** et **300 %** : chaque date locale compte au maximum une fois pour chaque badge. Une journée à 300 % valide également les deux premiers badges. L’objectif daté de la journée sert de référence ; avant le premier réglage, il est de 8 000 pas. La barre affiche les pas d’aujourd’hui sur le seuil du badge, même après des réussites antérieures.
 - **Semaine parfaite**, **mois parfait** et **année parfaite** : chaque journée du calendrier doit avoir atteint son propre objectif. Aucun dépassement ne compense une journée manquée ou sans mesure. Les semaines suivent le calendrier de l’appareil. Les mois et les années respectent leur nombre réel de jours, y compris le 29 février. Le badge est compté dès que le dernier objectif de la période est atteint. La barre indique les journées réussies de la période actuelle ; si une journée passée manque, le prochain départ est indiqué.
 - Les nombres de réussites sont affichés sous les médaillons. Cible, éclairs, calendrier, étoile et couronne distinguent les six badges. Les rubans, anneaux et étoiles suivent la palette choisie.
+- Les explications des périodes parfaites figurent en petits caractères sous leur titre. Les six cartes partagent la hauteur du contenu le plus haut, y compris avec les grandes tailles de texte.
 
 ## Séries
 
@@ -19,6 +20,8 @@ Les badges récompensent **7, 15 et 30 jours consécutifs** ayant atteint l’ob
 ## Collection proposée et intégrée
 
 Les noms évoquent des lieux et des aventures. Les distances sont des équivalences symboliques, sans suivi GPS, dénivelé ni prétention d’avoir réellement effectué le trajet. Chaque mesure de distance marche/course contribue simultanément à tous les trophées. Les pas ne sont jamais convertis en kilomètres estimés.
+
+La distance cumulée additionne les journées chargées depuis Santé, sans plafond à 24 000 km ni restriction Pro. La lecture de l’historique commence à la plus ancienne mesure accessible parmi les cinq types d’activité, pour conserver notamment les distances antérieures aux premiers pas enregistrés. Le cumul dépend des données et autorisations disponibles ; pendant le chargement de l’historique ancien, le total peut être provisoire.
 
 | Trophée | Seuil | Visuel | Référence |
 | --- | ---: | --- | --- |

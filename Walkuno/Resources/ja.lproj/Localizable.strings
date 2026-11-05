@@ -149,7 +149,7 @@
 "onboarding.2.title" = "自分のペース、\n自分の目標。";
 "onboarding.2.body" = "8,000歩から始めるか、自分に合った目標を選びましょう。目標はいつでも変更できます。";
 "onboarding.3.title" = "自分らしい\nスタイルに。";
-"onboarding.3.body" = "鮮やかなグリーンとターコイズの配色です。ライトまたはダークを選ぶか、デバイスの設定に合わせられます。";
+"onboarding.3.body" = "ダークな背景に鮮やかなグリーンとターコイズが映え、アクティビティを引き立てます。";
 "onboarding.permission.steps" = "歩数 · カウンターと履歴";
 "onboarding.permission.distance" = "距離 · 歩いた道のり";
 "onboarding.permission.energy" = "アクティブエネルギー · 任意の追加項目";
@@ -197,7 +197,8 @@
 "widget.style" = "表示内容";
 "widget.style.ring" = "歩数";
 "widget.style.numbers" = "歩数・大きな数字";
-"widget.style.weekly" = "週間";
+"widget.style.weekly" = "週間（棒グラフ）";
+"widget.style.weeklyLine" = "週間（曲線）";
 "widget.name" = "Walkuno・カウンター";
 "widget.description" = "歩数、距離、昨日との比較、上った階数。小さい表示では数値を短縮します。";
 "widget.open" = "Walkunoを開いて更新";
@@ -365,3 +366,5 @@
 "widget.chart.hourly.accessibility" = "過去24時間の時間別歩数。昨日は灰色、今日はテーマカラーです。";
 "widget.chart.goal.accessibility" = "0時から24時までの累計歩数。今日は実線、普段の活動は点線です。";
 "widget.goal.short" = "目標";
+
+"calendar.legend.months" = "色が濃いほど月の目標に近づいています。点は利用できるデータがない月を示します。";
