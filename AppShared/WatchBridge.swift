@@ -1,7 +1,7 @@
 import Foundation
 import WatchConnectivity
 
-/// Only goals and appearance cross this bridge. Health measurements stay in each HealthKit store.
+/// Only goals, appearance and verified Pro access cross this bridge. Health measurements stay in each HealthKit store.
 @MainActor
 final class WatchBridge: NSObject, WCSessionDelegate {
     private var session: WCSession?
@@ -17,8 +17,8 @@ final class WatchBridge: NSObject, WCSessionDelegate {
         session.activate()
     }
 
-    func send(_ preferences: Preferences) {
-        let payload = WatchSettings(preferences: preferences)
+    func send(_ preferences: Preferences, proAccess: ProAccess? = nil) {
+        let payload = WatchSettings(preferences: preferences, proAccess: proAccess)
         guard let data = try? JSONEncoder().encode(payload) else { return }
         pending = data
         flush()

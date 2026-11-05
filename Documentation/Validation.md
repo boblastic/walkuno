@@ -509,3 +509,160 @@ Preuves locales : `/tmp/walkuno-global-11-final-core.log`, `/tmp/walkuno-global-
 - Lancement contrôlé sur le simulateur Watch, état sans données. Rendus SwiftUI des cinq styles et des deux graphiques contrôlés en français aux largeurs utiles de 162, 182 et 198 points, avec mesures synthétiques et état vide. Le défilement à la couronne et la réception des préférences entre appareils restent à recetter sur matériel.
 
 Preuves locales : `/tmp/walkuno-watch-dashboard-build.log`, `/tmp/walkuno-watch-dashboard-tests.log`, `/tmp/walkuno-watch-dashboard-launch.png`, `/tmp/walkuno-watch-dashboard-{162,182,198,empty}.png`. Les rendus SwiftUI sont issus d’un harnais local ; la capture de lancement provient du simulateur Watch.
+
+## 5 novembre 2026 — répartition Gratuit / Pro
+
+- Référence fonctionnelle : [Offres](Offres.md).
+- 113 tests métier réussis, dont expiration exacte des droits et compatibilité des contextes Watch.
+- Quatre tests UI ciblés réussis sur Walkuno QA : sélection/relecture des effets Pro, passage Gratuit/Pro avec relancement, aperçu gratuit d’un effet payant et déblocage des analyses mensuelles/annuelles.
+- Compilations Debug et Release réussies des quatre cibles iPhone, Watch et extensions.
+- 452 textes et autorisations Santé validés dans les sept langues, puis ressources compilées vérifiées pour les quatre bundles.
+- Vérification des quatre exécutables Release : chemin du cache de droits de production présent, chemin du cache de développement absent.
+- `git diff --check` réussi.
+- Non exécutés : achats réels/Sandbox Apple, ajout manuel de toutes les tailles de widgets et propagation des droits sur une paire iPhone/Watch physique. La recette correspondante est décrite dans [Recette](Recette.md).
+
+
+## Historique des statistiques horizontal — 5 novembre 2026
+
+- « Toutes périodes confondues » présente les années côte à côte par défaut, avec défilement horizontal pour les années supplémentaires. Le bouton de disposition rétablit la présentation en lignes et permet de revenir à l’horizontal. Le choix est conservé au relancement. Les totaux, moyennes, valeurs absentes et indicateurs annuels utilisent les mêmes calculs dans les deux dispositions.
+- Compilation des cibles iPhone/Watch et test UI ciblé `testYearHistoryOrientationAndPersistence` réussis sur Walkuno Statistics QA. Le test vérifie les positions relatives des années, la conservation des valeurs et du mode Totaux lors de la bascule, la persistance après relancement et le changement de mesure. Les deux captures ont été contrôlées visuellement.
+- Validation des traductions dans les sept langues et `git diff --check` réussis. Aucun calcul métier modifié.
+
+Preuves locales : `/tmp/walkuno-history-layout-verified-ui.log`, `/tmp/walkuno-history-layout-verified-ui.xcresult` et `/tmp/walkuno-history-layout-verified-preview/`.
+
+## Horloge des pas dans Statistiques — 5 novembre 2026
+
+L’horloge ouvre les cartes de Statistiques. Les rayons représentent les pas horaires ; le total et l’anneau principal reprennent le compteur journalier et son objectif. L’anneau pointillé compare le cumul habituel au même instant, avec les valeurs et l’écart chiffrés sous le cadran. La carte suit la palette active et conserve les pas lorsqu’une autre métrique est sélectionnée pour les graphiques suivants. Le profil partagé avec les widgets est réutilisé sans nouvelle lecture Santé.
+
+- 128 tests Foundation réussis, dont six nouveaux scénarios : total journalier distinct des arrondis horaires, heure partielle, absence et zéro, référence décalée, mesures anciennes/futures, changements d’heure et dépassements d’objectif.
+- Compilation Debug simulateur des quatre cibles réussie. Validation des 489 textes dans les sept langues et absence de doublons dans les listes de sources du projet.
+- Deux tests UI réussis sur iPhone 18 Pro / iOS 27 : horloge en tête, conservation des pas lors du passage à Distance, défilement vers les graphiques et contenu dégagé sous le bandeau dans les onglets et fenêtres de détail. Capture finale contrôlée visuellement.
+
+Preuves : `/tmp/walkuno-step-clock-ui-final.xcresult`, `/tmp/walkuno-step-clock-ui-final.log` et `/tmp/walkuno-step-clock-final-captures/1FC0B172-2104-41FF-921B-5503B49CA260.png`. Vérification en mode démonstration uniquement ; aucune installation sur iPhone ou Watch physique pendant cette intervention.
+
+## Préparation et déploiement du build 12 — 5 novembre 2026
+
+- Version 1.0.0 (12) synchronisée dans les quatre cibles et le générateur. Compilation Debug signée pour appareils physiques réussie ; signatures strictes, profils valides, appareils autorisés et App Group contrôlés pour l’iPhone, la Watch et leurs extensions. Les 489 textes sont vérifiés dans les sept langues des quatre bundles compilés.
+- Mise à jour installée sur l’iPhone iBoblastic sans désinstallation. Les métadonnées confirment le build 12 ; lancement sans argument de démonstration réussi et processus de l’application et de son widget confirmés dans le nouvel emplacement d’installation.
+- Le bundle Watch signé est prêt et embarqué avec l’application iPhone. Deux tentatives d’installation directe et la vérification ultérieure de sa version échouent lors de l’établissement du tunnel réseau (`CoreDeviceError 4000`, `RemotePairingError 1001`). La montre apparaît appairée, mais sa mise à jour au build 12 n’est pas confirmée. Le dernier état vérifié avant transfert était le build 11. La connexion doit être rétablie pour terminer ce déploiement.
+
+Preuves locales : `/tmp/walkuno-clock-device-12-build.log`, `/tmp/walkuno-clock-device-12/Build/Products/`, `/tmp/walkuno-clock-12-iphone-{install,launch,app,processes}.json` et `/tmp/walkuno-clock-12-watch-install{,-retry}.log`. Aucune publication App Store ou TestFlight.
+
+## Horloge compacte et distance centrale — 5 novembre 2026
+
+Les explications au-dessus et au-dessous du cadran sont retirées. La distance Santé du jour remplace le libellé central « pas » ; son format suit l’unité choisie et sa couleur utilise exactement `secondaryTint(for:)`, comme la distance de l’accueil. Les légendes Aujourd’hui/Habituellement sont regroupées avec leurs valeurs directement sous le graphique, sans second bloc répété ni séparateur.
+
+Compilation Debug signée du build 13 pour les quatre cibles et vérification stricte des signatures réussies. Le test UI ciblé de l’horloge réussit et sa capture finale est contrôlée : kilomètres visibles au centre, couleur cohérente, valeurs regroupées, absence des explications et défilement fonctionnel. Validation des sept langues et `git diff --check` réussis.
+
+Preuves : `/tmp/walkuno-clock-compact-ui.xcresult`, `/tmp/walkuno-clock-compact-captures/21E9337F-9131-4861-AFB5-ECC5ED203419.png` et `/tmp/walkuno-clock-device-13-build.log`.
+
+Déploiement du build 13 : mise à jour installée et lancée sur l’iPhone iBoblastic, version 1.0.0 (13) confirmée par les métadonnées. Le bundle Watch signé est préparé ; sa nouvelle tentative d’installation échoue sur la connexion réseau (`Network.NWError 49`, adresse indisponible). Aucun succès d’installation du build 13 sur la montre n’est revendiqué. Preuves : `/tmp/walkuno-clock-13-iphone-{install,launch,app}.json` et `/tmp/walkuno-clock-13-watch-install.log`.
+
+## En-tête et objectif de l’horloge — 5 novembre 2026
+
+Les valeurs Aujourd’hui/Habituellement occupent désormais la partie supérieure droite de la carte, dans la même présentation et les mêmes couleurs que « Mon activité du jour ». L’heure reste sous le titre. Le pourcentage d’écart à l’habitude et l’objectif sont réunis sur une ligne sous le cadran, objectif à droite. Le nombre de pas restants est retiré ; les kilomètres colorés au centre sont conservés.
+
+Le test UI ciblé de l’horloge réussit ; la capture finale confirme l’en-tête compact et l’alignement du pourcentage avec l’objectif. Compilation Debug signée du build 14 des quatre cibles et signatures strictes vérifiées. Validation des sept langues et `git diff --check` réussis. Le contrôle de disponibilité de la Watch expire à nouveau avant l’établissement de la connexion ; son déploiement reste en attente.
+
+Preuves : `/tmp/walkuno-clock-header-ui.xcresult`, `/tmp/walkuno-clock-header-captures/A920A6A8-56E8-41AB-B983-565C3585C278.png`, `/tmp/walkuno-clock-device-14-build.log` et `/tmp/walkuno-clock-header-watch-status.log`.
+
+
+## Toutes les années dans la largeur du widget — 5 novembre 2026
+
+- L’ordre des années devient chronologique, de la plus ancienne à la plus récente, dans les deux dispositions. La présentation horizontale représente toutes les années enregistrées dans la largeur disponible, sans défilement horizontal. Les libellés sont espacés selon la place et la taille de texte, avec la première et la dernière année toujours nommées. Les valeurs restent disponibles dans VoiceOver et dans la vue en lignes ; elles sont aussi affichées au-dessus des colonnes lorsque la largeur le permet.
+- Compilation et test UI ciblé `testYearHistoryOrientationAndPersistence` réussis : ordre des années dans les deux vues, présence des quatre années de démonstration dans les limites du graphique, conservation des valeurs et du choix au relancement, changement de mesure et grands caractères. Captures normale, verticale et à libellés espacés contrôlées visuellement.
+- Traductions vérifiées dans les sept langues et `git diff --check` réussi. Les calculs et le chargement de l’historique restent identiques.
+
+Preuves locales : `/tmp/walkuno-history-all-years-verified-ui.log`, `/tmp/walkuno-history-all-years-verified-ui.xcresult` et `/tmp/walkuno-history-all-years-preview/`.
+
+Mise à jour du build 14 installée et lancée sur l’iPhone iBoblastic ; les métadonnées confirment 1.0.0 (14). Preuves : `/tmp/walkuno-clock-14-iphone-{install,launch,app}.json`. Le bundle Watch signé est prêt, sans installation confirmée sur la montre en raison de sa connexion indisponible.
+
+## Animation d’entrée de l’horloge des pas — 5 novembre 2026
+
+L’anneau de progression du jour commence vide à chaque apparition de l’horloge, puis se remplit avec le ressort partagé. À la disparition, sa présentation est réinitialisée sans animation inverse ; la courte tâche différée est annulée si l’utilisateur quitte la vue avant son démarrage. Les mesures, kilomètres, pourcentage et référence habituelle restent affichés à leur vraie valeur. Le mode Réduire les animations présente directement la progression finale.
+
+- Test UI ciblé réussi, enrichi de deux allers-retours Aujourd’hui/Statistiques : totaux stables, carte accessible et changement de métrique fonctionnel.
+- Enregistrement du simulateur et extraction de vues successives contrôlés : anneau presque vide puis rempli lors de la première ouverture, puis lors des deux retours. Les images à 62,50/62,75/63,25 s et 70,50/70,75/71,25 s montrent les deux premiers remplissages ; le troisième apparaît autour de 74,75–75,50 s.
+- Compilation Debug signée du build 15 pour les quatre cibles et signatures strictes vérifiées. Les objets compilés du simulateur et de l’appareil sont postérieurs à la dernière modification du cadran. Les 491 textes sont validés dans les sept langues et `git diff --check` réussit.
+- La dernière vérification de disponibilité de la Watch expire toujours ; sa mise à jour reste en attente de connexion.
+
+Preuves : `/tmp/walkuno-clock-replay-ui.xcresult`, `/tmp/walkuno-clock-replay.mp4`, `/tmp/walkuno-clock-animation-contact.png` et `/tmp/walkuno-clock-device-15-build.log`.
+
+Build 15 installé sur l’iPhone iBoblastic ; version 1.0.0 (15) confirmée par les métadonnées. Le lancement automatique est refusé car l’appareil est verrouillé (`FBSOpenApplicationErrorDomain 7`, `Locked`) ; aucun lancement sur l’iPhone physique n’est donc confirmé pour cette livraison. Preuves : `/tmp/walkuno-clock-15-iphone-{install,launch,app}.json`.
+
+
+## Années dans les barres et inspection au toucher — 5 novembre 2026
+
+- En vertical, les années vont de la plus récente à la plus ancienne. L’année et ses indicateurs figurent dans la barre, avec un contraste adapté au remplissage ; la valeur est placée à droite. Une grille aligne les barres et les valeurs sur toutes les lignes.
+- En horizontal, l’ordre ancien vers récent et toutes les années dans la largeur sont conservés. Le toucher affiche l’année, la valeur dans la mesure et le calcul sélectionnés, ainsi que les indicateurs utiles. Un appui maintenu permet de parcourir les colonnes, y compris les années sans libellé visible. La bulle utilise les mêmes reconnaisseurs natifs, fermeture différée et règles de défilement que les autres graphiques ; les changements de mesure ou de calcul effacent la sélection.
+- Compilation réussie. Trois tests UI ciblés réussis sur le simulateur isolé Walkuno History Touch QA : défilement sans sélection, valeurs des graphiques existants au toucher/glissement et historique avec ordre, valeurs, mémorisation et grands caractères. Après le dernier changement de disposition verticale, le test d’historique réussit de nouveau et sa capture confirme l’année dans la barre et la valeur à droite. Les captures des bulles normales et d’une année sans libellé ont également été contrôlées.
+- Traductions dans les sept langues et `git diff --check` vérifiés. Les premiers essais ont été interrompus par le processus de test ou refusés au démarrage du simulateur ; les résultats réussis ci-dessous sont issus du simulateur dédié après démarrage complet.
+
+Preuves locales : `/tmp/walkuno-history-touch-isolated-ui.xcresult`, `/tmp/walkuno-history-touch-preview/`, `/tmp/walkuno-history-inline-years-verified-ui.xcresult` et `/tmp/walkuno-history-inline-years-preview/`.
+
+## Effets et dégradé de l’accueil dans l’horloge — 5 novembre 2026
+
+L’horloge réutilise désormais le moteur `CounterPlayback`, l’anneau `SparklingRing` et les effets `CounterStarlight` de l’accueil : Étoiles, Feu vivant, Aurore boréale et Onde liquide suivent le choix effectif de l’utilisateur. Le remplissage dure deux secondes à l’ouverture, les mises à jour 1,2 seconde, puis la traînée se dissipe pendant 0,8 seconde. La lecture se rejoue lors des retours dans Statistiques et s’arrête quand la vue disparaît. Le mode Réduire les animations conserve la valeur finale sans particules.
+
+L’épaisseur de l’anneau de l’horloge passe de 8 à 12 points. Les couleurs et l’orientation du dégradé suivent le compteur choisi sur l’accueil : dégradé linéaire secondaire vers accent pour les styles correspondants, dégradé angulaire partagé pour le style Anneau. Les autres usages de `ProgressRing` conservent leur rendu par défaut.
+
+- 131 tests Foundation réussis, incluant progression, dépassements, corrections et durée de vie des effets.
+- Trois tests UI réussis : sélection/relecture des quatre effets dans la galerie et dans l’horloge, cinq styles de compteur de l’accueil avec leurs périodes, allers-retours dans Statistiques et conservation des valeurs.
+- Enregistrement contrôlé visuellement : feu autour de 28,65–29,25 s, aurore autour de 44,22–44,82 s, eau autour de 59,35–59,95 s et étoiles autour de 72,36–72,96 s ; les vues de repos confirment la disparition des effets et le dégradé turquoise/vert de l’accueil.
+- Compilation finale Debug signée du build 16 pour les quatre cibles, signatures strictes et versions vérifiées. Les trois sources graphiques modifiées sont incluses dans les objets compilés du simulateur et de l’appareil. Les 492 textes et leurs traductions compilées sont vérifiés dans les sept langues des quatre bundles ; `git diff --check` réussit.
+
+Preuves : `/tmp/walkuno-clock-home-effects-ui.xcresult`, `/tmp/walkuno-clock-home-effects.mp4`, `/tmp/walkuno-clock-home-effects-contact.png`, `/tmp/walkuno-clock-effects-core.log` et `/tmp/walkuno-clock-device-16-final-build.log`.
+
+Mise à jour du build 16 installée et lancée sur l’iPhone iBoblastic, version 1.0.0 (16) confirmée par les métadonnées, sans désinstallation ni argument de démonstration. Preuves : `/tmp/walkuno-clock-16-iphone-{install,launch,app}.json`.
+
+La connexion Watch est rétablie pendant cette livraison : mise à jour directe installée avec succès sur l’Apple Watch de Damien, version 1.0.0 (16) confirmée. Le lancement est refusé uniquement parce que la montre est verrouillée (`FBSOpenApplicationErrorDomain 7`, `Locked`) ; son démarrage reste à effectuer après déverrouillage. Les deux appareils ont désormais le build 16 installé. Preuves : `/tmp/walkuno-clock-16-watch-{install,launch,app}.json`.
+
+
+## Énergie active toujours affichée — 5 novembre 2026
+
+L’option « Afficher l’énergie active » est retirée des réglages et des sept traductions. Explorer, les statistiques et les widgets affichent toujours l’énergie. L’ancienne préférence `showEnergy`, y compris sa valeur `false` dans les caches de widgets, est ignorée au décodage et n’est plus enregistrée ; les autres choix et mesures sont conservés. Les valeurs Santé absentes restent affichées par un tiret.
+
+- 133 tests Foundation réussis, dont deux tests de reprise d’anciennes préférences et de caches avec énergie masquée.
+- Compilation Debug pour simulateur réussie avec les quatre cibles iPhone, Watch et widgets.
+- Parité des 491 textes dans les sept langues et `git diff --check` vérifiés.
+
+Preuves : `/tmp/walkuno-energy-tests.log` et `/tmp/walkuno-energy-build.log`.
+
+
+## Retrait de l’effacement local — 5 novembre 2026
+
+Le bouton d’effacement, sa confirmation et les méthodes `AppModel.resetLocalData()` et `LocalStore.clear()` sont retirés. Les quatre textes de réinitialisation disparaissent des sept traductions. La politique version 1.2 décrit la conservation locale des préférences et le renouvellement du cache sans proposer de suppression dans les réglages ; la mention de bien-être est conservée sous `privacy.wellbeing`. Les CGU version 1.1 et la documentation sont alignées. Le test d’accueil ne termine plus en déclenchant un effacement ; ce scénario nécessite une installation neuve du simulateur.
+
+- Validation des 487 textes dans les sept langues réussie.
+- Analyse syntaxique Swift des réglages, du stockage et des tests d’interface réussie ; `git diff --check` sans erreur.
+- Compilation Debug tentée pour simulateur : bloquée par un changement concurrent hors de ce périmètre, `StepsClockCard.swift:16` utilisant `AppModel.stepClock` alors que cette propriété a été retirée lors de la refonte de l’activité quotidienne. Aucun test d’interface exécuté sur ce build incomplet.
+
+Preuve de compilation : `/tmp/walkuno-privacy-build.log`.
+
+
+## Horloge multimesure et objectifs quotidiens — 5 novembre 2026, version 17
+
+L’heure sous le titre de l’horloge est retirée. La sélection Pas / Distance / Énergie / Exercice / Étages pilote les totaux, les rayons, la référence habituelle, les unités et les anneaux. L’objectif est également annoté sur la courbe quotidienne pour chaque mesure. Les cinq objectifs sont modifiables dans Réglages, avec valeurs initiales de 5 km, 400 kcal, 30 minutes et 10 étages pour les nouvelles mesures ; l’historique des objectifs de pas est préservé.
+
+- 139 tests Foundation dans 14 suites réussis, incluant les objectifs, la migration des préférences, la compatibilité Watch, les cinq profils horaires, les valeurs fractionnaires et les absences de données.
+- Tests d’interface réussis pour le changement entre les cinq mesures, la saisie décimale française, le refus d’un objectif nul, la sélection des cinq objectifs et leur reprise dans l’horloge, les quatre effets d’animation et la navigation des réglages après modification de l’objectif.
+- L’éditeur s’ouvre en grand pour rendre les choix prédéfinis accessibles ; son titre utilise la mesure pour rester lisible. Le défilement du test de confidentialité utilise le formulaire plutôt que sa marge, qui bloquait le geste au niveau du curseur.
+- Captures des cinq horloges et des éditeurs extraites ; distance, énergie et éditeur de distance vérifiés visuellement. Heure d’actualisation absente, légendes en haut à droite et objectif à droite de l’état d’avancement.
+- 495 textes validés dans les sept langues, ressources compilées vérifiées dans les quatre composants et `git diff --check` sans erreur.
+- Compilation signée des quatre composants en 1.0.0 (17), signatures vérifiées. Version 17 installée et lancée sur l’iPhone et la montre ; métadonnées de version relues sur les deux appareils.
+
+Preuves : `/tmp/walkuno-activity-goals-core.log`, `/tmp/walkuno-activity-goals-ui-17.log` (effets), `/tmp/walkuno-activity-goals-ui-17-final.xcresult` (horloge et objectifs), `/tmp/walkuno-activity-goals-privacy-navigation-17.xcresult`, `/tmp/walkuno-activity-device-17-release-build.log`, `/tmp/walkuno-17-iphone-final-app.json`, `/tmp/walkuno-17-iphone-final-install.json`, `/tmp/walkuno-17-iphone-final-launch.json`, `/tmp/walkuno-17-watch-after.json`. Les premières exécutions ayant révélé les défauts de sélection et de défilement sont conservées ; les scénarios concernés ont ensuite réussi.
+
+
+## Livraison iPhone et GitHub — 5 novembre 2026, version 18
+
+La version 1.0.0 (18) est construite depuis un instantané figé du projet, afin que le commit corresponde au code installé malgré les modifications parallèles du dossier de travail. Il inclut l’horloge multimesure, les cinq objectifs réglables, la personnalisation des statistiques, les encouragements locaux, les accès Gratuit/Pro et la réorganisation des réglages avec les explications d’autorisation Santé.
+
+- 139 tests métier dans 14 suites réussis depuis l’instantané.
+- Quatre tests d’interface réussis : sélection des cinq mesures, modification des objectifs, contenu sous le bandeau et réglages/documents légaux.
+- 497 textes validés dans les sept langues et ressources compilées contrôlées dans les quatre composants.
+- Compilation signée des quatre composants en 1.0.0 (18), signatures vérifiées.
+- Installation de cet instantané sur l’iPhone, lancement sans argument de démonstration et version 18 relue via les métadonnées de l’appareil.
+- Index Git contrôlé fichier par fichier contre l’instantané ; les modifications arrivées après sa copie restent dans le dossier de travail.
+
+Preuves : `/tmp/walkuno-release-18-snapshot-core.log`, `/tmp/walkuno-release-18-snapshot-ui.xcresult`, `/tmp/walkuno-release-18-snapshot-device.log`, `/tmp/walkuno-release-18-snapshot/manifest.json`, `/tmp/walkuno-release-18-iphone-install.json`, `/tmp/walkuno-release-18-iphone-launch.json`, `/tmp/walkuno-release-18-iphone-app.json`.

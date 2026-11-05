@@ -508,28 +508,30 @@ L'abonnement Premium ne doit pas être obligatoire pour accéder au compteur.
 
 ## 7.1. Modèle freemium
 
-Walkuno doit proposer une application gratuite réellement utile, complétée par des options Premium.
+Répartition ajustée le 5 novembre 2026 : [tableau détaillé Gratuit / Pro](Offres.md).
+
+Walkuno doit proposer une application gratuite réellement utile, complétée par Walkuno Pro.
 
 ### Version gratuite
 
-- Compteur quotidien.
-- Synchronisation Apple Santé.
-- Objectif quotidien.
-- Statistiques essentielles.
-- Historique récent.
-- Un thème principal.
-- Widgets de base.
+- Compteur quotidien et synchronisation Apple Santé en lecture seule.
+- Objectif quotidien personnalisable et les cinq mesures disponibles.
+- Statistiques récentes et tendance sur sept jours.
+- Consultation détaillée des 31 derniers jours, aujourd’hui compris.
+- Records quotidiens, tous les trophées, séries et traversées sur l’historique disponible.
+- Palette Walkuno, compteurs Horizon et Anneau, effet Étoiles.
+- Application Apple Watch, objectifs et sept jours récents.
+- Partage des périodes récentes, records et étapes.
 
-### Version Premium
+### Version Pro
 
-- Historique et statistiques avancées.
-- Heatmap complète.
-- Tous les thèmes.
-- Personnalisation avancée des widgets.
-- Records et visualisations supplémentaires.
-- Bilans visuels enrichis.
+- Historique détaillé complet, calendrier complet et vue annuelle.
+- Tendances mensuelles/annuelles et historique par année.
+- Toutes les palettes, tous les compteurs et tous les effets.
+- Tous les widgets iPhone, widgets d’écran verrouillé et complications Apple Watch.
+- Records agrégés semaine/mois/année et partage annuel.
 
-Les fonctionnalités essentielles ne doivent pas être artificiellement dégradées pour inciter à l'achat.
+Les fonctionnalités essentielles ne doivent pas être artificiellement dégradées pour inciter à l'achat. Les trophées et les données Santé sont conservés lors d’un retour à l’offre gratuite. Les deux formules payantes donnent les mêmes fonctionnalités Pro.
 
 ## 7.2. Tarification indicative
 
@@ -583,7 +585,7 @@ L'application doit disposer :
 - D'une politique de confidentialité.
 - D'une explication des données lues.
 - D'un accès aux réglages d'autorisation.
-- D'une procédure d'effacement des données locales.
+- D'une explication du stockage local des préférences et du renouvellement des caches.
 - D'informations claires sur les achats Premium.
 
 ## 8.4. Conformité

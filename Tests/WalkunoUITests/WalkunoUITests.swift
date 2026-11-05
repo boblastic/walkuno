@@ -13,6 +13,49 @@ final class WalkunoUITests: XCTestCase {
         return app
     }
 
+    func testMotivationExplainsLocalAnalysisAndOnlyAppearsForToday() {
+        let app = launch(pro: false)
+        XCTAssertTrue(app.tabBars.buttons["Accueil"].waitForExistence(timeout: 10))
+        app.swipeUp()
+        let fact = app.staticTexts["motivation.fact"]
+        XCTAssertTrue(fact.waitForExistence(timeout: 10), app.debugDescription)
+        for _ in 0..<3 {
+            if fact.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(fact.label.contains("objectif"))
+        XCTAssertFalse(app.staticTexts["motivation.message"].label.contains("motivation."))
+        let why = app.buttons["motivation.why"]
+        XCTAssertTrue(why.exists)
+        why.tap()
+        let source = app.staticTexts["motivation.source"]
+        if !source.exists { app.swipeUp() }
+        XCTAssertTrue(source.waitForExistence(timeout: 3))
+        XCTAssertEqual(source.label, "Encouragement préparé par Walkuno.")
+        capture("Motivation-explication-locale")
+        for _ in 0..<3 {
+            if app.buttons["today.previous"].isHittable { break }
+            app.swipeDown()
+        }
+        app.buttons["today.previous"].tap()
+        XCTAssertTrue(app.buttons["today.current"].waitForExistence(timeout: 3))
+        XCTAssertFalse(fact.exists)
+        app.buttons["today.current"].tap()
+        app.swipeUp()
+        XCTAssertTrue(fact.waitForExistence(timeout: 3))
+    }
+
+    func testMotivationUsesTheSelectedLanguage() {
+        let app = launch(languages: ["en"], locale: "en_US", pro: false)
+        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 10))
+        app.swipeUp()
+        let fact = app.staticTexts["motivation.fact"]
+        XCTAssertTrue(fact.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(fact.label.contains("goal"))
+        XCTAssertFalse(app.staticTexts["motivation.message"].label.contains("motivation."))
+        capture("Motivation-English")
+    }
+
     func testAppLanguageCanOverridePhoneAndReturnToAutomatic() {
         let app = launch(pro: false)
         XCTAssertTrue(app.tabBars.buttons["Réglages"].waitForExistence(timeout: 10))
@@ -30,7 +73,7 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(picker.label.contains("English"))
         capture("Langue-choisie-Anglais")
 
-        app.tabBars.buttons["Today"].tap()
+        app.tabBars.buttons["Home"].tap()
         XCTAssertTrue(app.buttons["today.counter"].label.contains("steps toward a goal"))
         var format = Date.FormatStyle().locale(Locale(identifier: "en_FR")).weekday(.wide).day().month(.wide).year()
         format.capitalizationContext = .beginningOfSentence
@@ -51,13 +94,13 @@ final class WalkunoUITests: XCTestCase {
 
     func testSevenLanguagesWithRegionalVariants() {
         let cases: [(String, String, [String], String, String)] = [
-            ("en-GB", "en_GB", ["Today", "Statistics", "Explore", "Achievements", "Settings"], "Steps", "Done"),
-            ("fr-FR", "fr_FR", ["Aujourd’hui", "Statistiques", "Explorer", "Succès", "Réglages"], "Pas", "Terminé"),
-            ("de-DE", "de_DE", ["Heute", "Statistiken", "Entdecken", "Erfolge", "Einstellungen"], "Schritte", "Fertig"),
-            ("es-MX", "es_MX", ["Hoy", "Estadísticas", "Explorar", "Logros", "Ajustes"], "Pasos", "Listo"),
-            ("it-IT", "it_IT", ["Oggi", "Statistiche", "Esplora", "Traguardi", "Impostazioni"], "Passi", "Fine"),
-            ("pt-BR", "pt_BR", ["Hoje", "Estatísticas", "Explorar", "Conquistas", "Definições"], "Passos", "Concluir"),
-            ("ja-JP", "ja_JP", ["今日", "統計", "探索", "実績", "設定"], "歩数", "完了")
+            ("en-GB", "en_GB", ["Home", "Statistics", "Explore", "Achievements", "Settings"], "Steps", "Done"),
+            ("fr-FR", "fr_FR", ["Accueil", "Statistiques", "Explorer", "Succès", "Réglages"], "Pas", "Terminé"),
+            ("de-DE", "de_DE", ["Start", "Statistiken", "Entdecken", "Erfolge", "Einstellungen"], "Schritte", "Fertig"),
+            ("es-MX", "es_MX", ["Inicio", "Estadísticas", "Explorar", "Logros", "Ajustes"], "Pasos", "Listo"),
+            ("it-IT", "it_IT", ["Home", "Statistiche", "Esplora", "Traguardi", "Impostazioni"], "Passi", "Fine"),
+            ("pt-BR", "pt_BR", ["Início", "Estatísticas", "Explorar", "Conquistas", "Definições"], "Passos", "Concluir"),
+            ("ja-JP", "ja_JP", ["ホーム", "統計", "探索", "実績", "設定"], "歩数", "完了")
         ]
         for (language, locale, tabs, steps, done) in cases {
             XCTContext.runActivity(named: language) { _ in
@@ -79,7 +122,7 @@ final class WalkunoUITests: XCTestCase {
                 assertHeader(in: app)
                 app.tabBars.buttons[tabs[4]].tap()
                 app.buttons["settings.subscription"].tap()
-                XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+                XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
                 XCTAssertTrue(app.buttons[done].exists)
                 capture("Langue-\(language)-Premium")
                 app.buttons[done].firstMatch.tap()
@@ -92,14 +135,14 @@ final class WalkunoUITests: XCTestCase {
         for languages in [["nl-NL"], ["zh-Hans-CN"], ["ko-KR", "sv-SE"]] {
             let app = launch(languages: languages, locale: "nl_NL")
             XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
-            for title in ["Today", "Statistics", "Explore", "Achievements", "Settings"] {
+            for title in ["Home", "Statistics", "Explore", "Achievements", "Settings"] {
                 XCTAssertTrue(app.tabBars.buttons[title].exists, languages.joined(separator: ","))
             }
             capture("Repli-anglais-\(languages[0])")
             app.terminate()
         }
         let app = launch(languages: ["nl-NL", "de-DE", "fr-FR"], locale: "nl_NL")
-        XCTAssertTrue(app.tabBars.buttons["Heute"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.tabBars.buttons["Start"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.tabBars.buttons["Einstellungen"].exists)
         app.terminate()
     }
@@ -125,24 +168,29 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["statistics.metric.steps"].waitForExistence(timeout: 5))
         capture("02-Statistiques")
         trendPeriod(app).buttons["Année"].tap()
-        XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
         app.buttons["Terminé"].firstMatch.tap()
         app.tabBars.buttons["Succès"].tap()
         XCTAssertTrue(app.staticTexts["Les belles étapes"].waitForExistence(timeout: 5))
         capture("03-Succes")
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         XCTAssertTrue(app.buttons["today.counter"].exists)
     }
 
     func testGoalEditingAndReadOnlyPrivacy() {
         let app = launch()
         app.tabBars.buttons["Réglages"].tap()
-        app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Objectif quotidien")).firstMatch.tap()
+        app.buttons["settings.goal.steps"].tap()
         XCTAssertTrue(app.textFields["goal.input"].waitForExistence(timeout: 5))
         app.buttons["5 000"].firstMatch.tap()
         app.buttons["Enregistrer"].tap()
+        XCTAssertTrue(app.textFields["goal.input"].waitForNonExistence(timeout: 3))
         let privacy = app.buttons["settings.privacy"]
-        reveal(privacy, in: app)
+        for _ in 0..<12 {
+            if privacy.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(privacy.isHittable)
         privacy.tap()
         XCTAssertTrue(app.staticTexts["Vos pas vous appartiennent."].waitForExistence(timeout: 5))
         capture("04-Confidentialite")
@@ -159,14 +207,14 @@ final class WalkunoUITests: XCTestCase {
         }
         XCTAssertTrue(app.descendants(matching: .any)["app.streak"].firstMatch.waitForExistence(timeout: 10))
         showSettings(in: app)
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].exists)
+        XCTAssertTrue(app.buttons["settings.subscription"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.subscription"].exists)
         XCTAssertTrue(app.buttons["settings.subscription"].exists)
         XCTAssertFalse(app.buttons["app.settings"].exists)
-        capture("Reglages-Espace-local")
+        capture("Reglages-Objectifs")
 
         app.tabBars.buttons["Réglages"].tap()
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].exists)
+        XCTAssertTrue(app.buttons["settings.subscription"].exists)
         let animations = app.switches["settings.period.animations"]
         scrollTo(animations)
         XCTAssertEqual(animations.value as? String, "1")
@@ -175,6 +223,10 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertEqual((slider.value as? String)?.filter(\.isNumber), "70")
         capture("Reglages-Valeurs-par-defaut")
 
+        let localAccount = app.staticTexts["Votre espace Walkuno"]
+        scrollTo(localAccount)
+        XCTAssertTrue(localAccount.exists)
+        capture("Reglages-Espace-local")
         let privacy = app.buttons["settings.privacy"]
         scrollTo(privacy)
         capture("Reglages-Informations-legales")
@@ -212,7 +264,7 @@ final class WalkunoUITests: XCTestCase {
         let app = launch()
         XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
 
-        for tab in ["Aujourd’hui", "Statistiques", "Explorer", "Succès", "Réglages"] {
+        for tab in ["Accueil", "Statistiques", "Explorer", "Succès", "Réglages"] {
             app.tabBars.buttons[tab].tap()
             assertHeader(in: app)
             let initialY = app.descendants(matching: .any)["app.streak"].firstMatch.frame.minY
@@ -223,20 +275,20 @@ final class WalkunoUITests: XCTestCase {
             capture("Bandeau-\(tab)")
         }
 
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         showSettings(in: app)
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.subscription"].waitForExistence(timeout: 5))
         assertHeader(in: app)
         capture("Bandeau-Reglages")
         app.buttons["settings.subscription"].tap()
-        XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
         assertHeader(in: app)
         app.swipeUp()
         assertHeader(in: app)
         capture("Bandeau-Premium")
-        app.navigationBars["Walkuno Premium"].buttons["Terminé"].tap()
+        app.navigationBars["Walkuno Pro"].buttons["Terminé"].tap()
 
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         let counter = app.buttons["today.counter"]
         for _ in 0..<6 {
             if counter.isHittable { break }
@@ -252,11 +304,11 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
 
         for (tab, firstContent) in [
-            ("Aujourd’hui", app.staticTexts["Aperçu · données de démonstration"]),
-            ("Statistiques", app.staticTexts["insights.header.insights.day"]),
+            ("Accueil", app.staticTexts["Aperçu · données de démonstration"]),
+            ("Statistiques", app.staticTexts["insights.clock.title"]),
             ("Explorer", app.segmentedControls["statistics.explorer.period"]),
             ("Succès", app.staticTexts["Records personnels"]),
-            ("Réglages", app.staticTexts["Votre espace Walkuno"])
+            ("Réglages", app.buttons["settings.subscription"])
         ] {
             app.tabBars.buttons[tab].tap()
             assertBelowHeader(firstContent, in: app)
@@ -264,19 +316,19 @@ final class WalkunoUITests: XCTestCase {
         }
 
         XCTAssertFalse(app.buttons["app.settings"].exists)
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         showSettings(in: app)
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].waitForExistence(timeout: 5))
-        assertBelowHeader(app.staticTexts["Votre espace Walkuno"], in: app)
+        XCTAssertTrue(app.buttons["settings.subscription"].waitForExistence(timeout: 5))
+        assertBelowHeader(app.buttons["settings.subscription"], in: app)
 
         app.buttons["settings.subscription"].tap()
-        XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
         assertBelowHeader(app.staticTexts["Un peu plus loin.\nUn peu plus vous."], in: app)
         capture("Contenu-sous-bandeau-Premium")
-        app.navigationBars["Walkuno Premium"].buttons["Terminé"].tap()
+        app.navigationBars["Walkuno Pro"].buttons["Terminé"].tap()
 
         app.tabBars.buttons["Réglages"].tap()
-        let goal = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Objectif quotidien")).firstMatch
+        let goal = app.buttons["settings.goal.steps"]
         goal.tap()
         assertBelowHeader(app.textFields["goal.input"], in: app)
         capture("Contenu-sous-bandeau-Objectif")
@@ -302,15 +354,15 @@ final class WalkunoUITests: XCTestCase {
         capture("Bandeau-Reglages-defiles")
         XCTAssertFalse(app.buttons["app.settings"].exists)
         XCTAssertFalse(app.buttons["Terminé"].exists)
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         app.descendants(matching: .any)["app.streak"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["streak.detail"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["streak.encouragement"].exists)
         app.buttons["streak.close"].tap()
         XCTAssertTrue(app.buttons["streak.close"].waitForNonExistence(timeout: 5))
         showSettings(in: app)
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].exists)
+        XCTAssertTrue(app.buttons["settings.subscription"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.subscription"].exists)
         XCTAssertFalse(app.buttons["app.settings"].exists)
     }
 
@@ -334,9 +386,9 @@ final class WalkunoUITests: XCTestCase {
         assertHeader(in: app)
         capture("Verre-Transparent")
         XCTAssertFalse(app.buttons["app.settings"].exists)
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         showSettings(in: app)
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.subscription"].waitForExistence(timeout: 5))
         assertHeader(in: app)
         app.tabBars.buttons["Réglages"].tap()
         reveal(slider, in: app)
@@ -346,7 +398,7 @@ final class WalkunoUITests: XCTestCase {
 
     private func showSettings(in app: XCUIApplication) {
         app.tabBars.buttons["Réglages"].tap()
-        let title = app.staticTexts["Votre espace Walkuno"]
+        let title = app.buttons["settings.subscription"]
         for _ in 0..<12 {
             if title.isHittable { break }
             app.swipeDown()
@@ -389,14 +441,14 @@ final class WalkunoUITests: XCTestCase {
         let initialToggle = openDevelopmentSwitch()
         if initialToggle.value as? String == "1" { initialToggle.tap() }
         app.buttons["Terminé"].firstMatch.tap()
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         XCTAssertEqual(app.staticTexts["app.subscription"].label, "Gratuit")
         XCTAssertTrue(app.descendants(matching: .any)["app.brand"].exists)
         capture("09-Accueil-Gratuit")
 
         openDevelopmentSwitch().tap()
         app.buttons["Terminé"].firstMatch.tap()
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         XCTAssertEqual(app.staticTexts["app.subscription"].label, "Pro")
         capture("10-Accueil-Pro")
 
@@ -406,18 +458,18 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["app.subscription"].label, "Pro")
         app.tabBars.buttons["Statistiques"].tap()
         trendPeriod(app).buttons["Année"].tap()
-        XCTAssertFalse(app.navigationBars["Walkuno Premium"].exists)
+        XCTAssertFalse(app.navigationBars["Walkuno Pro"].exists)
         trendPeriod(app).buttons["7 jours"].tap()
 
         let enabledToggle = openDevelopmentSwitch()
         XCTAssertEqual(enabledToggle.value as? String, "1")
         enabledToggle.tap()
         app.buttons["Terminé"].firstMatch.tap()
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         XCTAssertEqual(app.staticTexts["app.subscription"].label, "Gratuit")
         app.tabBars.buttons["Statistiques"].tap()
         trendPeriod(app).buttons["Année"].tap()
-        XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
         app.buttons["Terminé"].firstMatch.tap()
     }
 
@@ -431,6 +483,150 @@ final class WalkunoUITests: XCTestCase {
         capture("05-Carte-de-partage")
         app.buttons["Terminé"].firstMatch.tap()
         XCTAssertTrue(app.buttons["today.counter"].exists)
+    }
+
+    func testStatisticsWidgetVisibilityAndOrderPersistAfterRelaunch() {
+        // Use real preferences: the demo deliberately never writes to disk.
+        let app = launch(demo: false, pro: false)
+        if app.buttons["Continuer"].waitForExistence(timeout: 5) {
+            for label in ["Continuer", "Continuer sans connecter Santé", "Continuer", "C’est parti"] {
+                let button = app.buttons[label]
+                for _ in 0..<8 {
+                    if button.isHittable { break }
+                    app.scrollViews.firstMatch.swipeUp()
+                }
+                XCTAssertTrue(button.isHittable)
+                button.tap()
+            }
+        }
+        XCTAssertTrue(app.tabBars.buttons["Statistiques"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["Statistiques"].tap()
+        let customize = app.buttons["statistics.widgets.customize"]
+        for _ in 0..<12 {
+            if customize.isHittable { break }
+            app.scrollViews["statistics.content"].swipeUp()
+        }
+        XCTAssertTrue(customize.isHittable, app.debugDescription)
+        customize.tap()
+        let clock = app.switches["statistics.widgets.toggle.clock"]
+        let day = app.switches["statistics.widgets.toggle.day"]
+        XCTAssertTrue(clock.waitForExistence(timeout: 5))
+        XCTAssertEqual(clock.value as? String, "1")
+        capture("Statistiques-personnalisation-avant")
+        // Drag the second row's native reorder handle above the first row.
+        let dayHandle = app.cells.containing(.switch, identifier: "statistics.widgets.toggle.day").buttons.firstMatch
+        let clockHandle = app.cells.containing(.switch, identifier: "statistics.widgets.toggle.clock").buttons.firstMatch
+        XCTAssertTrue(dayHandle.exists, app.debugDescription)
+        if day.frame.minY < clock.frame.minY {
+            clockHandle.press(forDuration: 0.8, thenDragTo: dayHandle)
+        }
+        dayHandle.press(forDuration: 0.8, thenDragTo: clockHandle)
+        XCTAssertLessThan(day.frame.minY, clock.frame.minY, app.debugDescription)
+        capture("Statistiques-personnalisation")
+        for widget in ["clock", "day", "trends", "history", "records"] {
+            let toggle = app.switches["statistics.widgets.toggle." + widget]
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)).tap()
+            XCTAssertEqual(toggle.value as? String, "0")
+        }
+        app.buttons["Terminé"].tap()
+        XCTAssertTrue(customize.isHittable)
+        XCTAssertFalse(app.staticTexts["insights.clock.title"].exists)
+        XCTAssertFalse(app.staticTexts["insights.header.insights.day"].exists)
+        XCTAssertFalse(app.buttons["insights.history.unlock"].exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Statistiques"].waitForExistence(timeout: 10))
+        app.tabBars.buttons["Statistiques"].tap()
+        XCTAssertTrue(customize.waitForExistence(timeout: 5))
+        customize.tap()
+        XCTAssertLessThan(day.frame.minY, clock.frame.minY)
+        for widget in ["clock", "day", "trends", "history", "records"] {
+            let toggle = app.switches["statistics.widgets.toggle." + widget]
+            XCTAssertEqual(toggle.value as? String, "0")
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)).tap()
+        }
+        capture("Statistiques-ordre-restaure")
+        // Restore the default layout so other UI tests remain independent.
+        app.cells.containing(.switch, identifier: "statistics.widgets.toggle.clock").buttons.firstMatch
+            .press(forDuration: 0.8, thenDragTo: app.cells.containing(.switch, identifier: "statistics.widgets.toggle.day").buttons.firstMatch)
+        XCTAssertLessThan(clock.frame.minY, day.frame.minY)
+        app.buttons["Terminé"].tap()
+        XCTAssertTrue(app.staticTexts["insights.clock.title"].waitForExistence(timeout: 5))
+    }
+
+    func testActivityClockTracksTheSelectedMetric() {
+        let app = launch(pro: false)
+        app.tabBars.buttons["Statistiques"].tap()
+        let title = app.staticTexts["insights.clock.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        assertBelowHeader(title, in: app)
+        let current = app.descendants(matching: .any)["insights.clock.today"].firstMatch
+        let usual = app.descendants(matching: .any)["insights.clock.usual"].firstMatch
+        let chart = app.descendants(matching: .any)["insights.clock.chart"].firstMatch
+        let cases = [("steps", "Pas", "6 432", "pas"), ("distance", "Distance", "4,6 km", "km"),
+                     ("energy", "Énergie active", "225 kcal", "kcal"), ("exerciseTime", "Temps d’exercice", "36 min", "min"),
+                     ("floors", "Étages", "9 étages", "étages")]
+        for (metric, name, expected, unit) in cases {
+            let button = app.buttons["statistics.metric." + metric]
+            if !button.isHittable { app.scrollViews["statistics.metric"].swipeLeft() }
+            button.tap()
+            XCTAssertEqual(title.value as? String, name)
+            XCTAssertTrue(current.label.contains(expected), current.label)
+            XCTAssertTrue(usual.waitForExistence(timeout: 5))
+            XCTAssertTrue((chart.value as? String)?.contains(unit) == true, chart.value as? String ?? "")
+            let goal = app.staticTexts["insights.clock.goal"]
+            XCTAssertTrue(goal.label.contains(unit), goal.label)
+            capture("Horloge-" + metric)
+        }
+        app.tabBars.buttons["Accueil"].tap()
+        app.tabBars.buttons["Statistiques"].tap()
+        XCTAssertEqual(title.value as? String, "Étages")
+        XCTAssertTrue(current.label.contains("9 étages"))
+    }
+
+    func testDailyActivityGoalsCanBeEditedAndUsedByTheClock() {
+        let app = launch(pro: false)
+        app.tabBars.buttons["Réglages"].tap()
+        capture("Objectifs-quotidiens")
+        let cases = [("distance", "8,0 km"), ("energy", "600 kcal"), ("exerciseTime", "45 min"),
+                     ("floors", "15 étages"), ("steps", "8 000")]
+        for (metric, preset) in cases {
+            let row = app.buttons["settings.goal." + metric]
+            reveal(row, in: app)
+            row.tap()
+            let field = app.textFields["goal.input"]
+            XCTAssertTrue(field.waitForExistence(timeout: 5))
+            if metric == "distance" {
+                field.tap()
+                let previous = field.value as? String ?? ""
+                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count) + "0")
+                XCTAssertFalse(app.buttons["goal.save"].isEnabled)
+                field.typeText(XCUIKeyboardKey.delete.rawValue + "7,5")
+                XCTAssertTrue(app.buttons["goal.save"].isEnabled)
+                app.buttons["goal.save"].tap()
+                XCTAssertTrue(row.label.contains("7,5 km"), row.label)
+                row.tap()
+                XCTAssertEqual(field.value as? String, "7,5")
+            }
+            capture("Editeur-objectif-" + metric)
+            let choice = app.buttons[preset].firstMatch
+            XCTAssertTrue(choice.isHittable)
+            choice.tap()
+            XCTAssertNotEqual(field.value as? String, "7,5")
+            app.buttons["goal.save"].tap()
+            XCTAssertTrue(field.waitForNonExistence(timeout: 3))
+            XCTAssertTrue(row.label.contains(preset), row.label)
+        }
+        app.tabBars.buttons["Statistiques"].tap()
+        for (metric, goal) in cases {
+            let button = app.buttons["statistics.metric." + metric]
+            if !button.isHittable { app.scrollViews["statistics.metric"].swipeLeft() }
+            if !button.isHittable { app.scrollViews["statistics.metric"].swipeRight() }
+            button.tap()
+            let label = app.staticTexts["insights.clock.goal"]
+            XCTAssertTrue(label.label.contains(goal), label.label)
+            capture("Objectif-horloge-" + metric)
+        }
     }
 
     func testStatisticsChartsShowValuesOnTapAndDrag() {
@@ -518,6 +714,100 @@ final class WalkunoUITests: XCTestCase {
         }
     }
 
+    func testYearHistoryOrientationAndPersistence() {
+        let app = launch(pro: true)
+        app.tabBars.buttons["Statistiques"].tap()
+        func revealHistory(_ element: XCUIElement) {
+            for _ in 0..<12 {
+                let top = app.buttons["statistics.metric.steps"].frame.maxY + 12
+                let bottom = app.tabBars.firstMatch.frame.minY - 8
+                if element.exists && element.isHittable && element.frame.minY >= top && element.frame.maxY <= bottom { return }
+                let down = element.exists && element.frame.minY < top
+                let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.45 : 0.72))
+                let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.72 : 0.45))
+                start.press(forDuration: 0.01, thenDragTo: end)
+            }
+            XCTAssertTrue(element.isHittable)
+        }
+        let orientation = app.buttons["insights.history.orientation"]
+        revealHistory(orientation)
+        if orientation.value as? String != "Affichage horizontal" { orientation.tap() }
+        XCTAssertEqual(orientation.value as? String, "Affichage horizontal")
+
+        let year = Calendar.current.component(.year, from: .now)
+        let current = app.descendants(matching: .any)["insights.history.year.\(year)"].firstMatch
+        let previous = app.descendants(matching: .any)["insights.history.year.\(year - 1)"].firstMatch
+        revealHistory(current)
+        XCTAssertTrue(previous.exists)
+        XCTAssertLessThan(previous.frame.minX, current.frame.minX)
+        XCTAssertEqual(previous.frame.minY, current.frame.minY, accuracy: 1)
+        let history = app.descendants(matching: .any)["insights.history.horizontal"].firstMatch
+        for offset in 0..<4 {
+            let column = app.descendants(matching: .any)["insights.history.year.\(year - offset)"].firstMatch
+            XCTAssertTrue(column.exists)
+            XCTAssertGreaterThanOrEqual(column.frame.minX, history.frame.minX - 1)
+            XCTAssertLessThanOrEqual(column.frame.maxX, history.frame.maxX + 1)
+        }
+        capture("Historique-Horizontal")
+        let selection = app.descendants(matching: .any)["insights.history.horizontal.selection"].firstMatch
+        let first = history.coordinate(withNormalizedOffset: CGVector(dx: 0.125, dy: 0.7))
+        first.tap()
+        let initialSelection = selection.label
+        XCTAssertTrue(initialSelection.contains(String(year - 3)))
+        first.press(forDuration: 0.6, thenDragTo: history.coordinate(withNormalizedOffset: CGVector(dx: 0.875, dy: 0.7)),
+                    withVelocity: .slow, thenHoldForDuration: 1.3)
+        let lastSelection = selection.label
+        XCTAssertTrue(lastSelection.contains(String(year)))
+        XCTAssertNotEqual(lastSelection, initialSelection)
+        capture("Historique-Valeur-Au-Toucher")
+        XCTAssertTrue(selection.waitForNonExistence(timeout: 3))
+
+        let mode = app.segmentedControls["insights.history.mode"]
+        revealHistory(mode)
+        mode.buttons["Totaux"].tap()
+        let totalValue = current.value as? String ?? ""
+        XCTAssertFalse(totalValue.isEmpty)
+        revealHistory(orientation)
+        orientation.tap()
+        XCTAssertEqual(orientation.value as? String, "Affichage vertical")
+        XCTAssertTrue(mode.buttons["Totaux"].isSelected)
+        // Both layouts retain the same year, metric value and status.
+        XCTAssertEqual(current.value as? String, totalValue)
+        revealHistory(current)
+        XCTAssertGreaterThan(previous.frame.minY, current.frame.minY)
+        XCTAssertEqual(previous.frame.minX, current.frame.minX, accuracy: 1)
+        capture("Historique-Vertical")
+
+        app.terminate()
+        app.launch()
+        app.tabBars.buttons["Statistiques"].tap()
+        revealHistory(orientation)
+        XCTAssertEqual(orientation.value as? String, "Affichage vertical")
+        orientation.tap()
+        XCTAssertEqual(orientation.value as? String, "Affichage horizontal")
+        app.buttons["statistics.metric.distance"].tap()
+        XCTAssertEqual(orientation.value as? String, "Affichage horizontal")
+        XCTAssertEqual(app.staticTexts["insights.header.insights.all.years"].value as? String, "Distance")
+
+        // Larger text forces sparse year labels while keeping every year's bar visible.
+        app.terminate()
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXXXL"]
+        app.launch()
+        app.tabBars.buttons["Statistiques"].tap()
+        revealHistory(current)
+        for offset in 0..<4 {
+            let column = app.descendants(matching: .any)["insights.history.year.\(year - offset)"].firstMatch
+            XCTAssertTrue(column.exists)
+            XCTAssertGreaterThanOrEqual(column.frame.minX, history.frame.minX - 1)
+            XCTAssertLessThanOrEqual(column.frame.maxX, history.frame.maxX + 1)
+        }
+        capture("Historique-Libelles-Espaces")
+        history.coordinate(withNormalizedOffset: CGVector(dx: 0.375, dy: 0.7)).tap()
+        XCTAssertTrue(selection.label.contains(String(year - 2)))
+        capture("Historique-Valeur-Annee-Sans-Libelle")
+        XCTAssertTrue(selection.waitForNonExistence(timeout: 3))
+    }
+
     func testStatisticsInsightsMetricsRecordsAndYearHistory() {
         let app = launch()
         app.tabBars.buttons["Réglages"].tap()
@@ -574,13 +864,13 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertFalse(app.segmentedControls["statistics.explorer.period"].exists)
         capture("16b-Statistiques-Menu-fixe")
         showSettings(in: app)
-        XCTAssertTrue(app.staticTexts["Votre espace Walkuno"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.subscription"].waitForExistence(timeout: 5))
 
         app.tabBars.buttons["Explorer"].tap()
         let explorer = app.segmentedControls["statistics.explorer.period"]
         XCTAssertTrue(explorer.waitForExistence(timeout: 5))
         explorer.buttons["Année"].tap()
-        XCTAssertFalse(app.navigationBars["Walkuno Premium"].exists)
+        XCTAssertFalse(app.navigationBars["Walkuno Pro"].exists)
 
         app.tabBars.buttons["Réglages"].tap()
         app.buttons["settings.subscription"].tap()
@@ -736,7 +1026,7 @@ final class WalkunoUITests: XCTestCase {
         scroll.swipeLeft()
         XCTAssertEqual(title.label, original)
         XCTAssertFalse(app.buttons["explorer.next"].isEnabled)
-        XCTAssertFalse(app.navigationBars["Walkuno Premium"].exists)
+        XCTAssertFalse(app.navigationBars["Walkuno Pro"].exists)
     }
 
     func testExplorerKeepsFreeHistoryAndYearGates() {
@@ -745,21 +1035,21 @@ final class WalkunoUITests: XCTestCase {
         let picker = app.segmentedControls["statistics.explorer.period"]
         XCTAssertTrue(picker.waitForExistence(timeout: 5))
         picker.buttons["Année"].tap()
-        XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
         app.buttons["Terminé"].firstMatch.tap()
         XCTAssertTrue(picker.buttons["Semaine"].isSelected)
         picker.buttons["Mois"].tap()
         for _ in 0..<2 {
-            if app.navigationBars["Walkuno Premium"].exists { break }
+            if app.navigationBars["Walkuno Pro"].exists { break }
             let title = app.staticTexts["explorer.period.title"]
             let before = title.label
             app.buttons["Période précédente"].tap()
             let landedOrLocked = NSPredicate { _, _ in
-                title.label != before || app.navigationBars["Walkuno Premium"].exists
+                title.label != before || app.navigationBars["Walkuno Pro"].exists
             }
             XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: landedOrLocked, object: nil)], timeout: 3), .completed)
         }
-        XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
         app.buttons["Terminé"].firstMatch.tap()
     }
 
@@ -881,7 +1171,7 @@ final class WalkunoUITests: XCTestCase {
             XCTAssertTrue(button.isSelected)
             XCTAssertFalse(app.navigationBars[tab].exists)
         }
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         assertHomePeriodPickerIsVisible(in: app)
     }
 
@@ -928,11 +1218,6 @@ final class WalkunoUITests: XCTestCase {
         reveal(transparency, in: app)
         XCTAssertEqual(transparency.value as? String, savedTransparency)
         capture("Verre-Preference-Conservee")
-        // Restore a fresh install state for a later test run.
-        app.swipeUp(); app.swipeUp()
-        app.buttons["Effacer les données locales"].tap()
-        app.buttons["Effacer et recommencer"].tap()
-        XCTAssertTrue(app.buttons["Continuer"].waitForExistence(timeout: 5))
     }
 
     func testHomeNavigationWithPeriodAnimationsEnabledAndDisabled() {
@@ -948,7 +1233,7 @@ final class WalkunoUITests: XCTestCase {
             }
             XCTAssertEqual(toggle.value as? String, enabled ? "1" : "0")
             capture(enabled ? "Animation-periodes-Activee" : "Animation-periodes-Desactivee")
-            app.tabBars.buttons["Aujourd’hui"].tap()
+            app.tabBars.buttons["Accueil"].tap()
             let picker = app.segmentedControls["today.period"]
             for period in ["Jour", "Semaine", "Mois", "Année"] {
                 picker.buttons[period].tap()
@@ -1131,7 +1416,7 @@ final class WalkunoUITests: XCTestCase {
         reveal(toggle, in: app)
         if toggle.value as? String == "1" { toggle.tap() }
         app.buttons["Terminé"].firstMatch.tap()
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
 
         let picker = app.segmentedControls["today.period"]
         picker.buttons["Année"].tap()
@@ -1180,7 +1465,7 @@ final class WalkunoUITests: XCTestCase {
         reveal(toggle, in: app)
         toggle.tap()
         app.buttons["Terminé"].firstMatch.tap()
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         XCTAssertTrue(picker.buttons["Jour"].isSelected)
     }
 
@@ -1322,7 +1607,7 @@ final class WalkunoUITests: XCTestCase {
             reveal(preview, in: app)
             XCTAssertEqual(preview.value as? String, name)
             capture("Compteur-Galerie-" + identifier)
-            app.tabBars.buttons["Aujourd’hui"].tap()
+            app.tabBars.buttons["Accueil"].tap()
             XCTAssertEqual(counter.value as? String, name)
             let initial = counter.label
             counter.swipeRight()
@@ -1363,8 +1648,16 @@ final class WalkunoUITests: XCTestCase {
             capture("Effet-Animation-" + effect)
             Thread.sleep(forTimeInterval: 2.2)
             capture("Effet-Repos-" + effect)
+            app.tabBars.buttons["Statistiques"].tap()
+            let clock = app.descendants(matching: .any)["insights.clock.chart"].firstMatch
+            XCTAssertTrue(clock.waitForExistence(timeout: 5))
+            Thread.sleep(forTimeInterval: 0.5)
+            capture("Horloge-Effet-Animation-" + effect)
+            Thread.sleep(forTimeInterval: 2.5)
+            capture("Horloge-Effet-Repos-" + effect)
+            app.tabBars.buttons["Réglages"].tap()
         }
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         XCTAssertTrue(app.buttons["today.counter"].isHittable)
     }
 
@@ -1425,7 +1718,7 @@ final class WalkunoUITests: XCTestCase {
             if systemAlert.exists { systemAlert.buttons.firstMatch.tap() }
             XCTAssertTrue(colour.isSelected)
             app.navigationBars.buttons.firstMatch.tap()
-            app.tabBars.buttons["Aujourd’hui"].tap()
+            app.tabBars.buttons["Accueil"].tap()
             XCTAssertEqual(app.buttons["today.counter"].value as? String, "Chemin")
             capture("Compteur-Couleur-" + theme)
             app.tabBars.buttons["Réglages"].tap()
@@ -1448,10 +1741,46 @@ final class WalkunoUITests: XCTestCase {
         let unlock = app.buttons["counter.unlock"]
         reveal(unlock, in: app)
         unlock.tap()
-        XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
         app.buttons["Terminé"].firstMatch.tap()
-        app.tabBars.buttons["Aujourd’hui"].tap()
+        app.tabBars.buttons["Accueil"].tap()
         XCTAssertEqual(app.buttons["today.counter"].value as? String, "Horizon")
+    }
+
+    func testFreeMonthlyAnalysisAndAnnualHistoryRequirePro() {
+        let app = launch(pro: false)
+        XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["Statistiques"].tap()
+        let periods = app.segmentedControls["insights.trend.period"]
+        reveal(periods, in: app)
+        periods.buttons["Mois"].tap()
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Tous les widgets iPhone et les complications Apple Watch"].exists)
+        app.buttons["Terminé"].firstMatch.tap()
+        XCTAssertTrue(periods.buttons["7 jours"].isSelected)
+        let unlock = app.buttons["insights.history.unlock"]
+        reveal(unlock, in: app)
+        unlock.tap()
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
+    }
+
+    func testFreeEffectPreviewOffersProAndKeepsTheCounterUsable() {
+        let app = launch(pro: false)
+        XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["Réglages"].tap()
+        reveal(app.buttons["settings.counter"], in: app)
+        app.buttons["settings.counter"].tap()
+        let fire = app.buttons["counter.effect.fire"]
+        reveal(fire, in: app)
+        fire.tap()
+        let unlock = app.buttons["counter.unlock"]
+        reveal(unlock, in: app)
+        unlock.tap()
+        XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
+        app.buttons["Terminé"].firstMatch.tap()
+        app.tabBars.buttons["Accueil"].tap()
+        XCTAssertTrue(app.buttons["today.counter"].isHittable)
+        XCTAssertEqual(app.staticTexts["app.subscription"].firstMatch.label, "Gratuit")
     }
 
     func testCounterRemainsReadableWithAccessibilityText() {

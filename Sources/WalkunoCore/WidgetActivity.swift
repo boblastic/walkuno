@@ -111,9 +111,8 @@ public enum WidgetNumbers {
 /// Only effective, already-authorized display choices are shared with the extension.
 public struct WidgetDisplayPreferences: Codable, Equatable, Sendable {
     public var counter: CounterStyle
-    public var showEnergy: Bool
-    public init(counter: CounterStyle = .horizon, showEnergy: Bool = true) {
-        self.counter = counter; self.showEnergy = showEnergy
+    public init(counter: CounterStyle = .horizon) {
+        self.counter = counter
     }
 }
 

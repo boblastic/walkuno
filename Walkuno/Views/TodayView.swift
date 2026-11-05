@@ -24,7 +24,6 @@ struct TodayView: View {
     @State private var loadingHours = false
     @State private var hoursError = false
     @State private var previousHoursError = false
-    @State private var isConnectingHealth = false
 
     private var accent: Color { model.effectiveTheme.accent }
     private var ink: Color { model.effectiveTheme.tint(for: scheme) }
@@ -138,6 +137,9 @@ struct TodayView: View {
                         })
                 }
 
+                if period == .day && calendar.isDateInToday(anchor) {
+                    MotivationCard()
+                }
                 if activity.summary.total == nil && !model.isLoading { HealthEmptyView() }
                 if model.isLoading && activity.summary.total == nil {
                     HStack { ProgressView(); Text("health.refreshing").font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity)
@@ -153,28 +155,6 @@ struct TodayView: View {
                         .sensoryFeedback(.success, trigger: model.celebration)
                 }
                 if period == .day { hourlyCard } else { periodSummary }
-                if isConnectingHealth || (activity.summary.total != nil && (activity.total(for: .exerciseTime) == nil || activity.total(for: .floors) == nil)) {
-                    Button {
-                        isConnectingHealth = true
-                        Task {
-                            defer { isConnectingHealth = false }
-                            await model.connectHealth()
-                        }
-                    } label: {
-                        Label("today.health.metrics", systemImage: "heart.text.clipboard").font(.caption)
-                            .padding(.horizontal, 28)
-                            .frame(maxWidth: .infinity)
-                            .overlay(alignment: .trailing) {
-                                ProgressView().controlSize(.small)
-                                    .opacity(isConnectingHealth || model.isLoading ? 1 : 0)
-                                    .accessibilityLabel(Text("health.refreshing"))
-                                    .accessibilityHidden(!isConnectingHealth && !model.isLoading)
-                            }
-                    }
-                    .tint(ink)
-                    .disabled(isConnectingHealth || model.isLoading)
-                    .accessibilityIdentifier("today.health.metrics")
-                }
                 HStack(spacing: 12) {
                     Button { showGoal = true } label: { Label("goal.edit", systemImage: "scope").frame(maxWidth: .infinity) }
                     Button { showShare = true } label: { Label("share.title", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity) }
@@ -233,7 +213,7 @@ struct TodayView: View {
     private var counter: some View {
         TodayCounterCarousel(
             current: AnimatedStepCounter(steps: activity.summary.total, goal: activity.goal, title: title,
-                                          theme: model.effectiveTheme, style: model.effectiveCounter, effect: model.preferences.counterEffect,
+                                          theme: model.effectiveTheme, style: model.effectiveCounter, effect: model.effectiveEffect,
                                           distance: distanceText(for: activity), replay: counterReplay,
                                           animateEntry: model.preferences.animatePeriodChanges || replayCounterOnEntry,
                                           animateUpdates: model.preferences.animatePeriodChanges || (period == .day && calendar.isDateInToday(anchor)))
@@ -274,7 +254,7 @@ struct TodayView: View {
                                     ? 0 : Double(page.activity.summary.total ?? 0),
                                   hasSteps: page.activity.summary.total != nil, goal: page.activity.goal,
                                   title: title(for: page.anchor, activity: page.activity), theme: model.effectiveTheme,
-                                  style: model.effectiveCounter, effect: model.preferences.counterEffect,
+                                  style: model.effectiveCounter, effect: model.effectiveEffect,
                                   distance: distanceText(for: page.activity))
                     .frame(height: counterHeight)
             } else { Color.clear.frame(height: counterHeight) }

@@ -11,6 +11,33 @@ enum LocalStore {
         return directory?.appendingPathComponent("activity-v1.json")
     }
 
+    private static var proAccessURL: URL? {
+        // A development override must never survive into an installed Release build.
+        #if DEBUG
+        let filename = "pro-access-debug-v1.json"
+        #else
+        let filename = "pro-access-v1.json"
+        #endif
+        return cacheURL?.deletingLastPathComponent().appendingPathComponent(filename)
+    }
+
+    static func proAccess() -> ProAccess {
+        guard let url = proAccessURL,
+              let data = try? Data(contentsOf: url), data.count < 4096,
+              let access = try? JSONDecoder().decode(ProAccess.self, from: data) else { return .init() }
+        return access
+    }
+
+    static func save(_ access: ProAccess) throws {
+        guard var url = proAccessURL else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        try JSONEncoder().encode(access).write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try url.setResourceValues(values)
+    }
+
     static func preferences() -> Preferences {
         guard let data = UserDefaults.standard.data(forKey: preferencesKey),
               let preferences = try? JSONDecoder().decode(Preferences.self, from: data) else { return .init() }
@@ -18,6 +45,8 @@ enum LocalStore {
     }
 
     static func save(_ preferences: Preferences) {
+        // Persistent UserDefaults are included in device backups (including iCloud).
+        // Keep user choices here, separate from the disposable, backup-excluded widget cache.
         guard let data = try? JSONEncoder().encode(preferences) else { return }
         UserDefaults.standard.set(data, forKey: preferencesKey)
     }
@@ -33,12 +62,5 @@ enum LocalStore {
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         try url.setResourceValues(values)
-    }
-
-    static func clear() throws {
-        if let url = cacheURL, FileManager.default.fileExists(atPath: url.path) {
-            try FileManager.default.removeItem(at: url)
-        }
-        UserDefaults.standard.removeObject(forKey: preferencesKey)
     }
 }

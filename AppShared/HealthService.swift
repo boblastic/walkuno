@@ -1,6 +1,11 @@
 import Foundation
 import HealthKit
 
+enum HealthAuthorizationRequestOutcome {
+    case requested
+    case alreadyRequested
+}
+
 /// Read-only HealthKit adapter. Statistics queries let HealthKit reconcile overlapping sources.
 /// Read permission cannot be inferred from authorizationStatus(for:), which describes writing.
 @MainActor
@@ -12,10 +17,14 @@ final class HealthService {
     private let identifiers: [HKQuantityTypeIdentifier] = [.stepCount, .distanceWalkingRunning, .activeEnergyBurned, .appleExerciseTime, .flightsClimbed]
     var isAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
 
-    func authorize() async throws {
+    @discardableResult
+    func authorize() async throws -> HealthAuthorizationRequestOutcome {
         guard isAvailable else { throw HealthFailure.unavailable }
         let types = Set(identifiers.map { HKQuantityType($0) })
+        // This status describes whether iOS will prompt, never whether read access was granted.
+        let status = try await store.statusForAuthorizationRequest(toShare: [], read: types)
         try await store.requestAuthorization(toShare: [], read: types)
+        return status == .unnecessary ? .alreadyRequested : .requested
     }
 
     func observe(onChange: @escaping @MainActor @Sendable () async -> Void) {

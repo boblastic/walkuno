@@ -6,7 +6,7 @@ Cette version est un point de départ natif exécutable, pas une certification d
 
 `Tests/WalkunoCoreTests` : huit tests Foundation sur absence/zéro, moyenne, historique des objectifs, conflits Watch, séries, changement d’heure, cache jour/fuseau et jours futurs.
 
-`Tests/WalkunoUITests` : quatre tests couvrant navigation, ouverture/fermeture de Premium, retour au compteur, édition d’objectif, politique de confidentialité, partage, accueil sans autoriser Santé et effacement local. Les parcours remplis utilisent uniquement les données synthétiques de `--demo`, sans écriture dans Santé ou le cache partagé. Le parcours d’accueil est testé hors mode démonstration. Les captures sont jointes au résultat Xcode.
+`Tests/WalkunoUITests` : quatre tests couvrant navigation, ouverture/fermeture de Premium, retour au compteur, édition d’objectif, politique de confidentialité, partage, accueil sans autoriser Santé et conservation des réglages au relancement. Les parcours remplis utilisent uniquement les données synthétiques de `--demo`, sans écriture dans Santé ou le cache partagé. Le parcours d’accueil est testé hors mode démonstration sur une installation neuve du simulateur, à réinstaller avant de répéter ce scénario. Les captures sont jointes au résultat Xcode.
 
 ## À vérifier sur iPhone et Watch physiques
 
@@ -23,7 +23,6 @@ Cette version est un point de départ natif exécutable, pas une certification d
 | Minuit, DST, voyage | Nouveau compteur et nouvelle clé de cache, pas de valeur de la veille |
 | Objectif modifié | Objectifs antérieurs inchangés |
 | Watch hors ligne puis reconnectée | Objectif, palette, unité, style et effet récupérés depuis l’iPhone ; aucun écran d’édition sur la montre |
-| Effacement pendant une requête | Aucun retour tardif des anciennes données |
 | Widgets et complications | Valeur datée, protection au verrouillage, invalidation après minuit |
 | Complications circulaires | Distance et étages sans anneau ; pas et distance + pas abrégés dès 10 000 (`10.1K`), nombres complets avec VoiceOver, vérifier aussi 100 000 pas et les grands pourcentages |
 | Progression à la même heure | À 14 h 37, comparer aux mesures d’hier jusqu’à 14 h 37, y compris lors du changement d’heure ; référence nulle/absente = « — » |
@@ -52,3 +51,17 @@ Utiliser un jeu de données connu et comparer les **mêmes intervalles calendair
 - L’historique au-delà de la portée autorisée par Apple ne peut pas être reconstitué. Les records indiquent leur périmètre accessible.
 
 Ne pas considérer les préparatifs de publication comme une autorisation de téléverser ou publier : aucune opération App Store distante n’a été effectuée.
+
+
+## Répartition Gratuit / Pro
+
+Référence : [Offres](Offres.md).
+
+- Sans achat, vérifier compteur et objectifs, les cinq mesures, les 31 jours, la tendance sur sept jours, tous les trophées et l’app Watch.
+- Vérifier l’ouverture de l’offre Pro pour les tendances mensuelles/annuelles et l’historique annuel. Les aperçus des styles et effets Pro ne doivent pas remplacer les choix gratuits enregistrés.
+- Avec Pro, « Toutes périodes confondues » présente toutes les années enregistrées côte à côte par défaut, de la plus ancienne à la plus récente, sans défilement horizontal. Sur un historique dense, vérifier que toutes les barres sont présentes, que les libellés restent espacés et que la première et la dernière année sont nommées. Le bouton de disposition permet de retrouver les lignes empilées, de la plus récente à la plus ancienne, avec l’année dans la barre et la valeur à droite, puis de revenir à l’horizontal. Vérifier Totaux/Moyennes, les cinq mesures, les valeurs et les mentions de meilleure année et d’année en cours dans les deux vues. Le choix de disposition doit survivre au relancement. En horizontal, toucher les colonnes puis maintenir et glisser : vérifier année, valeur et statut, y compris quand le libellé annuel est masqué. Le défilement vertical doit rester disponible avant reconnaissance de l’appui ; les changements de mesure ou de calcul effacent la bulle.
+- Ajouter chaque famille de widget iPhone, chaque format d’écran verrouillé et chaque complication Watch : sans Pro, seul l’état verrouillé est visible, sans valeur Santé ; sur iPhone, le toucher ouvre Walkuno Pro.
+- Acheter/restaurer Pro : les widgets se déverrouillent et les droits sont transmis à la Watch, même si Santé n’est pas connecté. L’app Watch reste gratuite.
+- Simuler expiration et révocation avec StoreKit ; vérifier retour à l’apparence gratuite, accès aux 31 jours et verrouillage des widgets. Tester la réception différée sur une Watch déconnectée/reconnectée. WidgetKit peut différer une actualisation.
+- Réactiver Pro : retrouver les préférences payantes mémorisées. Les trophées et les données Santé restent disponibles après expiration.
+- Vérifier les titres produits Walkuno Pro dans App Store Connect dans les sept langues : les noms des produits réels proviennent d’Apple, et ne sont pas modifiés par les traductions embarquées.

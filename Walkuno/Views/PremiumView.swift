@@ -18,6 +18,9 @@ struct PremiumView: View {
                         Label("premium.feature.themes", systemImage: "paintpalette")
                         Label("premium.feature.counter", systemImage: "circle.dotted.circle")
                         Label("premium.feature.records", systemImage: "trophy")
+                        Label("premium.feature.analysis", systemImage: "chart.bar.xaxis")
+                        Label("premium.feature.widgets", systemImage: "square.grid.2x2")
+                        Label("premium.feature.effects", systemImage: "sparkles")
                     }.font(.subheadline.weight(.medium))
                     #if DEBUG
                     WalkunoCard {

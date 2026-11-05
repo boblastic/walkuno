@@ -8,6 +8,14 @@ import WatchKit
 final class WatchModel {
     static let shared = WatchModel()
     var preferences = LocalStore.preferences()
+    private(set) var proAccess = LocalStore.proAccess()
+    var effectiveTheme: WalkunoTheme { proAccess.isActive() ? preferences.theme : .mint }
+    var effectiveCounter: CounterStyle {
+        preferences.counterStyle.requiresPremium && !proAccess.isActive() ? .horizon : preferences.counterStyle
+    }
+    var effectiveEffect: CounterEffect {
+        preferences.counterEffect.requiresPremium && !proAccess.isActive() ? .stars : preferences.counterEffect
+    }
     var today = ActivityDay(date: Calendar.current.startOfDay(for: .now))
     var week: [ActivityDay] = []
     var updatedAt: Date?
@@ -36,7 +44,14 @@ final class WatchModel {
         }
         bridge.onReceive = { [weak self] settings in
             guard let self else { return }
+            if let access = settings.proAccess, access.verifiedAt >= self.proAccess.verifiedAt {
+                self.proAccess = access
+                do { try LocalStore.save(access) }
+                catch { self.message = L("cache.error") }
+                WidgetCenter.shared.reloadAllTimelines()
+            }
             self.preferences.goals.merge(settings.goals)
+            if let goals = settings.activityGoals { self.preferences.activityGoals = goals }
             self.preferences.theme = settings.theme
             self.preferences.unit = settings.unit
             if let style = settings.counterStyle { self.preferences.counterStyle = style }
@@ -103,8 +118,8 @@ final class WatchModel {
         LocalStore.save(preferences)
         if let updatedAt {
             let snapshot = WidgetSnapshot(updatedAt: updatedAt, today: current, goal: goal, week: week,
-                                          theme: preferences.theme, unit: preferences.unit, activity: widgetActivity,
-                                          display: .init(counter: preferences.counterStyle, showEnergy: preferences.showEnergy))
+                                          theme: effectiveTheme, unit: preferences.unit, activity: widgetActivity,
+                                          display: .init(counter: effectiveCounter))
             do { try LocalStore.save(snapshot); WidgetCenter.shared.reloadAllTimelines() }
             catch { message = L("cache.error") }
         }
@@ -123,7 +138,7 @@ struct WalkunoWatchApp: App {
     @Environment(\.scenePhase) private var scenePhase
     var body: some Scene {
         WindowGroup {
-            WatchRootView().environment(model).tint(model.preferences.theme.accent)
+            WatchRootView().environment(model).tint(model.effectiveTheme.accent)
                 .preferredColorScheme(.dark)
                 .task { await model.start() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await model.refresh() } } }
@@ -136,28 +151,44 @@ struct WalkunoWatchApp: App {
 /// One native scroll view gives the Digital Crown continuous control over the dashboard.
 struct WatchRootView: View {
     @Environment(WatchModel.self) private var model
+    @ScaledMetric(relativeTo: .headline) private var brandSize = 24
 
     var body: some View {
         GeometryReader { geometry in
             let width = max(1, geometry.size.width - 16)
+            // Keep the identity and the entire counter visible together on the first screen.
+            let counterSize = min(width, max(1, geometry.size.height - brandSize - 20))
             ScrollView {
                 VStack(spacing: 16) {
+                    HStack(spacing: 8) {
+                        BrandMark(size: brandSize, theme: model.effectiveTheme)
+                        Text("Walkuno")
+                            .font(.system(.headline, design: .rounded, weight: .bold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Walkuno")
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("watch.brand")
+
                     AnimatedStepCounter(steps: model.current.steps, goal: model.goal, title: L("tab.today"),
-                                        theme: model.preferences.theme, style: model.preferences.counterStyle,
-                                        effect: model.preferences.counterEffect,
+                                        theme: model.effectiveTheme, style: model.effectiveCounter,
+                                        effect: model.effectiveEffect,
                                         distance: distanceText(model.current.meters, unit: model.preferences.unit),
                                         replay: model.current.date.description, animateEntry: true, animateUpdates: true)
-                        // Reuse the phone's five faces at a consistent, watch-sized scale.
+                        // Reuse the phone's five faces, fitted below the header on each watch size.
                         .frame(width: 260, height: 260)
-                        .scaleEffect(width / 260)
-                        .frame(width: width, height: width)
+                        .scaleEffect(counterSize / 260)
+                        .frame(width: width, height: counterSize)
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(Text("today.counter.accessibility \(stepsText(model.current.steps)) \(model.goal.formatted())"))
-                        .accessibilityValue(Text(L(model.preferences.counterStyle.titleKey)) + Text(", " + distanceText(model.current.meters, unit: model.preferences.unit)))
+                        .accessibilityValue(Text(L(model.effectiveCounter.titleKey)) + Text(", " + distanceText(model.current.meters, unit: model.preferences.unit)))
                         .accessibilityIdentifier("watch.counter")
-                    WatchTrendChart(days: model.week + [model.current], goal: model.goal, accent: model.preferences.theme.accent)
+                    WatchTrendChart(days: model.week + [model.current], goal: model.goal, accent: model.effectiveTheme.accent)
                     WatchRhythmChart(date: model.current.date, hours: model.activity?.todayHours ?? [],
-                                     previousHours: model.activity?.yesterdayHours ?? [], accent: model.preferences.theme.accent)
+                                     previousHours: model.activity?.yesterdayHours ?? [], accent: model.effectiveTheme.accent)
                     if model.current.steps == nil {
                         Text(L(model.preferences.healthRequested ? "health.empty.connected.body" : "health.empty.body"))
                             .font(.caption2).foregroundStyle(.secondary)
@@ -172,7 +203,8 @@ struct WatchRootView: View {
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 }
-                .padding(.horizontal, 8).padding(.bottom, 12)
+                .frame(width: width, alignment: .center)
+                .padding(.horizontal, 8).padding(.top, 4).padding(.bottom, 12)
             }
             .accessibilityIdentifier("watch.dashboard")
         }

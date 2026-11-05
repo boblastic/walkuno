@@ -6,6 +6,7 @@
 "common.continue" = "続ける";
 "common.days" = "日";
 "demo.banner" = "プレビュー · デモデータ";
+"tab.home" = "ホーム";
 "tab.today" = "今日";
 "tab.statistics" = "統計";
 "tab.explorer" = "探索";
@@ -41,6 +42,8 @@
 "health.empty.body" = "この日の測定値はありません。データがない、まだ同期されていない、またはアクセスが許可されていない可能性があります。";
 "health.empty.connected.body" = "この期間の測定値はありません。Appleヘルスケアのデータがないか、同期を待っている可能性があります。";
 "health.connect" = "Appleヘルスケアに接続";
+"health.authorize" = "Appleヘルスケアへのアクセスを許可";
+"health.authorization.note" = "Walkunoは歩数、ウォーキングとランニングの距離、アクティブエネルギー、エクササイズ時間、上った階数の読み取りをまとめてリクエストします。ヘルスケアへの書き込みは行いません。すでに回答した場合は、ヘルスケア → プロフィール → アプリとサービス → Walkuno で選択を変更してください。";
 "health.permissions.path" = "アクセス権の確認：ヘルスケア → プロフィール → アプリとサービス → Walkuno。";
 "cache.error" = "ウィジェットのキャッシュを更新できませんでした。";
 "chart.no.data" = "データがありません";
@@ -80,7 +83,7 @@
 "achievements.total" = "取得できたすべての歩数";
 "achievements.week" = "最高の週";
 "achievements.month" = "最高の月";
-"achievements.advanced" = "Premiumの記録をチェック";
+"achievements.advanced" = "Proの記録をチェック";
 "achievements.scope" = "アクセス可能なヘルスケアの履歴に基づきます。連続達成は保存済みの目標で判定されます。最初の変更より前の基準目標は8,000歩です。";
 "badge.5000" = "最初の節目\n5,000歩";
 "badge.10000" = "大きな一歩\n10,000歩";
@@ -90,7 +93,6 @@
 "badge.pending" = "自分のペースで";
 "settings.daily" = "毎日の設定";
 "settings.unit" = "距離の単位";
-"settings.energy" = "アクティブエネルギーを表示";
 "settings.appearance" = "自分らしい見た目に";
 "settings.glass.transparency" = "ガラスの透明度";
 "settings.glass.opaque" = "不透明";
@@ -129,19 +131,15 @@
 "theme.palette.description" = "リング、グラフ、ウィジェットの色を選びましょう。";
 "theme.selected" = "選択中の色";
 "theme.available" = "利用可能";
-"theme.premium.note" = "「Walkuno」の配色は無料で使えます。Premiumでは、さらに8色から選べます。";
-"reset.title" = "ローカルデータを消去";
-"reset.confirm" = "消去してやり直す";
-"reset.body" = "このデバイスの設定、目標、キャッシュを消去します。Appleヘルスケアのデータ、購入、ほかのデバイスの設定は保持されます。Walkunoが再びヘルスケアを読み取るには、明示的に再接続する必要があります。";
-"reset.error" = "キャッシュを消去できませんでした。デバイスのロックを解除して、もう一度お試しください。";
+"theme.premium.note" = "「Walkuno」の配色は無料で使えます。Proでは、さらに8色から選べます。";
 "privacy.title" = "プライバシーポリシー";
 "privacy.headline" = "あなたの歩みは、あなたのもの。";
 "privacy.body" = "Orbelioが提供するWalkunoは、アカウントや追跡サーバーなしで動作します。Appleヘルスケアで許可された歩数、ウォーキングとランニングの距離、アクティブエネルギー、エクササイズ時間、上った階数のみを読み取ります。ヘルスケアに測定値を書き込んだり、健康データをOrbelio、分析サービス、広告ネットワークに送信したりすることはありません。広告やトラッカーはありません。";
 "privacy.permissions" = "アクセス権はAppleが管理します。ヘルスケア → プロフィール → アプリとサービス → Walkunoで変更できます。測定値がない場合でも、アクセスを拒否したかどうかをWalkunoが判断することはできません。";
 "privacy.widgets" = "全履歴はヘルスケアに残り、グラフはメモリ内で計算されます。上限のあるローカルキャッシュには直近7日の日別合計、時間別プロフィール、今月と先月の日別集計、Proでは2年分の月別集計を保存します。バックアップ対象外で、端末ロック中は保護されます。ウィジェットの測定値は機密情報として扱います。iPhoneとWatch間では目標と表示設定のみを送信し、健康データは送信しません。";
 "privacy.purchases" = "購入はAppleが処理します。WalkunoはStoreKitで利用権を確認し、支払い情報を受け取ることはありません。設定と目標はローカルに保存されます。Walkunoは健康データをiCloudに同期しません。";
-"privacy.reset" = "「設定」でローカルデータを消去できます。Appleヘルスケアの内容、サブスクリプション、Appleが管理するアクセス権は変更されません。Walkunoはウェルネスアプリであり、医療診断機能はありません。";
-"privacy.editor" = "Orbelio · 2026年11月5日制定 · バージョン1.1";
+"privacy.wellbeing" = "Walkunoはウェルネスアプリであり、医療診断機能はありません。";
+"privacy.editor" = "Orbelio · 2026年11月5日制定 · バージョン1.2";
 "onboarding.0.title" = "一歩一歩が、\n力になる。";
 "onboarding.0.body" = "アクティビティをひと目で。美しい歩数計で、自分のペースで前進しよう。データはあなたの手元に。";
 "onboarding.1.title" = "ひとつの接続で、\nすべての歩みを。";
@@ -154,12 +152,12 @@
 "onboarding.permission.distance" = "距離 · 歩いた道のり";
 "onboarding.permission.energy" = "アクティブエネルギー · 任意の追加項目";
 "onboarding.readonly" = "読み取り専用。Walkunoが健康データをデバイス外に送信することはありません。";
-"onboarding.themes.note" = "Premiumでは、さらに多くのパレットやスタイルを利用できます。";
+"onboarding.themes.note" = "Proでは、さらに多くのパレットやスタイルを利用できます。";
 "onboarding.start" = "歩き始めよう";
 "onboarding.later" = "ヘルスケアに接続せずに続ける";
 "onboarding.footer" = "アカウント不要。広告なし。あなたのために。";
-"premium.title" = "Walkuno Premium";
-"premium.active" = "Premiumは有効です";
+"premium.title" = "Walkuno Pro";
+"premium.active" = "Proは有効です";
 "subscription.free" = "無料";
 "subscription.pro" = "Pro";
 "premium.development.title" = "開発";
@@ -167,24 +165,24 @@
 "premium.development.note" = "購入せずにProの利用をシミュレートし、次回起動時も選択を保持します。開発時のみ利用できます。この設定をオフにしても、実際の購入は有効なままです。";
 "premium.headline" = "もう少し先へ。\nもっと自分らしく。";
 "premium.body" = "シンプルさはそのままに、進歩をもっと詳しく。";
-"premium.settings.subtitle" = "すべての履歴。すべてのカラー。";
+"premium.settings.subtitle" = "すべての履歴、ウィジェット、スタイル。";
 "premium.feature.history" = "全履歴、年間表示、カレンダー";
 "premium.feature.themes" = "鮮やかな9つのカラーパレット";
-"premium.feature.counter" = "4つの追加カウンタースタイルとウィジェットテーマ";
+"premium.feature.counter" = "3種類の追加カウンタースタイル";
 "premium.feature.records" = "週間・月間の記録";
-"premium.history.cta" = "Premiumですべての履歴を見る";
+"premium.history.cta" = "Proですべての履歴を見る";
 "premium.annual.condition" = "自動更新の年間サブスクリプション";
 "premium.lifetime.condition" = "1回の購入 · 無期限アクセス";
 "premium.renewal" = "サブスクリプションの料金はApple Accountに請求され、期間終了の24時間前までに解約しない限り自動更新されます。App Storeのアカウント設定で管理・解約できます。無期限アクセスの購入はサブスクリプションではありません。";
 "premium.terms" = "利用規約";
-"premium.free.note" = "歩数計、目標、最近の統計、基本ウィジェットは引き続き無料です。";
+"premium.free.note" = "カウンター、目標、最近の統計、実績、Apple Watchアプリは引き続き無料です。";
 "purchase.title" = "購入";
 "purchase.unavailable" = "現在、App Storeの購入プランを取得できません。歩数計は引き続き無料で使えます。";
-"purchase.unverified" = "取引を確認できませんでした。Premiumの利用権は付与されていません。";
+"purchase.unverified" = "取引を確認できませんでした。Proの利用権は付与されていません。";
 "purchase.pending" = "購入は承認待ちです。";
 "purchase.failed" = "操作を完了できませんでした。App Storeからもう一度お試しください。";
-"purchase.restored" = "Premiumの利用権を復元しました。";
-"purchase.nothing" = "このApple Accountには有効なPremiumの購入が見つかりませんでした。";
+"purchase.restored" = "Proの利用権を復元しました。";
+"purchase.nothing" = "このApple Accountには有効なProの購入が見つかりませんでした。";
 "purchase.restore" = "購入を復元";
 "purchase.manage" = "サブスクリプションを管理";
 "purchase.retry" = "購入プランを再読み込み";
@@ -216,6 +214,14 @@
 "insights.metric" = "項目";
 "insights.details" = "詳細を表示";
 "insights.day" = "今日のアクティビティ";
+"insights.clock.title" = "アクティビティ時計";
+"insights.clock.subtitle" = "放射線：1時間ごとの歩数 · リング：今日の進捗";
+"insights.clock.steps %@" = "%@歩";
+"insights.clock.ahead %@" = "いつもより%@歩多い";
+"insights.clock.behind %@" = "いつもより%@歩少ない";
+"insights.clock.same" = "いつものペースです";
+"insights.clock.remaining %@" = "あと%@歩";
+"insights.clock.accessibility %@ %@ %@" = "今日は%@歩、通常の同時刻は%@歩。時刻は%@です。";
 "insights.day.goal %@" = "目標：%@歩";
 "insights.today" = "今日";
 "insights.usual" = "いつも";
@@ -243,6 +249,10 @@
 "insights.record.coverage" = "この期間に測定値がある%ld日間の合計。";
 "insights.in.progress" = "この期間はまだ進行中のため、合計は変わる可能性があります。";
 "insights.all.years" = "すべての年";
+"insights.layout.horizontal" = "横向き表示";
+"insights.layout.vertical" = "縦向き表示";
+"insights.layout.show.horizontal" = "年を横に並べて表示";
+"insights.layout.show.vertical" = "年を行ごとに表示";
 "insights.aggregation" = "集計方法";
 "insights.totals" = "合計";
 "insights.averages" = "平均";
@@ -409,7 +419,7 @@
 
 "counter.selected" = "選択中のカウンター";
 
-"counter.unlock" = "Premiumでこのスタイルを選ぶ";
+"counter.unlock" = "Proでこのカスタマイズを解除";
 
 "counter.palette.note" = "すべてのカウンターに選択したカラーパレットが反映されます。";
 
@@ -458,7 +468,7 @@
 "terms.health.title" = "アクティビティと健康維持";
 "terms.health.body" = "測定値と目標は健康維持の目安であり、精度はデバイス、データソース、ヘルスケアの権限に依存します。Walkunoは診断や医療上の助言を提供しません。ご自身の状況に合わせて運動し、必要に応じて専門家に相談してください。";
 "terms.purchases.title" = "無料機能とPro機能";
-"terms.purchases.body" = "機能と価格は購入前に表示されます。支払いと返金の申請はAppleが取り扱います。サブスクリプションはAppleが提示する条件で更新され、Appleアカウントで管理・解約できます。ローカルデータの消去やWalkunoの削除では解約されません。購入は設定から復元できます。";
+"terms.purchases.body" = "機能と価格は購入前に表示されます。支払いと返金の申請はAppleが取り扱います。サブスクリプションはAppleが提示する条件で更新され、Appleアカウントで管理・解約できます。Walkunoを削除してもサブスクリプションは解約されません。購入は設定から復元できます。";
 "terms.brand.title" = "ブランドと制作物の尊重";
 "terms.brand.body" = "WalkunoとOrbelioの名称、ロゴ、イラスト、インターフェイス、コードは、各権利者の適用される知的財産権により保護されます。許可なく商業利用や再配布を行ったり、制作物をOrbelioの公式または提携作品と表示したりすることはできません。法令で認められる利用は妨げません。Appleおよび第三者の商標はそれぞれの権利者に帰属します。";
 "terms.sharing.title" = "データと共有";
@@ -468,10 +478,58 @@
 "terms.rights.title" = "お問い合わせと権利";
 "terms.rights.body" = "Orbelioへのお問い合わせは、App StoreのWalkuno掲載ページにあるサポートリンクをご利用ください。本規約はAppleの規則を補足し、保証、救済手段、データ保護を含む法的権利を制限しません。";
 "terms.apple" = "Apple標準使用許諾契約";
-"terms.editor" = "Orbelio · 2026年11月5日制定 · バージョン1.0";
+"terms.editor" = "Orbelio · 2026年11月5日制定 · バージョン1.1";
 "privacy.sharing" = "カードの共有はご自身の操作でのみ開始されます。表示情報は、選択したアプリや送信先に、そのサービスの規則に従って送られます。Orbelioはこれらの共有内容を受け取りません。";
-"privacy.storage" = "設定と目標は消去するまでデバイス上に保存されます。バックアップの有無はAppleの設定によります。ウィジェットのキャッシュは更新に伴い置き換えられ、設定から消去できます。Appleが管理するヘルスケア、バックアップ、購入には、Appleの設定とプライバシーポリシーも適用されます。ご質問はApp StoreのWalkuno掲載ページにあるサポートリンクをご利用ください。";
+"privacy.storage" = "設定と目標はデバイス上にローカル保存されます。バックアップの有無はAppleの設定によります。ウィジェットのキャッシュは更新に伴い置き換えられます。Appleが管理するヘルスケア、バックアップ、購入には、Appleの設定とプライバシーポリシーも適用されます。ご質問はApp StoreのWalkuno掲載ページにあるサポートリンクをご利用ください。";
 
 "settings.language" = "アプリの言語";
 "settings.language.system" = "電話の言語";
 "settings.language.note" = "標準では電話の優先言語に従います。対応する言語がない場合は英語を使用します。ここで別の言語を選択できます。";
+
+"premium.feature.widgets" = "すべてのiPhoneウィジェットとApple Watchコンプリケーション";
+
+"premium.feature.effects" = "4種類のカウンターアニメーション効果";
+
+"premium.feature.analysis" = "月別・年別の分析と年ごとの履歴";
+
+"widget.pro.required" = "ウィジェットとコンプリケーションにはProが必要です。iPhoneでWalkunoを開いて解除してください。";
+
+/* Local activity encouragement. */
+"motivation.title" = "今日の一歩";
+"motivation.why" = "この提案の理由";
+"motivation.fact.noData" = "今日の歩数はまだ確認できません。";
+"motivation.fact.achieved %@" = "目標の%@歩を達成しました。";
+"motivation.fact.remaining %@ %@" = "目標まであと%@歩です（目標：%@歩）。";
+"motivation.message.noData" = "小さな一歩から始められます。";
+"motivation.message.starting" = "自分に合うペースで、一歩ずつ進みましょう。";
+"motivation.message.steady" = "都合のよいときの短い散歩も、一歩前進です。";
+"motivation.message.progressing" = "目標に届く前でも、最近の積み重ねには価値があります。";
+"motivation.message.easing" = "過去の日々を取り戻そうとせず、ゆっくり再開できます。";
+"motivation.message.nearGoal" = "目標はもうすぐです。気が向いたら、短い散歩もよさそうです。";
+"motivation.message.achieved" = "今日もよく歩きました。達成を喜びましょう。";
+"motivation.message.evening" = "一日の終わりはゆっくりと。これまでの一歩一歩が大切です。";
+"motivation.action %@" = "気が向いたら、あと%@歩";
+"motivation.basis %ld %ld" = "目標達成は%ld日。直近の終了した7日間で、計測のある%ld日を対象にしています。";
+"motivation.average %@ %ld" = "最近の平均：%@歩（計測のある%ld日）。";
+"motivation.trend %@ %@ %ld" = "前の7日間との変化：%@%%（前の平均%@歩、計測のある%ld日）。";
+"motivation.pace.ahead" = "計測時点では、普段より多く歩いていました。";
+"motivation.pace.similar" = "計測時点では、普段と同じくらい歩いていました。";
+"motivation.pace.behind" = "計測時点では普段より少なめでしたが、取り戻す必要はありません。";
+"motivation.sameTime %@ %@ %ld" = "%@時点の普段の平均は%@歩。同じ時刻の計測がある最近の%ld日が対象です（過去28日から最大7日）。";
+"motivation.history.note" = "各日の当時の目標で比較します。データのない日は平均から、今日は週ごとの傾向から除きます。";
+"motivation.local" = "Walkunoによる励ましのメッセージです。";
+"motivation.apple" = "このiPhoneのApple Intelligenceで表現を調整しました。";
+"motivation.privacy" = "分析はこのiPhone内で行い、この提案のためにヘルスケアデータをサーバーへ送信しません。";
+
+"statistics.widgets.customize" = "ウィジェットをカスタマイズ";
+"statistics.widgets.instructions" = "表示するウィジェットを選び、ハンドルをドラッグして順序を変更できます。変更は自動的に保存されます。";
+
+/* Configurable daily objectives and metric-aware activity clock. */
+"goals.daily" = "1日の目標";
+"goals.target %@" = "目標 %@";
+"goals.range %@ %@" = "%@から%@まで。";
+"insights.clock.more %@" = "%@先行";
+"insights.clock.less %@" = "通常より%@少なめ";
+"insights.clock.summary %@ %@" = "今日は%@、1日の同じ時点での通常値は%@。";
+"unit.steps" = "歩";
+"unit.floors" = "階";

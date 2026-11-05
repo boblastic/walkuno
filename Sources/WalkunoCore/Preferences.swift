@@ -91,10 +91,106 @@ public enum CounterStyle: String, CaseIterable, Codable, Identifiable, Sendable 
 public enum CounterEffect: String, CaseIterable, Codable, Identifiable, Sendable {
     case stars, fire, aurora, liquid
     public var id: String { rawValue }
+    public var requiresPremium: Bool { self != .stars }
+}
+
+public enum StatisticsWidget: String, CaseIterable, Codable, Identifiable, Sendable {
+    case clock, day, trends, history, records
+    public var id: String { rawValue }
+}
+
+public struct StatisticsWidgetLayout: Codable, Equatable, Sendable {
+    public var order: [StatisticsWidget]
+    public var hidden: Set<StatisticsWidget>
+    public var visible: [StatisticsWidget] { order.filter { !hidden.contains($0) } }
+
+    public init(order: [StatisticsWidget] = StatisticsWidget.allCases, hidden: Set<StatisticsWidget> = []) {
+        var seen = Set<StatisticsWidget>()
+        self.order = (order + StatisticsWidget.allCases).filter { seen.insert($0).inserted }
+        self.hidden = hidden
+    }
+
+    private enum CodingKeys: String, CodingKey { case order, hidden }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        // Ignore future identifiers without losing the other preferences after a downgrade.
+        let order = try values.decodeIfPresent([String].self, forKey: .order) ?? []
+        let hidden = try values.decodeIfPresent([String].self, forKey: .hidden) ?? []
+        self.init(order: order.compactMap(StatisticsWidget.init(rawValue:)),
+                  hidden: Set(hidden.compactMap(StatisticsWidget.init(rawValue:))))
+    }
+}
+
+extension ActivityMetric {
+    /// Product defaults, expressed in HealthKit's canonical units (meters, kcal, minutes).
+    public var defaultGoal: Double {
+        switch self {
+        case .steps: Double(GoalHistory.defaultGoal)
+        case .distance: 5_000
+        case .energy: 400
+        case .exerciseTime: 30
+        case .floors: 10
+        }
+    }
+
+    public var goalRange: ClosedRange<Double> {
+        switch self {
+        case .steps: 500...100_000
+        case .distance: 100...200_000
+        case .energy: 10...10_000
+        case .exerciseTime: 1...1_440
+        case .floors: 1...1_000
+        }
+    }
+
+    public func acceptsGoal(_ value: Double) -> Bool {
+        value.isFinite && goalRange.contains(value) && (self == .distance || value.rounded() == value)
+    }
+}
+
+/// Phone-owned objectives. Steps retain their existing dated history for streaks and records.
+public struct ActivityGoals: Codable, Equatable, Sendable {
+    public private(set) var distance = ActivityMetric.distance.defaultGoal
+    public private(set) var energy = ActivityMetric.energy.defaultGoal
+    public private(set) var exerciseTime = ActivityMetric.exerciseTime.defaultGoal
+    public private(set) var floors = ActivityMetric.floors.defaultGoal
+    public init() {}
+
+    public func value(for metric: ActivityMetric) -> Double {
+        switch metric {
+        case .steps: metric.defaultGoal
+        case .distance: distance
+        case .energy: energy
+        case .exerciseTime: exerciseTime
+        case .floors: floors
+        }
+    }
+
+    public mutating func set(_ value: Double, for metric: ActivityMetric) {
+        guard metric.acceptsGoal(value) else { return }
+        switch metric {
+        case .steps: break
+        case .distance: distance = value
+        case .energy: energy = value
+        case .exerciseTime: exerciseTime = value
+        case .floors: floors = value
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey { case distance, energy, exerciseTime, floors }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        for (key, metric): (CodingKeys, ActivityMetric) in [(.distance, .distance), (.energy, .energy),
+                                                          (.exerciseTime, .exerciseTime), (.floors, .floors)] {
+            if let value = try values.decodeIfPresent(Double.self, forKey: key) { set(value, for: metric) }
+        }
+    }
 }
 
 public struct Preferences: Codable, Equatable, Sendable {
     public var goals = GoalHistory()
+    public var activityGoals = ActivityGoals()
     public var theme: WalkunoTheme = .mint
     public var unit: DistanceUnit = .kilometers
     public var language: AppLanguage = .system
@@ -103,19 +199,20 @@ public struct Preferences: Codable, Equatable, Sendable {
     public var counterStyle: CounterStyle = .horizon
     public var counterEffect: CounterEffect = .stars
     public var animatePeriodChanges = true
-    public var showEnergy = true
     public var onboardingComplete = false
     public var healthRequested = false
     public var glassTransparency = 0.7
+    public var statisticsWidgets = StatisticsWidgetLayout()
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case goals, theme, unit, language, appearance, counterStyle, counterEffect, animatePeriodChanges, showEnergy, onboardingComplete, healthRequested, glassTransparency
+        case goals, activityGoals, theme, unit, language, appearance, counterStyle, counterEffect, animatePeriodChanges, onboardingComplete, healthRequested, glassTransparency, statisticsWidgets
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         goals = try values.decode(GoalHistory.self, forKey: .goals)
+        activityGoals = try values.decodeIfPresent(ActivityGoals.self, forKey: .activityGoals) ?? .init()
         theme = try values.decode(WalkunoTheme.self, forKey: .theme)
         unit = try values.decode(DistanceUnit.self, forKey: .unit)
         language = (try values.decodeIfPresent(String.self, forKey: .language)).flatMap(AppLanguage.init(rawValue:)) ?? .system
@@ -123,25 +220,33 @@ public struct Preferences: Codable, Equatable, Sendable {
         counterStyle = try values.decode(CounterStyle.self, forKey: .counterStyle)
         counterEffect = (try values.decodeIfPresent(String.self, forKey: .counterEffect)).flatMap(CounterEffect.init(rawValue:)) ?? .stars
         animatePeriodChanges = try values.decodeIfPresent(Bool.self, forKey: .animatePeriodChanges) ?? true
-        showEnergy = try values.decode(Bool.self, forKey: .showEnergy)
         onboardingComplete = try values.decode(Bool.self, forKey: .onboardingComplete)
         healthRequested = try values.decode(Bool.self, forKey: .healthRequested)
         // Existing installations keep their goals and preferences when the glass setting is added.
         glassTransparency = min(max(try values.decodeIfPresent(Double.self, forKey: .glassTransparency) ?? 0.7, 0), 1)
+        statisticsWidgets = try values.decodeIfPresent(StatisticsWidgetLayout.self, forKey: .statisticsWidgets) ?? .init()
+    }
+
+    public func goal(for metric: ActivityMetric, on date: Date = .now, calendar: Calendar = .current) -> Double {
+        metric == .steps ? Double(goals.value(on: date, calendar: calendar)) : activityGoals.value(for: metric)
     }
 }
 
 /// Phone-owned display settings; optional fields preserve compatibility with older companions.
 public struct WatchSettings: Codable, Equatable, Sendable {
     public var goals: GoalHistory
+    public var activityGoals: ActivityGoals?
     public var theme: WalkunoTheme
     public var unit: DistanceUnit
     public var counterStyle: CounterStyle?
     public var counterEffect: CounterEffect?
+    public var proAccess: ProAccess?
 
-    public init(preferences: Preferences) {
+    public init(preferences: Preferences, proAccess: ProAccess? = nil) {
         goals = preferences.goals; theme = preferences.theme; unit = preferences.unit
+        activityGoals = preferences.activityGoals
         counterStyle = preferences.counterStyle; counterEffect = preferences.counterEffect
+        self.proAccess = proAccess
     }
 }
 

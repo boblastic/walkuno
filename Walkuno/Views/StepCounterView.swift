@@ -1,5 +1,11 @@
 import SwiftUI
 
+extension WalkunoTheme {
+    func counterLinearGradient(for scheme: ColorScheme) -> LinearGradient {
+        LinearGradient(colors: [secondaryTint(for: scheme), tint(for: scheme)], startPoint: .leading, endPoint: .trailing)
+    }
+}
+
 extension CounterStyle {
     var titleKey: String { "counter.\(rawValue)" }
     var descriptionKey: String { "counter.\(rawValue).description" }
@@ -34,7 +40,7 @@ struct StepCounterFace: View {
     private var accent: Color { theme.tint(for: scheme) }
     private var secondary: Color { theme.secondaryTint(for: scheme) }
     private var gradient: LinearGradient {
-        LinearGradient(colors: [secondary, accent], startPoint: .leading, endPoint: .trailing)
+        theme.counterLinearGradient(for: scheme)
     }
     private var overflow: Color {
         progress.overflowLap.truncatingRemainder(dividingBy: 2) == 1 ? .white.opacity(0.88) : WalkunoStyle.ink.opacity(0.85)
@@ -283,7 +289,7 @@ struct CompactStepCounterFace: View {
         value.overflowLap.truncatingRemainder(dividingBy: 2) == 1 ? .white.opacity(0.88) : WalkunoStyle.ink.opacity(0.85)
     }
     private var gradient: LinearGradient {
-        .init(colors: [theme.secondaryTint(for: scheme), accent], startPoint: .leading, endPoint: .trailing)
+        theme.counterLinearGradient(for: scheme)
     }
 
     var body: some View {
@@ -456,17 +462,55 @@ private struct CounterPlaybackView: View {
     var distance: String? = nil
     var animateEntry: Bool
     var animateUpdates: Bool
+
+    var body: some View {
+        CounterPlayback(value: steps.map(Double.init), goal: Double(goal), animateEntry: animateEntry, animateUpdates: animateUpdates) { value, trail in
+            StepCounterFace(displayedSteps: value, trail: trail, hasSteps: steps != nil,
+                            goal: goal, title: title, theme: theme, style: style, effect: effect, distance: distance)
+        }
+    }
+}
+
+/// The clock and home counter share their easing, duration, live updates and finite effect tail.
+struct AnimatedCounterRing: View {
+    var value: Double?
+    var goal: Double
+    var theme: WalkunoTheme
+    var counterStyle: CounterStyle
+    var effect: CounterEffect
+    var lineWidth: CGFloat = 12
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        CounterPlayback(value: value, goal: goal, animateEntry: true, animateUpdates: true, replayOnAppear: true) { value, trail in
+            SparklingRing(progress: .init(value: value, goal: goal), trail: trail, effect: effect,
+                          accent: theme.tint(for: scheme), secondaryAccent: theme.secondaryTint(for: scheme),
+                          starAccent: theme.accent, starSecondary: theme.secondaryAccent, lineWidth: lineWidth,
+                          gradient: counterStyle == .ring ? nil : AnyShapeStyle(theme.counterLinearGradient(for: scheme)))
+                .transaction { $0.animation = nil; $0.disablesAnimations = true }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+private struct CounterPlayback<Content: View>: View {
+    var value: Double?
+    var goal: Double
+    var animateEntry: Bool
+    var animateUpdates: Bool
+    var replayOnAppear: Bool
+    var content: (Double, CounterTrailFrame?) -> Content
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var settledSteps: Double
+    @State private var settledValue: Double
     @State private var playback: Playback?
     @State private var hasStarted = false
 
-    init(steps: Int?, goal: Int, title: String, theme: WalkunoTheme, style: CounterStyle, effect: CounterEffect, distance: String?,
-         animateEntry: Bool, animateUpdates: Bool) {
-        self.steps = steps; self.goal = goal; self.title = title
-        self.theme = theme; self.style = style; self.effect = effect; self.distance = distance
+    init(value: Double?, goal: Double, animateEntry: Bool, animateUpdates: Bool, replayOnAppear: Bool = false,
+         @ViewBuilder content: @escaping (Double, CounterTrailFrame?) -> Content) {
+        self.value = value; self.goal = goal
         self.animateEntry = animateEntry; self.animateUpdates = animateUpdates
-        _settledSteps = State(initialValue: animateEntry ? 0 : Double(steps ?? 0))
+        self.replayOnAppear = replayOnAppear; self.content = content
+        _settledValue = State(initialValue: animateEntry ? 0 : (value ?? 0))
     }
 
     private struct Playback {
@@ -474,19 +518,19 @@ private struct CounterPlaybackView: View {
         var started: Date
         var from: Double
         var target: Double
-        var goal: Int
+        var goal: Double
         var duration: Double
 
         func frame(at date: Date) -> CounterTrailFrame {
             CounterTrailFrame(elapsed: date.timeIntervalSince(started), duration: duration,
-                              startRatio: from / Double(max(1, goal)), endRatio: target / Double(max(1, goal)))
+                              startRatio: from / (goal > 0 ? goal : 1), endRatio: target / (goal > 0 ? goal : 1))
         }
-        func value(at date: Date) -> Double { frame(at: date).ratio(at: date.timeIntervalSince(started)) * Double(max(1, goal)) }
+        func value(at date: Date) -> Double { frame(at: date).ratio(at: date.timeIntervalSince(started)) * (goal > 0 ? goal : 1) }
     }
 
     private struct Request: Equatable {
-        var steps: Int?
-        var goal: Int
+        var value: Double?
+        var goal: Double
         var reduceMotion: Bool
         var animateEntry: Bool
         var animateUpdates: Bool
@@ -498,20 +542,20 @@ private struct CounterPlaybackView: View {
                 // This clock exists only for the sweep and the final 0.8 seconds of dissipation.
                 TimelineView(.animation(minimumInterval: 1.0 / 60)) { context in
                     let frame = playback.frame(at: context.date)
-                    face(value: playback.value(at: context.date), trail: frame.isActive ? frame : nil)
+                    content(playback.value(at: context.date), frame.isActive ? frame : nil)
                 }
             } else {
-                face(value: reduceMotion ? Double(steps ?? 0) : settledSteps, trail: nil)
+                content(reduceMotion ? (value ?? 0) : settledValue, nil)
             }
         }
-        .task(id: Request(steps: steps, goal: goal, reduceMotion: reduceMotion,
+        .task(id: Request(value: value, goal: goal, reduceMotion: reduceMotion,
                           animateEntry: animateEntry, animateUpdates: animateUpdates)) {
             let entry = !hasStarted
             let enabled = entry ? animateEntry : animateUpdates
             hasStarted = true
-            let target = Double(steps ?? 0)
-            let from = playback?.value(at: .now) ?? settledSteps
-            guard !reduceMotion, enabled, goal > 0, steps != nil, from != target else {
+            let target = (value ?? 0)
+            let from = playback?.value(at: .now) ?? settledValue
+            guard !reduceMotion, enabled, goal > 0, value != nil, from != target else {
                 finish(at: target); return
             }
             let run = Playback(started: .now, from: from, target: target, goal: goal,
@@ -523,17 +567,14 @@ private struct CounterPlaybackView: View {
                 finish(at: target)
             } catch { return }
         }
-        // Remember that this request ran: returning from another tab must not reset a visible total.
-        .onDisappear { finish(at: Double(steps ?? 0)) }
-    }
-
-    private func face(value: Double, trail: CounterTrailFrame?) -> some View {
-        StepCounterFace(displayedSteps: value, trail: trail, hasSteps: steps != nil,
-                        goal: goal, title: title, theme: theme, style: style, effect: effect, distance: distance)
+        .onDisappear {
+            finish(at: replayOnAppear ? 0 : (value ?? 0))
+            if replayOnAppear { hasStarted = false }
+        }
     }
 
     private func finish(at value: Double) {
-        settledSteps = value
+        settledValue = value
         playback = nil
     }
 }
@@ -548,10 +589,13 @@ private struct SparklingRing: View {
     var secondaryAccent: Color
     var starAccent: Color
     var starSecondary: Color
+    var lineWidth: CGFloat = 18
+    var gradient: AnyShapeStyle? = nil
 
     var body: some View {
         ZStack {
-            ProgressRing(progress: progress.ratio, accent: accent, secondaryAccent: secondaryAccent)
+            ProgressRing(progress: progress.ratio, accent: accent, secondaryAccent: secondaryAccent,
+                         lineWidth: lineWidth, gradient: gradient)
                 // Playback already supplies the value for this frame.
                 .transaction { $0.animation = nil; $0.disablesAnimations = true }
             GeometryReader { geometry in

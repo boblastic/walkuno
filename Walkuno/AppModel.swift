@@ -2,6 +2,14 @@ import SwiftUI
 import Observation
 import WidgetKit
 
+struct DailyActivitySnapshot {
+    let metric: ActivityMetric
+    let sampledAt: Date
+    let today: ActivityDay
+    let hours: [HourActivity]
+    let comparison: DayComparison
+}
+
 @MainActor @Observable
 final class AppModel {
     static let shared = AppModel()
@@ -28,6 +36,7 @@ final class AppModel {
     private var widgetActivity: WidgetActivityDetail?
     @ObservationIgnored private var hasLoadedWidgetHistory = false
     @ObservationIgnored private var recentRefreshStart: Date?
+    @ObservationIgnored let motivationWriter = MotivationWriter()
 
     init() {
         AppLocalization.configure(preferences.language)
@@ -43,6 +52,14 @@ final class AppModel {
             loadedSnapshot = snapshot
             widgetActivity = snapshot.activity
             hours = snapshot.activity?.todayHours ?? []
+        }
+        purchases.onAccessChange = { [weak self] access in
+            guard let self, !self.isDemo else { return }
+            do { try LocalStore.save(access) }
+            catch { self.errorMessage = L("cache.error") }
+            self.writeSnapshot()
+            self.sendSettings()
+            WidgetCenter.shared.reloadAllTimelines()
         }
         bridge.onReceive = { [weak self] settings in
             guard let self, self.preferences.onboardingComplete else { return }
@@ -70,9 +87,33 @@ final class AppModel {
         return detail.yesterdayHours
     }
     var progress: Double { ActivityMath.progress(steps: today.steps, goal: goal) }
+
+    func activityClock(metric: ActivityMetric, data: DailyActivitySnapshot?) -> ActivityClockSnapshot {
+        let calendar = Calendar.current
+        let sampledAt = data?.sampledAt ?? lastUpdated.flatMap { calendar.isDateInToday($0) ? $0 : nil } ?? .now
+        let cached = widgetActivity.flatMap {
+            $0.sampledAt == sampledAt && calendar.isDateInToday($0.sampledAt) ? $0 : nil
+        }
+        // Keep the measured rays visible while the shared comparison loads. The cached
+        // habitual profile is steps-only and must never be reused for another metric.
+        let reference = data.map { WidgetUsualActivity(comparison: $0.comparison) } ?? (metric == .steps ? cached?.usual : nil)
+        return .init(metric: metric, sampledAt: sampledAt, current: metric.value(in: data?.today ?? today),
+                     goal: preferences.goal(for: metric), hours: data?.hours ?? cached?.todayHours ?? (isDemo ? hours : []),
+                     usual: reference, calendar: calendar)
+    }
+
+    func motivationSnapshot(at now: Date) -> MotivationSnapshot {
+        // A new daily read must not be compared with an older hourly query.
+        let detail = !usingCache && widgetActivity?.sampledAt == lastUpdated ? widgetActivity : nil
+        return .init(days: days, goals: preferences.goals, detail: detail, now: now)
+    }
     var effectiveTheme: WalkunoTheme { purchases.isPremium ? preferences.theme : .mint }
     var effectiveCounter: CounterStyle {
         preferences.counterStyle.requiresPremium && !purchases.isPremium ? .horizon : preferences.counterStyle
+    }
+
+    var effectiveEffect: CounterEffect {
+        preferences.counterEffect.requiresPremium && !purchases.isPremium ? .stars : preferences.counterEffect
     }
 
     func start() async {
@@ -91,15 +132,18 @@ final class AppModel {
         observe()
     }
 
-    func connectHealth() async {
-        guard !isDemo else { return }
+    @discardableResult
+    func connectHealth() async -> HealthAuthorizationRequestOutcome? {
+        guard !isDemo else { return nil }
         do {
-            try await health.authorize()
+            let outcome = try await health.authorize()
             preferences.healthRequested = true
             persist()
             observe()
             await refresh()
+            return outcome
         } catch { errorMessage = L("health.connection.error") }
+        return nil
     }
 
     private func observe() {
@@ -202,13 +246,15 @@ final class AppModel {
         return try await health.hours(on: date, metric: metric)
     }
 
-    func dayComparison(metric: ActivityMetric, earliest: Date?) async throws -> DayComparison {
+    func dailyActivity(metric: ActivityMetric, earliest: Date?) async throws -> DailyActivitySnapshot {
+        let total = today
         let calendar = Calendar.current
         let cutoff = lastUpdated.flatMap { calendar.isDateInToday($0) ? $0 : nil } ?? .now
         let clock = calendar.dateComponents([.hour, .minute, .second], from: cutoff)
         let cutoffHour = Double(clock.hour ?? 0) + Double(clock.minute ?? 0) / 60 + Double(clock.second ?? 0) / 3600
         guard isDemo || preferences.healthRequested else {
-            return .init(today: [], history: [], metric: metric, cutoffHour: cutoffHour)
+            return .init(metric: metric, sampledAt: cutoff, today: total, hours: [],
+                         comparison: .init(today: [], history: [], metric: metric, cutoffHour: cutoffHour))
         }
         let current: [HourActivity]
         if isDemo { current = demoHours(on: cutoff, through: cutoff) }
@@ -221,13 +267,12 @@ final class AppModel {
         var fullDayHistory: [[HourActivity]] = []
         for day in candidates {
             try Task.checkCancellation()
-            guard let end = calendar.date(bySettingHour: clock.hour ?? 0, minute: clock.minute ?? 0,
-                                          second: clock.second ?? 0, of: day.date) else { continue }
+            guard let end = WidgetActivityDetail.clockCutoff(on: day.date, matching: cutoff, calendar: calendar) else { continue }
             if isDemo {
                 history.append(demoHours(on: day.date, through: end))
                 fullDayHistory.append(demoHours(on: day.date))
             } else {
-                async let partial = health.hours(on: day.date, metric: metric, through: end)
+                async let partial = health.hours(on: day.date, metric: metric, through: end, now: cutoff, calendar: calendar, strictEnd: true)
                 async let complete = health.hours(on: day.date, metric: metric)
                 let (partialHours, completeHours) = try await (partial, complete)
                 history.append(partialHours)
@@ -235,12 +280,20 @@ final class AppModel {
             }
         }
         try Task.checkCancellation()
-        return .init(today: current, history: history, metric: metric, cutoffHour: cutoffHour, calendar: calendar,
-                     fullDayHistory: fullDayHistory)
+        return .init(metric: metric, sampledAt: cutoff, today: total, hours: current,
+                     comparison: .init(today: current, history: history, metric: metric, cutoffHour: cutoffHour,
+                                       calendar: calendar, fullDayHistory: fullDayHistory))
     }
 
     func setGoal(_ value: Int) {
         preferences.goals.set(value)
+        persist()
+    }
+
+    func setGoal(_ value: Double, for metric: ActivityMetric) {
+        guard metric.acceptsGoal(value) else { return }
+        if metric == .steps { preferences.goals.set(Int(value)) }
+        else { preferences.activityGoals.set(value, for: metric) }
         persist()
     }
 
@@ -255,7 +308,9 @@ final class AppModel {
         var settings = preferences
         settings.theme = effectiveTheme
         settings.counterStyle = effectiveCounter
-        bridge.send(settings)
+        settings.counterEffect = effectiveEffect
+        guard purchases.hasLoadedEntitlements else { return }
+        bridge.send(settings, proAccess: purchases.access)
     }
 
     private func writeSnapshot() {
@@ -265,32 +320,12 @@ final class AppModel {
             goals: preferences.goals, includeYear: purchases.isPremium && hasLoadedWidgetHistory, now: lastUpdated ?? .now)
         let snapshot = WidgetSnapshot(updatedAt: lastUpdated ?? .now, today: today, goal: goal,
                                       week: days, theme: effectiveTheme, unit: preferences.unit, activity: widgetActivity,
-                                      display: .init(counter: effectiveCounter, showEnergy: preferences.showEnergy), history: history)
+                                      display: .init(counter: effectiveCounter), history: history)
         do {
             try LocalStore.save(snapshot)
             loadedSnapshot = snapshot
             WidgetCenter.shared.reloadAllTimelines()
         } catch { errorMessage = L("cache.error") }
-    }
-
-    func resetLocalData() async {
-        generation += 1
-        // Refuse observer callbacks already queued while HealthKit finishes stopping delivery.
-        preferences.healthRequested = false
-        refreshCoordinator.cancel()
-        historyTask?.cancel()
-        historyTask = nil
-        isLoading = false
-        await health.stop()
-        do {
-            try LocalStore.clear()
-            days = []; hours = []; lastUpdated = nil; usingCache = false; loadedSnapshot = nil; widgetActivity = nil
-            hasLoadedWidgetHistory = false
-            recentRefreshStart = nil
-            preferences = .init()
-            celebration = false
-            WidgetCenter.shared.reloadAllTimelines()
-        } catch { errorMessage = L("reset.error") }
     }
 
     #if DEBUG

@@ -277,6 +277,20 @@ struct WidgetTests {
         #expect(calendar.dateComponents([.day], from: week.previous[6].date, to: week.current[0].date).day == 1)
     }
 
+    @Test func retiredEnergySettingIsIgnoredInCachedWidgets() throws {
+        var value = snapshot(at: date("2026-11-05T13:37:12Z"))
+        value.display = .init(counter: .milestones)
+        let encoded = try JSONEncoder().encode(value)
+        var legacy = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacy["display"] = ["counter": "milestones", "showEnergy": false]
+
+        let restored = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONSerialization.data(withJSONObject: legacy))
+        #expect(restored == value)
+        let saved = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(restored)) as? [String: Any])
+        let display = try #require(saved["display"] as? [String: Any])
+        #expect(display["showEnergy"] == nil)
+    }
+
     @Test func extendedCacheStaysBoundedAndLegacyPreferencesRemainOptional() throws {
         let now = date("2026-11-05T13:37:12Z")
         let today = calendar.startOfDay(for: now)
@@ -286,7 +300,7 @@ struct WidgetTests {
         }
         var value = snapshot(at: now)
         value.history = WidgetHistory(days: days, goals: .init(), includeYear: true, now: now, calendar: calendar)
-        value.display = .init(counter: .milestones, showEnergy: false)
+        value.display = .init(counter: .milestones)
         let encoded = try JSONEncoder().encode(value)
         #expect(encoded.count < 100_000)
         #expect(try JSONDecoder().decode(WidgetSnapshot.self, from: encoded) == value)

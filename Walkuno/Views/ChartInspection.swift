@@ -22,6 +22,14 @@ struct ChartInspectionPoint: Equatable {
         return result
     }
 
+    init(x: CGFloat, y: CGFloat?, title: String, value: String, color: Color) {
+        self.x = x
+        self.y = y
+        self.title = title
+        self.value = value
+        self.color = color
+    }
+
     init?(proxy: ChartProxy, x: some Plottable, y: Double?, title: String, value: String, color: Color) {
         guard let position = proxy.position(forX: x) else { return nil }
         self.x = position
@@ -47,12 +55,17 @@ extension View {
     func chartInspection(_ identifier: String, resetKey: String = "", points: @escaping (ChartProxy) -> [ChartInspectionPoint]) -> some View {
         modifier(ChartInspectionModifier(identifier: identifier, resetKey: resetKey, points: points))
     }
+
+    func plotInspection(_ identifier: String, resetKey: String = "", points: @escaping (CGSize) -> [ChartInspectionPoint]) -> some View {
+        modifier(ChartInspectionModifier(identifier: identifier, resetKey: resetKey, points: { _ in [] }, plotPoints: points))
+    }
 }
 
 private struct ChartInspectionModifier: ViewModifier {
     var identifier: String
     var resetKey: String
     var points: (ChartProxy) -> [ChartInspectionPoint]
+    var plotPoints: ((CGSize) -> [ChartInspectionPoint])? = nil
     @Environment(\.chartScrubbing) private var pagingScrubbing
     @State private var selection: Selection?
     @State private var dismissalID: UUID?
@@ -66,43 +79,7 @@ private struct ChartInspectionModifier: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        content.chartOverlay { proxy in
-            GeometryReader { geometry in
-                if let anchor = proxy.plotFrame {
-                    let frame = geometry[anchor]
-                    let samples = points(proxy)
-                    ZStack(alignment: .topLeading) {
-                        ChartInspectionTouchSurface(
-                            onTap: { location in
-                                select(at: location, frame: frame, samples: samples)
-                                dismissalID = UUID()
-                            },
-                            onInspect: { select(at: $0, frame: frame, samples: samples) },
-                            onScrubbingChanged: { active in
-                                pagingScrubbing?.wrappedValue = active
-                                dismissalID = active ? nil : UUID()
-                            }
-                        )
-                        .accessibilityHidden(true)
-                        if let selection {
-                            Path { path in
-                                path.move(to: CGPoint(x: selection.x, y: frame.minY))
-                                path.addLine(to: CGPoint(x: selection.x, y: frame.maxY))
-                            }
-                            .stroke(selection.point.color.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                            .allowsHitTesting(false).accessibilityHidden(true)
-                            if selection.point.y != nil {
-                                Circle().fill(selection.point.color).frame(width: 8, height: 8)
-                                    .position(x: selection.x, y: selection.y).allowsHitTesting(false).accessibilityHidden(true)
-                            }
-                        }
-                    }
-                    .onChange(of: samples) { _, samples in
-                        if let selection { select(at: selection.touch, frame: frame, samples: samples) }
-                    }
-                }
-            }
-        }
+        inspectedContent(content)
         // Keep the tooltip outside Charts' generated accessibility representation.
         .overlay {
             GeometryReader { geometry in
@@ -133,6 +110,57 @@ private struct ChartInspectionModifier: ViewModifier {
         }
         .onChange(of: resetKey) { _, _ in selection = nil; dismissalID = nil }
         .onDisappear { pagingScrubbing?.wrappedValue = false; selection = nil; dismissalID = nil }
+    }
+
+    @ViewBuilder
+    private func inspectedContent(_ content: Content) -> some View {
+        if let plotPoints {
+            content.overlay {
+                GeometryReader { geometry in
+                    touchOverlay(frame: CGRect(origin: .zero, size: geometry.size), samples: plotPoints(geometry.size))
+                }
+            }
+        } else {
+            content.chartOverlay { proxy in
+                GeometryReader { geometry in
+                    if let anchor = proxy.plotFrame {
+                        touchOverlay(frame: geometry[anchor], samples: points(proxy))
+                    }
+                }
+            }
+        }
+    }
+
+    private func touchOverlay(frame: CGRect, samples: [ChartInspectionPoint]) -> some View {
+        ZStack(alignment: .topLeading) {
+            ChartInspectionTouchSurface(
+                onTap: { location in
+                    select(at: location, frame: frame, samples: samples)
+                    dismissalID = UUID()
+                },
+                onInspect: { select(at: $0, frame: frame, samples: samples) },
+                onScrubbingChanged: { active in
+                    pagingScrubbing?.wrappedValue = active
+                    dismissalID = active ? nil : UUID()
+                }
+            )
+            .accessibilityHidden(true)
+            if let selection {
+                Path { path in
+                    path.move(to: CGPoint(x: selection.x, y: frame.minY))
+                    path.addLine(to: CGPoint(x: selection.x, y: frame.maxY))
+                }
+                .stroke(selection.point.color.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                .allowsHitTesting(false).accessibilityHidden(true)
+                if selection.point.y != nil {
+                    Circle().fill(selection.point.color).frame(width: 8, height: 8)
+                        .position(x: selection.x, y: selection.y).allowsHitTesting(false).accessibilityHidden(true)
+                }
+            }
+        }
+        .onChange(of: samples) { _, samples in
+            if let selection { select(at: selection.touch, frame: frame, samples: samples) }
+        }
     }
 
     private func select(at touch: CGPoint, frame: CGRect, samples: [ChartInspectionPoint]) {

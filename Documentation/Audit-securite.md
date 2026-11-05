@@ -1,5 +1,7 @@
 # Revue de confidentialité et de sécurité
 
+> Évolution du 5 novembre 2026 : la fonction d’effacement local a été retirée des réglages et du code. Les constats historiques sur cet ancien parcours sont conservés ci-dessous à titre de trace.
+
 Audit statique du projet initial, complété par compilation et tests locaux. Pas de dépôt Git ou de révision de référence dans le dossier initial. Périmètre : application iPhone, Watch, widgets, pont WatchConnectivity, StoreKit, fichiers de configuration et scripts locaux.
 
 **Aucun problème confirmé dans le périmètre vérifié.** Cette conclusion est limitée au code et aux vérifications décrits ci-dessous ; les capacités et comportements sur appareils signés restent à recetter.
@@ -74,3 +76,20 @@ Périmètre : refonte des widgets de cette session sur `main`, base `b60de42`, a
 Validation : tests synthétiques sur données absentes/zéro, dates futures, objectifs historiques, année bissextile, moyennes pondérées, migration et taille du cache ; 101 tests Foundation réussis. Compilation Debug iPhone/Watch et extensions pour simulateur réussie. Contrôle des rendus natifs, dont les états sans données. Le JSON d’un historique synthétique de 5 000 jours avec cinq mesures reste sous 100 Ko après agrégation. Aucune donnée Santé personnelle n’a été utilisée.
 
 Limites : la confidentialité réelle sous verrouillage et la fréquence des livraisons Santé/WidgetKit restent à vérifier sur appareils signés. Les capacités existantes sont examinées statiquement ; aucun nouveau test de verrouillage matériel ou d’achat Sandbox n’a été exécuté. Aucune action opérationnelle de sécurité requise par cette refonte ; les recettes matérielles SEC-01/SEC-02 restent applicables.
+
+
+## Complément du 5 novembre 2026 — droits Pro et extensions
+
+Base : branche `main`, révision `dfb8948`, modifications locales de la répartition Gratuit/Pro. Périmètre : PurchaseStore, ProAccess, LocalStore, WatchConnectivity, fournisseurs de timelines et lien `walkuno://pro`. Actifs : droits d’achat et mesures Santé ; frontières : transactions Apple vérifiées, App Group privé, compagnon appairé et configurations Debug/Release. Les surfaces serveur, WebView et dépendances tierces restent non applicables.
+
+**Aucun problème confirmé dans le périmètre vérifié.**
+
+- PurchaseStore n’accepte que les transactions vérifiées, des produits attendus, non révoquées, non remplacées et non expirées. Le miroir local ne sert jamais de preuve de paiement dans l’application.
+- Le miroir des droits ne contient aucune mesure Santé, reste dans l’App Group, est exclu des sauvegardes et protégé jusqu’à la première authentification. Le cache Santé conserve sa protection complète.
+- Les extensions ne reçoivent aucune mesure dans les entrées gratuites et contrôlent la date d’expiration. Les contextes anciens sans droits restent verrouillés ; sur Watch, un droit plus ancien ne remplace pas un droit vérifié plus récent. L’iPhone ignore les droits entrants du compagnon.
+- Les fichiers de droits Debug et Release sont distincts : le mode de simulation ne peut pas déverrouiller les extensions Release via un cache issu de Debug.
+- Le lien profond ouvre uniquement l’offre, sans octroyer de droit ni exécuter de paramètre externe. Les identifiants d’achat existants sont conservés.
+
+Limites opérationnelles : WidgetKit conserve le contrôle du rafraîchissement ; une révocation ou un remboursement doit être relu par StoreKit sur l’iPhone puis transmis à la Watch. Hors connexion, la Watch conserve le dernier état jusqu’à expiration/synchronisation. La propagation effective StoreKit/App Group/WatchConnectivity et la protection des fichiers sur appareils signés restent à recetter. Aucun service distant ni achat réel n’a été testé.
+
+Vérifications locales : compilation Debug et Release des quatre cibles, validation des sept langues, tests métier incluant l’expiration exacte et la compatibilité des contextes Watch, et tests d’interface ciblés Gratuit/Pro. Les résultats détaillés sont consignés avec la livraison de cette modification.

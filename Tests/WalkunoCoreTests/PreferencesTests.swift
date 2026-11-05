@@ -3,6 +3,98 @@ import Testing
 @testable import WalkunoCore
 
 struct PreferencesTests {
+    @Test func addingActivityGoalsPreservesLegacyPreferencesAndStepHistory() throws {
+        var original = Preferences()
+        original.goals.set(11_500)
+        original.unit = .miles
+        original.theme = .violet
+        var legacy = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as? [String: Any])
+        legacy.removeValue(forKey: "activityGoals")
+        let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy))
+        #expect(restored == original)
+        #expect(restored.goal(for: .steps) == 11_500)
+        #expect(restored.goal(for: .distance) == 5_000)
+        #expect(restored.goal(for: .energy) == 400)
+        #expect(restored.goal(for: .exerciseTime) == 30)
+        #expect(restored.goal(for: .floors) == 10)
+    }
+
+    @Test func metricGoalsPersistIndependentlyAndDistanceDoesNotChangeWithDisplayUnits() throws {
+        var preferences = Preferences()
+        preferences.goals.set(12_000)
+        for (metric, value): (ActivityMetric, Double) in [(.distance, 3 * 1_609.344), (.energy, 650), (.exerciseTime, 45), (.floors, 15)] {
+            preferences.activityGoals.set(value, for: metric)
+        }
+        preferences.unit = .miles
+        let restored = try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(preferences))
+        #expect(restored == preferences)
+        #expect(restored.unit.convert(meters: restored.goal(for: .distance)) == 3)
+        #expect(restored.goal(for: .steps) == 12_000)
+        #expect(restored.goal(for: .energy) == 650)
+        #expect(restored.goal(for: .exerciseTime) == 45)
+        #expect(restored.goal(for: .floors) == 15)
+        let settings = try JSONDecoder().decode(WatchSettings.self, from: JSONEncoder().encode(WatchSettings(preferences: restored)))
+        #expect(settings.activityGoals == restored.activityGoals)
+        var legacy = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        legacy.removeValue(forKey: "activityGoals")
+        let oldWatch = try JSONDecoder().decode(WatchSettings.self, from: JSONSerialization.data(withJSONObject: legacy))
+        #expect(oldWatch.activityGoals == nil)
+        #expect(oldWatch.goals == restored.goals)
+    }
+
+    @Test func invalidGoalsAreRejectedAndPartialSavedGoalsUseDefaults() throws {
+        var goals = ActivityGoals()
+        for metric in ActivityMetric.allCases where metric != .steps {
+            for invalid in [0, -1, .infinity, .nan, metric.goalRange.upperBound + 1] {
+                goals.set(invalid, for: metric)
+                #expect(goals.value(for: metric) == metric.defaultGoal)
+            }
+        }
+        goals.set(15.5, for: .exerciseTime)
+        #expect(goals.value(for: .exerciseTime) == 30)
+        goals.set(5_123.45, for: .distance)
+        #expect(goals.value(for: .distance) == 5_123.45)
+        let saved = Data(#"{"distance":7000,"energy":0,"floors":2.5}"#.utf8)
+        let restored = try JSONDecoder().decode(ActivityGoals.self, from: saved)
+        #expect(restored.value(for: .distance) == 7_000)
+        #expect(restored.value(for: .energy) == 400)
+        #expect(restored.value(for: .exerciseTime) == 30)
+        #expect(restored.value(for: .floors) == 10)
+    }
+
+    @Test func statisticsWidgetChoicesSurviveSavingIncludingAllHidden() throws {
+        for hidden in [Set<StatisticsWidget>([.clock, .history]), Set(StatisticsWidget.allCases)] {
+            var original = Preferences()
+            original.goals.set(12_000)
+            original.statisticsWidgets = .init(order: [.records, .trends, .day, .history, .clock], hidden: hidden)
+            let restored = try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(original))
+            #expect(restored == original)
+            #expect(restored.statisticsWidgets.visible == original.statisticsWidgets.order.filter { !hidden.contains($0) })
+        }
+    }
+
+    @Test func addingStatisticsLayoutPreservesExistingPreferences() throws {
+        var original = Preferences()
+        original.goals.set(11_500)
+        original.theme = .violet
+        original.language = .french
+        var legacy = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as? [String: Any])
+        legacy.removeValue(forKey: "statisticsWidgets")
+        #expect(try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy)) == original)
+    }
+
+    @Test func statisticsLayoutRecoversMissingDuplicateAndFutureWidgets() throws {
+        var original = Preferences()
+        original.unit = .miles
+        var saved = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as? [String: Any])
+        saved["statisticsWidgets"] = ["order": ["records", "future-widget", "records", "day"],
+                                      "hidden": ["clock", "future-widget"]]
+        let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: saved))
+        #expect(restored.unit == .miles)
+        #expect(restored.statisticsWidgets.order == [.records, .day, .clock, .trends, .history])
+        #expect(restored.statisticsWidgets.hidden == [.clock])
+    }
+
     @Test func watchSettingsCarryEveryCounterStyleAndEffect() throws {
         for style in CounterStyle.allCases {
             for effect in CounterEffect.allCases {
@@ -132,6 +224,22 @@ struct PreferencesTests {
         }
     }
 
+    @Test func retiredEnergySettingIsIgnoredWithoutLosingPreferences() throws {
+        var original = Preferences()
+        original.goals.set(12_000)
+        original.theme = .glacier
+        original.unit = .miles
+        original.onboardingComplete = true
+        let encoded = try JSONEncoder().encode(original)
+        var legacy = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacy["showEnergy"] = false
+
+        let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy))
+        #expect(restored == original)
+        let saved = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(restored)) as? [String: Any])
+        #expect(saved["showEnergy"] == nil)
+    }
+
     @Test func addingGlassPreservesExistingPreferences() throws {
         var original = Preferences()
         original.goals.set(12_000)
@@ -139,7 +247,6 @@ struct PreferencesTests {
         original.unit = .miles
         original.appearance = .light
         original.counterStyle = .minimal
-        original.showEnergy = false
         original.onboardingComplete = true
         original.healthRequested = true
         let encoded = try JSONEncoder().encode(original)

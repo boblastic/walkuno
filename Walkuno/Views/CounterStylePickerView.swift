@@ -7,11 +7,13 @@ struct CounterStylePickerView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var preview: CounterStyle?
     @State private var showPremium = false
+    @State private var previewEffect: CounterEffect?
     @State private var replayCounter = 0
 
     private var style: CounterStyle { preview ?? model.effectiveCounter }
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
-    private var isLocked: Bool { style.requiresPremium && !model.purchases.isPremium }
+    private var effect: CounterEffect { previewEffect ?? model.effectiveEffect }
+    private var isLocked: Bool { (style.requiresPremium || effect.requiresPremium) && !model.purchases.isPremium }
 
     var body: some View {
         ScrollViewReader { reader in
@@ -26,10 +28,10 @@ struct CounterStylePickerView: View {
                                 .lineLimit(1).minimumScaleFactor(0.6)
                         }
                         AnimatedStepCounter(steps: 6240, goal: 8000, title: L("tab.today"),
-                                            theme: model.effectiveTheme, style: style, effect: model.preferences.counterEffect,
-                                            replay: "\(style.rawValue)-\(model.preferences.counterEffect.rawValue)-\(replayCounter)",
+                                            theme: model.effectiveTheme, style: style, effect: effect,
+                                            replay: "\(style.rawValue)-\(effect.rawValue)-\(replayCounter)",
                                             animateEntry: true, animateUpdates: true)
-                            .id("\(style.rawValue)-\(model.preferences.counterEffect.rawValue)-\(replayCounter)")
+                            .id("\(style.rawValue)-\(effect.rawValue)-\(replayCounter)")
                             .frame(height: typeSize.isAccessibilitySize ? 320 : 232)
                             .background {
                                 RadialGradient(colors: [accent.opacity(0.10), .clear], center: .center, startRadius: 15, endRadius: 170)
@@ -91,16 +93,26 @@ struct CounterStylePickerView: View {
         .sensoryFeedback(.selection, trigger: style)
         .sheet(isPresented: $showPremium) { PremiumView() }
         .onChange(of: model.purchases.isPremium) { _, premium in
-            if premium { select(style) }
-            else { preview = model.effectiveCounter }
+            if premium {
+                select(style)
+                model.preferences.counterEffect = effect
+                model.persist()
+            } else {
+                preview = model.effectiveCounter
+                previewEffect = model.effectiveEffect
+            }
         }
     }
 
     private func effectOption(_ candidate: CounterEffect) -> some View {
-        let selected = candidate == model.preferences.counterEffect
+        let selected = candidate == effect
+        let locked = candidate.requiresPremium && !model.purchases.isPremium
         return Button {
-            model.preferences.counterEffect = candidate
-            model.persist()
+            previewEffect = candidate
+            if !locked {
+                model.preferences.counterEffect = candidate
+                model.persist()
+            }
             replayCounter += 1
         } label: {
             VStack(alignment: .leading, spacing: 8) {
@@ -109,7 +121,7 @@ struct CounterStylePickerView: View {
                         .font(.system(size: 22, weight: .medium))
                         .foregroundStyle(candidate.previewGradient)
                     Spacer(minLength: 4)
-                    Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    Image(systemName: locked ? "lock.fill" : selected ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(selected ? accent : Color.secondary.opacity(0.4))
                 }
                 Text(LocalizedStringKey(candidate.titleKey)).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)

@@ -6,7 +6,11 @@ public struct CounterProgress: Equatable, Sendable {
     public let ratio: Double
 
     public init(steps: Double, goal: Int) {
-        ratio = steps.isFinite && goal > 0 ? max(0, steps) / Double(goal) : 0
+        self.init(value: steps, goal: Double(goal))
+    }
+
+    public init(value: Double, goal: Double) {
+        ratio = value.isFinite && goal.isFinite && goal > 0 ? max(0, value) / goal : 0
     }
 
     public var fraction: Double { min(ratio, 1) }

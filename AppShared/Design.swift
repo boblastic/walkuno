@@ -84,9 +84,10 @@ struct ProgressRing: View {
     var accent: Color
     var secondaryAccent: Color? = nil
     var lineWidth: CGFloat = 18
+    var gradient: AnyShapeStyle? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        ProgressRingDrawing(progress: progress, accent: accent, secondaryAccent: secondaryAccent ?? accent.opacity(0.88), lineWidth: lineWidth)
+        ProgressRingDrawing(progress: progress, accent: accent, secondaryAccent: secondaryAccent ?? accent.opacity(0.88), lineWidth: lineWidth, gradient: gradient)
             .animation(reduceMotion ? nil : .spring(response: 0.9, dampingFraction: 0.85), value: progress)
             .accessibilityHidden(true)
     }
@@ -98,6 +99,7 @@ private struct ProgressRingDrawing: View, Animatable {
     var accent: Color
     var secondaryAccent: Color
     var lineWidth: CGFloat
+    var gradient: AnyShapeStyle?
 
     var animatableData: Double {
         get { progress }
@@ -118,7 +120,7 @@ private struct ProgressRingDrawing: View, Animatable {
             Circle().stroke(accent.opacity(0.18), lineWidth: lineWidth)
             Circle().trim(from: 0, to: min(total, 1))
                 // Matching both ends prevents a hard color seam across the rounded cap at twelve o'clock.
-                .stroke(AngularGradient(colors: [accent, secondaryAccent, accent], center: .center, startAngle: .degrees(0), endAngle: .degrees(360)),
+                .stroke(gradient ?? AnyShapeStyle(AngularGradient(colors: [accent, secondaryAccent, accent], center: .center, startAngle: .degrees(0), endAngle: .degrees(360))),
                         style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .shadow(color: accent.opacity(0.28), radius: 10)

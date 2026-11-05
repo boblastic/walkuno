@@ -6,6 +6,7 @@
 "common.continue" = "Continuar";
 "common.days" = "dias";
 "demo.banner" = "Pré-visualização · dados de demonstração";
+"tab.home" = "Início";
 "tab.today" = "Hoje";
 "tab.statistics" = "Estatísticas";
 "tab.explorer" = "Explorar";
@@ -41,6 +42,8 @@
 "health.empty.body" = "Não há medições disponíveis para este dia. Os dados podem estar em falta, ainda não ter sido sincronizados ou não estar autorizados.";
 "health.empty.connected.body" = "Não há medições disponíveis para este período. Os dados da Saúde da Apple podem estar em falta ou a aguardar sincronização.";
 "health.connect" = "Ligar à Saúde da Apple";
+"health.authorize" = "Autorizar o acesso à Saúde da Apple";
+"health.authorization.note" = "O Walkuno pede, num único pedido, acesso de leitura aos passos, à distância a caminhar e a correr, à energia ativa, aos minutos de exercício e aos andares subidos. Não são escritos dados na Saúde. Se já respondeste, altera as tuas escolhas em Saúde → o teu perfil → Apps e serviços → Walkuno.";
 "health.permissions.path" = "Para rever permissões: Saúde → o teu perfil → Apps e serviços → Walkuno.";
 "cache.error" = "Não foi possível atualizar a cache dos widgets.";
 "chart.no.data" = "Sem dados disponíveis";
@@ -80,7 +83,7 @@
 "achievements.total" = "Todos os passos disponíveis";
 "achievements.week" = "Melhor semana";
 "achievements.month" = "Melhor mês";
-"achievements.advanced" = "Descobrir os recordes Premium";
+"achievements.advanced" = "Descobrir os recordes Pro";
 "achievements.scope" = "Com base no histórico acessível da Saúde. As sequências usam os objetivos guardados; antes da primeira alteração, o objetivo de referência é de 8 000 passos.";
 "badge.5000" = "Primeiro marco\n5 000 passos";
 "badge.10000" = "Um grande passo\n10 000 passos";
@@ -90,7 +93,6 @@
 "badge.pending" = "Ao teu ritmo";
 "settings.daily" = "O teu dia a dia";
 "settings.unit" = "Unidade de distância";
-"settings.energy" = "Mostrar energia ativa";
 "settings.appearance" = "Ao teu gosto";
 "settings.glass.transparency" = "Transparência do vidro";
 "settings.glass.opaque" = "Opaco";
@@ -129,19 +131,15 @@
 "theme.palette.description" = "Escolhe uma cor para os teus anéis, gráficos e widgets.";
 "theme.selected" = "Cor selecionada";
 "theme.available" = "Disponível";
-"theme.premium.note" = "A paleta Walkuno está incluída. Há mais oito cores disponíveis com Premium.";
-"reset.title" = "Apagar dados locais";
-"reset.confirm" = "Apagar e recomeçar";
-"reset.body" = "Apaga preferências, objetivos e caches neste dispositivo. Os dados da Saúde da Apple, as compras e as definições no outro dispositivo são mantidos. O Walkuno só voltará a ler a Saúde depois de voltares a estabelecer a ligação de forma explícita.";
-"reset.error" = "Não foi possível apagar a cache. Desbloqueia o dispositivo e tenta novamente.";
+"theme.premium.note" = "A paleta Walkuno está incluída. Há mais oito cores disponíveis com Pro.";
 "privacy.title" = "Política de privacidade";
 "privacy.headline" = "Os teus passos são teus.";
 "privacy.body" = "O Walkuno, publicado pela Orbelio, funciona sem conta nem servidor de rastreio. Apenas lê os passos, a distância a caminhar e correr, a energia ativa, o tempo de exercício e os andares subidos que autorizares na Saúde da Apple. Nunca grava medições na Saúde nem envia dados de saúde para a Orbelio, serviços de análise ou redes publicitárias. Não há anúncios nem rastreadores.";
 "privacy.permissions" = "A Apple gere as permissões. Altera-as em Saúde → o teu perfil → Apps e serviços → Walkuno. A ausência de medições não permite ao Walkuno saber se recusaste o acesso.";
 "privacy.widgets" = "O histórico completo permanece no Saúde. Os gráficos são calculados em memória. Uma cache local limitada contém sete totais diários recentes, perfis horários, resumos diários do mês atual e anterior e, com Pro, agregados mensais de dois anos. É excluída dos backups e protegida com o dispositivo bloqueado. As medidas dos widgets são sensíveis. iPhone–Watch transmite objetivos e preferências, nunca medidas de saúde.";
 "privacy.purchases" = "A Apple processa as compras. O Walkuno verifica os direitos de acesso com StoreKit e nunca recebe os teus dados de pagamento. As preferências e os objetivos são guardados localmente. O Walkuno não sincroniza dados de saúde com o iCloud.";
-"privacy.reset" = "As Definições permitem apagar os dados locais. Isto não altera a Saúde da Apple, não cancela assinaturas nem revoga permissões geridas pela Apple. O Walkuno é uma aplicação de bem-estar sem função de diagnóstico médico.";
-"privacy.editor" = "Orbelio · Política de 5 de novembro de 2026 · Versão 1.1";
+"privacy.wellbeing" = "O Walkuno é uma aplicação de bem-estar sem função de diagnóstico médico.";
+"privacy.editor" = "Orbelio · Política de 5 de novembro de 2026 · Versão 1.2";
 "onboarding.0.title" = "Cada passo\nconta.";
 "onboarding.0.body" = "A tua atividade num relance. Um bonito contador de passos, progresso ao teu ritmo e dados que continuam a ser teus.";
 "onboarding.1.title" = "Uma ligação.\nTodos os teus passos.";
@@ -154,12 +152,12 @@
 "onboarding.permission.distance" = "Distância · até onde vais";
 "onboarding.permission.energy" = "Energia ativa · um extra opcional";
 "onboarding.readonly" = "Apenas leitura. O Walkuno nunca envia dados de saúde para fora dos teus dispositivos.";
-"onboarding.themes.note" = "Mais paletas e estilos estão disponíveis com Premium.";
+"onboarding.themes.note" = "Mais paletas e estilos estão disponíveis com Pro.";
 "onboarding.start" = "Vamos caminhar";
 "onboarding.later" = "Continuar sem ligar à Saúde";
 "onboarding.footer" = "Sem conta. Sem anúncios. Só tu.";
-"premium.title" = "Walkuno Premium";
-"premium.active" = "Premium está ativo";
+"premium.title" = "Walkuno Pro";
+"premium.active" = "Pro está ativo";
 "subscription.free" = "Grátis";
 "subscription.pro" = "Pro";
 "premium.development.title" = "Desenvolvimento";
@@ -167,24 +165,24 @@
 "premium.development.note" = "Simula o acesso Pro sem compra e memoriza a tua escolha no próximo arranque. Disponível apenas em desenvolvimento. As compras reais mantêm-se ativas ao desativares esta opção.";
 "premium.headline" = "Um pouco mais longe.\nUm pouco mais tu.";
 "premium.body" = "Uma visão mais rica do teu progresso, com a mesma simplicidade.";
-"premium.settings.subtitle" = "Todo o teu histórico. Todas as tuas cores.";
+"premium.settings.subtitle" = "Todo o histórico, todos os widgets e estilos.";
 "premium.feature.history" = "Histórico completo, vista anual e calendário";
 "premium.feature.themes" = "9 paletas de cores vibrantes";
-"premium.feature.counter" = "4 estilos de contador adicionais e temas dos widgets";
+"premium.feature.counter" = "3 estilos de contador adicionais";
 "premium.feature.records" = "Recordes semanais e mensais";
-"premium.history.cta" = "Descobre o teu histórico completo com Premium";
+"premium.history.cta" = "Descobre o teu histórico completo com Pro";
 "premium.annual.condition" = "Assinatura anual com renovação automática";
 "premium.lifetime.condition" = "Compra única · acesso vitalício";
 "premium.renewal" = "As assinaturas são cobradas na tua conta Apple e renovam-se automaticamente, salvo cancelamento pelo menos 24 horas antes do fim do período. Gere ou cancela nas definições da tua conta na App Store. A compra vitalícia não é uma assinatura.";
 "premium.terms" = "Termos de utilização";
-"premium.free.note" = "O contador de passos, o objetivo, as estatísticas recentes e os widgets básicos continuam gratuitos.";
+"premium.free.note" = "O contador, o objetivo, as estatísticas recentes, as conquistas e a app Apple Watch continuam gratuitos.";
 "purchase.title" = "Compras";
 "purchase.unavailable" = "As ofertas da App Store estão de momento indisponíveis. O contador de passos continua gratuito.";
-"purchase.unverified" = "Não foi possível verificar a transação. O acesso Premium não foi concedido.";
+"purchase.unverified" = "Não foi possível verificar a transação. O acesso Pro não foi concedido.";
 "purchase.pending" = "A tua compra aguarda aprovação.";
 "purchase.failed" = "Não foi possível concluir a operação. Tenta novamente através da App Store.";
-"purchase.restored" = "O teu acesso Premium foi restaurado.";
-"purchase.nothing" = "Não foi encontrada nenhuma compra Premium ativa para esta conta Apple.";
+"purchase.restored" = "O teu acesso Pro foi restaurado.";
+"purchase.nothing" = "Não foi encontrada nenhuma compra Pro ativa para esta conta Apple.";
 "purchase.restore" = "Restaurar compras";
 "purchase.manage" = "Gerir assinaturas";
 "purchase.retry" = "Recarregar ofertas";
@@ -216,6 +214,14 @@
 "insights.metric" = "Medida";
 "insights.details" = "Ver detalhes";
 "insights.day" = "A minha atividade de hoje";
+"insights.clock.title" = "Relógio de atividade";
+"insights.clock.subtitle" = "Raios: passos por hora · anéis: progresso diário";
+"insights.clock.steps %@" = "%@ passos";
+"insights.clock.ahead %@" = "%@ passos de avanço";
+"insights.clock.behind %@" = "%@ passos a menos do que o habitual";
+"insights.clock.same" = "Ao seu ritmo habitual";
+"insights.clock.remaining %@" = "Faltam %@ passos";
+"insights.clock.accessibility %@ %@ %@" = "%@ passos hoje, %@ passos habitualmente à mesma hora, às %@.";
 "insights.day.goal %@" = "Objetivo: %@ passos";
 "insights.today" = "Hoje";
 "insights.usual" = "Habitualmente";
@@ -243,6 +249,10 @@
 "insights.record.coverage" = "Total de %ld dias com medições neste período.";
 "insights.in.progress" = "Este período ainda está em curso: o total pode mudar.";
 "insights.all.years" = "Todos os anos";
+"insights.layout.horizontal" = "Vista horizontal";
+"insights.layout.vertical" = "Vista vertical";
+"insights.layout.show.horizontal" = "Mostrar anos lado a lado";
+"insights.layout.show.vertical" = "Mostrar anos em linhas";
 "insights.aggregation" = "Cálculo";
 "insights.totals" = "Totais";
 "insights.averages" = "Médias";
@@ -409,7 +419,7 @@
 
 "counter.selected" = "Contador selecionado";
 
-"counter.unlock" = "Escolher este estilo com Premium";
+"counter.unlock" = "Desbloquear esta personalização com Pro";
 
 "counter.palette.note" = "Cada contador segue a sua paleta de cores.";
 
@@ -458,7 +468,7 @@
 "terms.health.title" = "Atividade e bem-estar";
 "terms.health.body" = "As medições e os objetivos são indicadores de bem-estar cuja precisão depende dos dispositivos, das fontes e das permissões da Saúde. O Walkuno não fornece diagnósticos nem aconselhamento médico. Adapte a atividade à sua situação e procure orientação profissional quando necessário.";
 "terms.purchases.title" = "Funcionalidades gratuitas e Pro";
-"terms.purchases.body" = "As funcionalidades e os preços são apresentados antes da compra. A Apple gere pagamentos e pedidos de reembolso. As assinaturas renovam-se segundo as condições indicadas pela Apple; pode geri-las ou cancelá-las na sua conta Apple. Apagar dados locais ou desinstalar o Walkuno não cancela uma assinatura. Pode restaurar compras nas Definições.";
+"terms.purchases.body" = "As funcionalidades e os preços são apresentados antes da compra. A Apple gere pagamentos e pedidos de reembolso. As assinaturas renovam-se segundo as condições indicadas pela Apple; pode geri-las ou cancelá-las na sua conta Apple. Desinstalar o Walkuno não cancela uma assinatura. Pode restaurar compras nas Definições.";
 "terms.brand.title" = "Respeito pela marca e pelas criações";
 "terms.brand.body" = "Os nomes Walkuno e Orbelio, os logótipos, as ilustrações, a interface e o código são protegidos pelos direitos de propriedade intelectual aplicáveis dos seus titulares. Sem autorização, não pode explorá-los comercialmente, redistribuí-los nem apresentar uma criação como oficial ou associada à Orbelio. Mantêm-se permitidos os usos autorizados por lei. As marcas Apple e de terceiros pertencem aos respetivos titulares.";
 "terms.sharing.title" = "Os seus dados e partilhas";
@@ -468,10 +478,58 @@
 "terms.rights.title" = "Questões e direitos";
 "terms.rights.body" = "Para contactar a Orbelio, utilize a ligação de assistência na página do Walkuno na App Store. Estas condições complementam as regras da Apple sem limitar os seus direitos legais, incluindo garantias, meios de recurso e proteção de dados.";
 "terms.apple" = "Contrato de licença padrão da Apple";
-"terms.editor" = "Orbelio · Condições de 5 de novembro de 2026 · Versão 1.0";
+"terms.editor" = "Orbelio · Condições de 5 de novembro de 2026 · Versão 1.1";
 "privacy.sharing" = "A partilha de um cartão é iniciada apenas por si. As informações visíveis são transmitidas à aplicação ou ao destinatário que escolher, segundo as regras desse serviço. A Orbelio não recebe estas partilhas.";
-"privacy.storage" = "As preferências e os objetivos permanecem nos seus dispositivos até serem apagados; eventuais cópias de segurança dependem das definições Apple. A cache dos widgets é substituída ao atualizar e pode ser apagada nas Definições. Os serviços Saúde, as cópias de segurança e as compras geridas pela Apple também estão sujeitos às definições e à política de privacidade da Apple. Para questões, utilize a ligação de assistência na página do Walkuno na App Store.";
+"privacy.storage" = "As preferências e os objetivos são guardados localmente nos seus dispositivos; eventuais cópias de segurança dependem das definições Apple. A cache dos widgets é substituída ao atualizar. Os serviços Saúde, as cópias de segurança e as compras geridas pela Apple também estão sujeitos às definições e à política de privacidade da Apple. Para questões, utilize a ligação de assistência na página do Walkuno na App Store.";
 
 "settings.language" = "Idioma da aplicação";
 "settings.language.system" = "Idioma do telefone";
 "settings.language.note" = "Por predefinição, o Walkuno segue os idiomas preferidos do telefone. Se nenhum for suportado, é utilizado o inglês. Pode escolher outro idioma aqui.";
+
+"premium.feature.widgets" = "Todos os widgets iPhone e as complicações Apple Watch";
+
+"premium.feature.effects" = "4 efeitos animados para o contador";
+
+"premium.feature.analysis" = "Análises mensais e anuais e histórico por ano";
+
+"widget.pro.required" = "Os widgets e as complicações requerem Pro. Abra o Walkuno no iPhone para os desbloquear.";
+
+/* Local activity encouragement. */
+"motivation.title" = "O teu impulso de hoje";
+"motivation.why" = "Porquê esta sugestão?";
+"motivation.fact.noData" = "Os passos de hoje ainda não estão disponíveis.";
+"motivation.fact.achieved %@" = "Atingiste o teu objetivo de %@ passos.";
+"motivation.fact.remaining %@ %@" = "Faltam %@ passos para o teu objetivo de %@.";
+"motivation.message.noData" = "Cada pequeno passo pode ser um começo.";
+"motivation.message.starting" = "Encontra um ritmo que te sirva, passo a passo.";
+"motivation.message.steady" = "Um pequeno passeio, quando te der jeito, é uma oportunidade para continuar.";
+"motivation.message.progressing" = "Os teus progressos recentes contam, mesmo antes de atingires o objetivo.";
+"motivation.message.easing" = "Podes retomar com calma, sem compensar os dias anteriores.";
+"motivation.message.nearGoal" = "Estás perto do objetivo; um pequeno passeio é uma opção, se te apetecer.";
+"motivation.message.achieved" = "Parabéns pelos passos de hoje, desfruta do que conseguiste.";
+"motivation.message.evening" = "O teu dia pode terminar com calma; cada passo já dado conta.";
+"motivation.action %@" = "Se quiseres: mais %@ passos";
+"motivation.basis %ld %ld" = "Objetivo atingido em %ld de %ld dias com medições nos últimos 7 dias completos.";
+"motivation.average %@ %ld" = "Média recente: %@ passos em %ld dias com medições.";
+"motivation.trend %@ %@ %ld" = "Variação: %@%% face aos 7 dias anteriores (média de %@ passos, %ld dias com medições).";
+"motivation.pace.ahead" = "À hora da medição, estavas acima da tua atividade habitual.";
+"motivation.pace.similar" = "À hora da medição, estavas perto da tua atividade habitual.";
+"motivation.pace.behind" = "À hora da medição, estavas abaixo da tua atividade habitual; não há nada a compensar.";
+"motivation.sameTime %@ %@ %ld" = "Às %@: média habitual de %@ passos, com base em %ld dias recentes com medições à mesma hora (até 7 dos últimos 28 dias).";
+"motivation.history.note" = "Cada dia é comparado com o objetivo dessa altura; os dados em falta são excluídos das médias e hoje das tendências semanais.";
+"motivation.local" = "Mensagem de incentivo preparada pelo Walkuno.";
+"motivation.apple" = "Mensagem de incentivo redigida com Apple Intelligence neste iPhone.";
+"motivation.privacy" = "A análise fica neste iPhone; nenhum dado de Saúde é enviado para um servidor para esta sugestão.";
+
+"statistics.widgets.customize" = "Personalizar widgets";
+"statistics.widgets.instructions" = "Escolha os widgets a apresentar e arraste as pegas para alterar a ordem. As alterações são guardadas automaticamente.";
+
+/* Configurable daily objectives and metric-aware activity clock. */
+"goals.daily" = "Objetivos diários";
+"goals.target %@" = "Objetivo %@";
+"goals.range %@ %@" = "Entre %@ e %@.";
+"insights.clock.more %@" = "%@ de avanço";
+"insights.clock.less %@" = "%@ a menos que o habitual";
+"insights.clock.summary %@ %@" = "%@ hoje, %@ habitualmente neste momento do dia.";
+"unit.steps" = "passos";
+"unit.floors" = "andares";

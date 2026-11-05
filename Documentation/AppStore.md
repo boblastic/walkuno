@@ -12,7 +12,7 @@
 
 Connectez Apple Santé pour consulter vos pas, la distance marche/course et, lorsqu’elle est disponible, l’énergie active. Vos mesures de santé restent sur vos appareils : aucun compte, serveur de suivi ou SDK publicitaire.
 
-Le compteur, les objectifs, les statistiques récentes et les widgets sont gratuits. Walkuno Premium ajoute l’historique complet, la vue annuelle, des palettes et un compteur minimaliste ainsi que les records hebdomadaires et mensuels. Un abonnement annuel et un achat à vie sont proposés selon disponibilité App Store.
+Le compteur, les objectifs, les statistiques récentes, tous les trophées et l’application Apple Watch sont gratuits. Walkuno Pro ajoute l’historique complet, la vue annuelle, les analyses mensuelles et annuelles, toutes les palettes et tous les styles et effets, les records agrégés ainsi que tous les widgets iPhone et les complications Apple Watch. Un abonnement annuel et un achat à vie donnent les mêmes fonctionnalités Pro, selon disponibilité App Store.
 
 Le rafraîchissement des widgets dépend d’iOS et de watchOS. Les données affichées dépendent des autorisations Santé et des mesures accessibles. Walkuno est une application de bien-être, sans fonction de diagnostic médical.
 
@@ -30,7 +30,7 @@ Le rafraîchissement des widgets dépend d’iOS et de watchOS. Les données aff
 
 Connect Apple Health to view steps, walking/running distance, and active energy when available. Your health measurements stay on your devices. No account, tracking server, or advertising SDK.
 
-The step counter, goals, recent statistics, and widgets are free. Walkuno Premium adds full history, a yearly view, more palettes, a minimal counter, and weekly and monthly records. Annual subscription and lifetime purchase options are subject to App Store availability.
+The step counter, goals, recent statistics, all achievements and the Apple Watch app are free. Walkuno Pro adds full history, a yearly view, monthly and yearly analysis, all palettes, counter styles and effects, aggregate records, all iPhone widgets and Apple Watch complications. Annual subscription and lifetime purchase options unlock the same Pro features, subject to App Store availability.
 
 Widget updates are managed by iOS and watchOS. Measurements depend on Health permissions and available data. Walkuno is a wellness application with no medical diagnostic function.
 

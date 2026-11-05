@@ -36,7 +36,7 @@ private struct AppHeader: View {
     private var streak: Int? {
         ActivityMath.currentStreak(days: model.days, goals: model.preferences.goals, endingOn: model.today.date)
     }
-    private var streakSymbol: String { model.preferences.counterEffect == .fire ? "flame.fill" : "star.fill" }
+    private var streakSymbol: String { model.effectiveEffect == .fire ? "flame.fill" : "star.fill" }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -260,7 +260,7 @@ struct WalkunoGlassSurface: View {
     }
 }
 
-struct GlassSettingsSection: View {
+struct GlassSettingsControls: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
@@ -268,8 +268,9 @@ struct GlassSettingsSection: View {
     private var systemOverridesTransparency: Bool { reduceTransparency || contrast == .increased }
 
     var body: some View {
-        Section {
+        Group {
             VStack(alignment: .leading, spacing: 12) {
+                Text("Liquid Glass").font(.headline)
                 LabeledContent("settings.glass.transparency", value: model.preferences.glassTransparency.formatted(.percent.precision(.fractionLength(0))))
                 Slider(value: Binding(get: { model.preferences.glassTransparency }, set: {
                     model.preferences.glassTransparency = $0
@@ -293,10 +294,8 @@ struct GlassSettingsSection: View {
                     Text("settings.glass.transparent")
                 }.font(.caption).foregroundStyle(.secondary)
             }.padding(.vertical, 4)
-        } header: {
-            Text("Liquid Glass")
-        } footer: {
             Text(systemOverridesTransparency ? "settings.glass.accessibility" : "settings.glass.note")
+                .font(.caption).foregroundStyle(.secondary)
         }
     }
 }

@@ -21,6 +21,26 @@ extension ActivityMetric {
         }
     }
 
+    func clockNumber(_ value: Double?, unit: DistanceUnit) -> String {
+        guard let value else { return "—" }
+        let number = self == .distance ? unit.convert(meters: value) : value
+        return number.formatted(.number.precision(.fractionLength(self == .distance ? 1 : 0)))
+    }
+
+    func clockUnit(_ unit: DistanceUnit) -> String {
+        switch self {
+        case .distance: unit.symbol
+        case .energy: "kcal"
+        case .exerciseTime: "min"
+        case .steps: L("unit.steps")
+        case .floors: L("unit.floors")
+        }
+    }
+
+    func clockText(_ value: Double?, unit: DistanceUnit) -> String {
+        clockNumber(value, unit: unit) + " " + clockUnit(unit)
+    }
+
     func text(_ value: Double?, unit: DistanceUnit, signed: Bool = false) -> String {
         guard let value else { return "—" }
         let sign = signed && value > 0 ? "+" : ""
@@ -82,38 +102,76 @@ struct StatisticsInsightsView: View {
     var earliest: Date?
     var onPremium: () -> Void
     private var days: [ActivityDay] { model.days.filter { $0.date >= (earliest ?? .distantPast) && $0.date <= .now } }
+    @State private var activity: DailyActivitySnapshot?
+    @State private var loadedID: String?
+    @State private var loading = false
+    @State private var failed = false
+    private var taskID: String {
+        "\(metric.rawValue)-\(earliest?.timeIntervalSince1970 ?? 0)-\(model.lastUpdated?.timeIntervalSince1970 ?? 0)-\(model.preferences.healthRequested)-\(model.days.count)-\(model.preferences.statisticsWidgets.visible.contains(.clock) || model.preferences.statisticsWidgets.visible.contains(.day))"
+    }
+    private var currentActivity: DailyActivitySnapshot? { loadedID == taskID ? activity : nil }
+    private var clock: ActivityClockSnapshot {
+        model.activityClock(metric: metric, data: currentActivity)
+    }
+
 
     var body: some View {
         VStack(spacing: 20) {
-            DailyComparisonCard(earliest: earliest, metric: metric)
-            TrendsCard(days: days, onPremium: onPremium, metric: metric)
-            YearHistoryCard(days: days, metric: metric)
-            ActivityRecordCard(days: days, onPremium: onPremium, metric: metric)
-            if !model.isDemo && (model.today.exerciseMinutes == nil || model.today.floors == nil) {
-                Button("insights.health.connect") { Task { await model.connectHealth() } }
-                    .font(.caption.weight(.semibold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            ForEach(model.preferences.statisticsWidgets.visible) { widget in
+                widgetView(widget)
             }
+        }
+        .task(id: taskID) {
+            let requestID = taskID
+            guard loadedID != requestID || activity == nil else { return }
+            loading = true; failed = false; activity = nil; loadedID = nil
+            guard model.preferences.statisticsWidgets.visible.contains(.clock) || model.preferences.statisticsWidgets.visible.contains(.day) else {
+                loading = false; return
+            }
+            do {
+                let result = try await model.dailyActivity(metric: metric, earliest: earliest)
+                try Task.checkCancellation()
+                guard taskID == requestID else { return }
+                activity = result; loadedID = requestID; loading = false
+            } catch is CancellationError { }
+            catch { if !Task.isCancelled { failed = true; loading = false } }
+        }
+    }
+
+    @ViewBuilder private func widgetView(_ widget: StatisticsWidget) -> some View {
+        switch widget {
+        case .clock:
+            StepsClockCard(snapshot: clock, loading: loading, failed: failed).id(metric)
+        case .day:
+            DailyComparisonCard(metric: metric, comparison: currentActivity?.comparison, loading: loading, failed: failed)
+        case .trends:
+            TrendsCard(days: days, onPremium: onPremium, metric: metric)
+        case .history:
+            if model.purchases.isPremium {
+                YearHistoryCard(days: days, metric: metric)
+            } else {
+                Button(action: onPremium) {
+                    Label("premium.feature.analysis", systemImage: "lock.fill").frame(maxWidth: .infinity)
+                }.buttonStyle(.bordered).accessibilityIdentifier("insights.history.unlock")
+            }
+        case .records:
+            ActivityRecordCard(days: model.days, onPremium: onPremium, metric: metric)
         }
     }
 }
 
 private struct DailyComparisonCard: View {
-    var earliest: Date?
     @Environment(AppModel.self) private var model
     var metric: ActivityMetric
-    @State private var comparison: DayComparison?
-    @State private var loading = false
-    @State private var failed = false
+    var comparison: DayComparison?
+    var loading: Bool
+    var failed: Bool
     @Environment(\.colorScheme) private var scheme
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
     private var baseline: Color { model.effectiveTheme.secondaryTint(for: scheme) }
     private var chartMaximum: Double {
         let values = (comparison?.points.compactMap(\.current) ?? []) + (comparison?.usualDayPoints.compactMap(\.usual) ?? [])
-        return max(values.max() ?? 0, metric == .steps ? Double(model.goal) : 1) * 1.15
-    }
-    private var taskID: String {
-        "\(metric.rawValue)-\(earliest?.timeIntervalSince1970 ?? 0)-\(model.lastUpdated?.timeIntervalSince1970 ?? 0)-\(model.preferences.healthRequested)-\(model.days.count)"
+        return max(values.max() ?? 0, model.preferences.goal(for: metric)) * 1.15
     }
     var body: some View {
         WalkunoCard {
@@ -125,15 +183,13 @@ private struct DailyComparisonCard: View {
                     dayLegend(title: "insights.usual", value: comparison?.usualDayTotal, color: baseline, dashed: true)
                 }
                 Chart {
-                    if metric == .steps {
-                        RuleMark(y: .value(L("goal.title"), model.goal))
+                    RuleMark(y: .value(L("goal.title"), model.preferences.goal(for: metric)))
                             .foregroundStyle(Color.secondary.opacity(0.5))
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 4]))
                             .annotation(position: .bottom, alignment: .trailing, spacing: 3) {
-                                Text("insights.day.goal \(model.goal.formatted())")
+                                Text("goals.target \(metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))")
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
-                    }
                     ForEach(comparison?.usualDayPoints ?? []) { point in
                         if let usual = point.usual {
                             LineMark(x: .value(L("chart.hour"), point.hour), y: .value(L("insights.usual"), usual), series: .value("series", "usual"))
@@ -168,7 +224,7 @@ private struct DailyComparisonCard: View {
                 .overlay { if loading { ProgressView() } }
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel(Text("\(L(metric.titleKey)), \(L("insights.today")) \(metric.text(comparison?.current, unit: model.preferences.unit)), \(L("insights.usual")) \(metric.text(comparison?.usualDayTotal, unit: model.preferences.unit))"))
-                .accessibilityValue(metric == .steps ? Text("insights.day.goal \(model.goal.formatted())") : Text(""))
+                .accessibilityValue(Text("goals.target \(metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))"))
                 .chartInspection("insights.day.chart", resetKey: metric.rawValue) { proxy in
                     let usual = comparison?.usualDayPoints ?? []
                     let current = comparison?.points ?? []
@@ -188,15 +244,7 @@ private struct DailyComparisonCard: View {
                 }
             }
         }
-        .task(id: taskID) {
-            loading = true; failed = false; comparison = nil
-            do {
-                let result = try await model.dayComparison(metric: metric, earliest: earliest)
-                try Task.checkCancellation()
-                comparison = result; loading = false
-            } catch is CancellationError { }
-            catch { if !Task.isCancelled { failed = true; loading = false } }
-        }
+
     }
 
     private func dayLegend(title: String, value: Double?, color: Color, dashed: Bool) -> some View {
@@ -300,7 +348,7 @@ private struct TrendsCard: View {
                     }
                 }
                 Picker("statistics.period", selection: Binding(get: { period }, set: { value in
-                    if value == .year && !model.purchases.isPremium { onPremium() } else { period = value }
+                    if value != .sevenDays && !model.purchases.isPremium { onPremium() } else { period = value }
                 })) {
                     ForEach([TrendPeriod.sevenDays, .month, .year]) { Text(L("trend.\($0.rawValue)")).tag($0) }
                 }.pickerStyle(.segmented).accessibilityIdentifier("insights.trend.period")
@@ -358,7 +406,7 @@ private struct TrendsCard: View {
                 }
             }
         }
-        .onChange(of: model.purchases.isPremium) { _, premium in if !premium && period == .year { period = .sevenDays } }
+        .onChange(of: model.purchases.isPremium) { _, premium in if !premium && period != .sevenDays { period = .sevenDays } }
     }
 
     private func trendLegend(title: String, value: Double?, color: Color) -> some View {
@@ -547,17 +595,33 @@ private struct YearHistoryCard: View {
     @Environment(AppModel.self) private var model
     var metric: ActivityMetric
     @State private var averages = true
+    @AppStorage("statistics.history.horizontal") private var horizontal = true
     @Environment(\.colorScheme) private var scheme
+    @ScaledMetric(relativeTo: .caption) private var yearLabelWidth = 76
+    @ScaledMetric(relativeTo: .caption) private var labelHeight = 22
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
 
     var body: some View {
-        let years = ActivityStatistics.buckets(days: days, period: .year).reversed()
+        let years = ActivityStatistics.buckets(days: days, period: .year)
         let values = years.compactMap { value($0) }
         let maximum = max(values.max() ?? 1, 1)
         let best = years.filter { value($0) != nil }.max { (value($0) ?? 0) < (value($1) ?? 0) }?.id
         WalkunoCard {
             VStack(alignment: .leading, spacing: 20) {
-                InsightHeader(title: "insights.all.years", metric: metric)
+                HStack(spacing: 12) {
+                    InsightHeader(title: "insights.all.years", metric: metric)
+                    Button { horizontal.toggle() } label: {
+                        Image(systemName: horizontal ? "rectangle.grid.1x2" : "rectangle.grid.3x1")
+                            .font(.body.weight(.semibold))
+                            .frame(width: 44, height: 44)
+                            .background(accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(accent)
+                    .accessibilityLabel(Text(L(horizontal ? "insights.layout.show.vertical" : "insights.layout.show.horizontal")))
+                    .accessibilityValue(Text(L(horizontal ? "insights.layout.horizontal" : "insights.layout.vertical")))
+                    .accessibilityIdentifier("insights.history.orientation")
+                }
                 Picker("insights.aggregation", selection: $averages) {
                     Text("insights.totals").tag(false)
                     Text("insights.averages").tag(true)
@@ -566,25 +630,149 @@ private struct YearHistoryCard: View {
                     InsightValue(title: "insights.total", value: metric.text(MetricSummary(days: days, metric: metric).total, unit: model.preferences.unit))
                 }
                 if values.isEmpty { Text("chart.no.data").font(.subheadline).foregroundStyle(.secondary) }
-                ForEach(Array(years)) { year in
-                    VStack(alignment: .leading, spacing: 7) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(year.id.formatted(.dateTime.locale(AppLocalization.locale).year())).font(.subheadline.weight(.semibold))
-                            if year.id == best { Image(systemName: "trophy.fill").font(.caption).foregroundStyle(accent).accessibilityLabel(Text("insights.best.year")) }
-                            if year.interval.end > .now { Text("insights.partial").font(.caption2).foregroundStyle(.secondary) }
-                            Spacer(minLength: 4)
-                            Text(metric.text(value(year), unit: model.preferences.unit)).font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        }
-                        GeometryReader { geometry in
-                            Capsule().fill(accent.opacity(0.08))
-                            if let amount = value(year) {
-                                Capsule().fill(accent.gradient).frame(width: max(amount > 0 ? 4 : 0, geometry.size.width * min(1, amount / maximum)))
+                if horizontal && !years.isEmpty {
+                    GeometryReader { geometry in
+                        let columnWidth = geometry.size.width / CGFloat(years.count)
+                        let labels = visibleYearIndices(count: years.count, width: geometry.size.width)
+                        HStack(alignment: .top, spacing: 0) {
+                            ForEach(Array(years.enumerated()), id: \.element.id) { index, year in
+                                yearColumn(year, maximum: maximum, best: best, width: columnWidth,
+                                           showLabel: labels.contains(index),
+                                           alignment: columnWidth >= yearLabelWidth ? .center
+                                               : index == 0 ? .leading : index == years.count - 1 ? .trailing : .center)
+                                    .frame(width: columnWidth)
                             }
-                        }.frame(height: 18).accessibilityHidden(true)
-                    }.accessibilityElement(children: .combine)
+                        }
+                    }
+                    .frame(height: 140 + labelHeight * 2 + 16)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("insights.history.horizontal")
+                    .plotInspection("insights.history.horizontal", resetKey: "\(metric.rawValue)-\(averages)") { size in
+                        years.enumerated().map { index, year in
+                            let amount = value(year)
+                            let title = ([year.id.formatted(.dateTime.locale(AppLocalization.locale).year())]
+                                         + (year.id == best ? [L("insights.best.year")] : [])
+                                         + (year.interval.end > .now ? [L("insights.partial")] : [])).joined(separator: " · ")
+                            return ChartInspectionPoint(x: size.width * (CGFloat(index) + 0.5) / CGFloat(years.count),
+                                y: amount.map { labelHeight + 8 + 140 * (1 - min(1, max(0, $0 / maximum))) },
+                                title: title, value: metric.text(amount, unit: model.preferences.unit), color: accent)
+                        }
+                    }
+                    if let current = years.last, current.interval.end > .now {
+                        Text(current.id.formatted(.dateTime.locale(AppLocalization.locale).year()) + " · " + L("insights.partial"))
+                            .font(.caption2).foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                } else {
+                    Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 14) {
+                        ForEach(Array(years.reversed())) { year in
+                            let description = ([year.id.formatted(.dateTime.locale(AppLocalization.locale).year())]
+                                               + (year.id == best ? [L("insights.best.year")] : [])
+                                               + (year.interval.end > .now ? [L("insights.partial")] : [])).joined(separator: ", ")
+                            GridRow {
+                                yearRowBar(year, maximum: maximum, best: best)
+                                Text(metric.text(value(year), unit: model.preferences.unit))
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                    .monospacedDigit().lineLimit(1)
+                                    .fixedSize(horizontal: true, vertical: false)
+                                    .gridColumnAlignment(.trailing)
+                            }
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(Text(description))
+                            .accessibilityValue(Text(metric.text(value(year), unit: model.preferences.unit)))
+                            .accessibilityIdentifier("insights.history.year.\(Calendar.current.component(.year, from: year.id))")
+                        }
+                    }
+
                 }
             }
         }
+    }
+
+    private func yearRowBar(_ year: ActivityBucket, maximum: Double, best: Date?) -> some View {
+        GeometryReader { geometry in
+            let amount = value(year)
+            let filledWidth = amount.map { max($0 > 0 ? 4 : 0, geometry.size.width * min(1, max(0, $0 / maximum))) } ?? 0
+            ZStack(alignment: .leading) {
+                Capsule().fill(accent.opacity(0.08))
+                Capsule().fill(accent.gradient).frame(width: filledWidth)
+                yearRowLabel(year, best: best).foregroundStyle(Color.primary)
+                // Match the text contrast to the filled and empty portions of the bar.
+                yearRowLabel(year, best: best).foregroundStyle(WalkunoStyle.ink)
+                    .mask(alignment: .leading) { Rectangle().frame(width: filledWidth) }
+            }
+        }
+        .frame(height: max(36, labelHeight + 14))
+        .accessibilityHidden(true)
+    }
+
+    private func yearRowLabel(_ year: ActivityBucket, best: Date?) -> some View {
+        HStack(spacing: 4) {
+            Text(year.id.formatted(.dateTime.locale(AppLocalization.locale).year()))
+                .font(.caption.weight(.semibold))
+            if year.id == best { Image(systemName: "trophy.fill").font(.caption2) }
+            if year.interval.end > .now { Text("insights.partial").font(.caption2) }
+        }
+        .lineLimit(1).minimumScaleFactor(0.65)
+        .padding(.horizontal, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func visibleYearIndices(count: Int, width: CGFloat) -> Set<Int> {
+        guard count > 1 else { return [0] }
+        let labelCount = min(count, max(2, Int(width / yearLabelWidth)))
+        // Keep both ends of the history and distribute the other labels evenly.
+        return Set((0..<labelCount).map { index in
+            Int((Double(index) * Double(count - 1) / Double(labelCount - 1)).rounded())
+        })
+    }
+
+    private func yearColumn(_ year: ActivityBucket, maximum: Double, best: Date?, width: CGFloat,
+                            showLabel: Bool, alignment: Alignment) -> some View {
+        let showValue = width >= yearLabelWidth
+        let yearTitle = year.id.formatted(.dateTime.locale(AppLocalization.locale).year())
+        let description = ([yearTitle] + (year.id == best ? [L("insights.best.year")] : [])
+                           + (year.interval.end > .now ? [L("insights.partial")] : [])).joined(separator: ", ")
+        return VStack(spacing: 8) {
+            ZStack {
+                Text(metric.text(value(year), unit: model.preferences.unit))
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .opacity(showValue ? 1 : 0)
+                if !showValue && year.id == best {
+                    Image(systemName: "trophy.fill").font(.caption).foregroundStyle(accent)
+                }
+            }
+            .frame(height: labelHeight)
+            GeometryReader { geometry in
+                ZStack(alignment: .bottom) {
+                    Capsule().fill(accent.opacity(0.08))
+                    if let amount = value(year) {
+                        Capsule().fill(accent.gradient)
+                            .frame(height: max(amount > 0 ? 4 : 0, geometry.size.height * min(1, amount / maximum)))
+                    }
+                }
+            }
+            .frame(width: min(26, width * 0.6), height: 140)
+            Color.clear.frame(height: labelHeight)
+                .overlay(alignment: alignment) {
+                    if showLabel {
+                        HStack(spacing: 4) {
+                            Text(yearTitle).font(.caption.weight(.semibold))
+                            if showValue && year.id == best {
+                                Image(systemName: "trophy.fill").font(.caption2).foregroundStyle(accent)
+                            }
+                        }
+                        .fixedSize()
+                        .accessibilityIdentifier("insights.history.label.\(Calendar.current.component(.year, from: year.id))")
+                    }
+                }
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(description))
+        .accessibilityValue(Text(metric.text(value(year), unit: model.preferences.unit)))
+        .accessibilityIdentifier("insights.history.year.\(Calendar.current.component(.year, from: year.id))")
     }
 
     private func value(_ bucket: ActivityBucket) -> Double? {

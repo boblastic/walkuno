@@ -4,7 +4,7 @@ L’onglet Succès présente quatre catégories : records personnels, victoires 
 
 ## Records personnels
 
-Les maxima quotidiens des pas, de l’énergie active, de la distance marche/course, du temps d’exercice et des étages sont affichés en tête, chacun avec sa propre date et son pictogramme. Le record de pas est mis en avant. Une mesure absente reste « — ». Le record d’énergie reste visible dans cette collection, même si son affichage est désactivé sur le tableau de bord.
+Les maxima quotidiens des pas, de l’énergie active, de la distance marche/course, du temps d’exercice et des étages sont affichés en tête, chacun avec sa propre date et son pictogramme. Le record de pas est mis en avant. Une mesure absente reste « — ». L’énergie active est toujours affichée dans l’application et les widgets.
 
 ## Victoires du quotidien
 

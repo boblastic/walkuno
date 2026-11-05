@@ -4,19 +4,17 @@ import StoreKit
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.colorScheme) private var scheme
-    @State private var showGoal = false
+    @State private var goalMetric: ActivityMetric?
     @State private var showPremium = false
     @State private var showPrivacy = false
     @State private var showTerms = false
-    @State private var confirmReset = false
     @State private var showSubscriptions = false
+    @State private var isRequestingHealth = false
+    @State private var showHealthPermissions = false
+    @State private var healthPermissionsMessage = ""
     var body: some View {
         @Bindable var model = model
         Form {
-            Section {
-                Label("account.local", systemImage: "figure.walk.circle.fill").font(.headline)
-                Text("account.local.note").font(.subheadline).foregroundStyle(.secondary)
-            }
             Section {
                 Button { showPremium = true } label: {
                     HStack(spacing: 14) {
@@ -30,15 +28,19 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("settings.subscription")
             }
-            Section("settings.daily") {
-                Button { showGoal = true } label: { LabeledContent("goal.title", value: model.goal.formatted()) }
+            Section("goals.daily") {
+                ForEach(ActivityMetric.allCases) { metric in
+                    Button { goalMetric = metric } label: {
+                        LabeledContent(L(metric.titleKey), value: metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))
+                    }
+                    .accessibilityIdentifier("settings.goal.\(metric.rawValue)")
+                }
+            }
+            Section("settings.appearance") {
                 Picker("settings.unit", selection: $model.preferences.unit) {
                     Text("unit.kilometers").tag(DistanceUnit.kilometers)
                     Text("unit.miles").tag(DistanceUnit.miles)
                 }
-                Toggle("settings.energy", isOn: $model.preferences.showEnergy)
-            }
-            Section {
                 Picker("settings.language", selection: $model.preferences.language) {
                     Text("settings.language.system").tag(AppLanguage.system)
                     ForEach(AppLanguage.allCases.filter { $0 != .system }) { language in
@@ -46,10 +48,7 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityIdentifier("settings.language")
-            } footer: {
-                Text("settings.language.note")
-            }
-            Section("settings.appearance") {
+                Text("settings.language.note").font(.caption).foregroundStyle(.secondary)
                 NavigationLink {
                     ThemePaletteView().appHeader()
                 } label: {
@@ -71,21 +70,35 @@ struct SettingsView: View {
                 Toggle("settings.period.animations", isOn: $model.preferences.animatePeriodChanges)
                     .accessibilityIdentifier("settings.period.animations")
                 Text("settings.period.animations.description").font(.caption).foregroundStyle(.secondary)
+                GlassSettingsControls()
             }
-            GlassSettingsSection()
             Section("settings.data") {
-                Button("health.connect") { Task { await model.connectHealth() } }
-                Text("health.permissions.path").font(.caption).foregroundStyle(.secondary)
-                Button("reset.title", role: .destructive) { confirmReset = true }
+                Button("health.authorize") {
+                    isRequestingHealth = true
+                    Task {
+                        defer { isRequestingHealth = false }
+                        let outcome = await model.connectHealth()
+                        if outcome == .alreadyRequested {
+                            healthPermissionsMessage = L("health.permissions.path")
+                            showHealthPermissions = true
+                        } else if outcome == nil, !model.isDemo {
+                            healthPermissionsMessage = L("health.connection.error")
+                            showHealthPermissions = true
+                        }
+                    }
+                }
+                .disabled(isRequestingHealth)
+                .accessibilityIdentifier("settings.health.authorize")
+                Text("health.authorization.note").font(.caption).foregroundStyle(.secondary)
+                    .accessibilityIdentifier("settings.health.explanation")
             }
             Section("settings.purchases") {
                 Button("purchase.restore") { Task { await model.purchases.restore() } }.disabled(model.purchases.isBusy)
                 Button("purchase.manage") { showSubscriptions = true }
             }
             Section {
-                Text("Walkuno · Orbelio").font(.subheadline.weight(.semibold))
-                Text("brand.tagline").font(.caption).foregroundStyle(.secondary)
-                Text("settings.version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")").font(.caption2).foregroundStyle(.secondary)
+                Label("account.local", systemImage: "figure.walk.circle.fill").font(.headline)
+                Text("account.local.note").font(.subheadline).foregroundStyle(.secondary)
             }
             Section {
                 Button("privacy.title") { showPrivacy = true }
@@ -106,14 +119,16 @@ struct SettingsView: View {
                 else if previous.language != newPreferences.language { model.persist(sync: false) }
             }
         }
-        .sheet(isPresented: $showGoal) { GoalEditor() }
+        .sheet(item: $goalMetric) { GoalEditor(metric: $0) }
         .sheet(isPresented: $showPremium) { PremiumView() }
         .sheet(isPresented: $showPrivacy) { PrivacyView() }
         .sheet(isPresented: $showTerms) { TermsView() }
         .manageSubscriptionsSheet(isPresented: $showSubscriptions)
-        .confirmationDialog("reset.title", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("reset.confirm", role: .destructive) { Task { await model.resetLocalData() } }
-        } message: { Text("reset.body") }
+        .alert("health.authorize", isPresented: $showHealthPermissions) {
+            Button("common.done", role: .cancel) { }
+        } message: {
+            Text(healthPermissionsMessage)
+        }
         .alert("purchase.title", isPresented: Binding(get: { model.purchases.message != nil }, set: { if !$0 { model.purchases.message = nil } })) {
             Button("common.done") { model.purchases.message = nil }
         } message: { Text(model.purchases.message ?? "") }
@@ -198,48 +213,97 @@ private struct ThemePaletteView: View {
 }
 
 struct GoalEditor: View {
+    var metric: ActivityMetric = .steps
     @Environment(\.colorScheme) private var scheme
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var input = ""
-    private var parsedGoal: Int? {
-        let formatter = NumberFormatter(); formatter.numberStyle = .decimal
-        guard let number = formatter.number(from: input) else { return nil }
-        let value = number.doubleValue
-        guard value.rounded() == value, (500...100_000).contains(value) else { return nil }
-        return Int(value)
+    private var unit: DistanceUnit { model.preferences.unit }
+    private var value: Double { model.preferences.goal(for: metric) }
+    private var formatter: NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.locale = AppLocalization.locale
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = false
+        formatter.maximumFractionDigits = metric == .distance ? 3 : 0
+        return formatter
+    }
+    private func editText(_ value: Double) -> String {
+        formatter.string(from: NSNumber(value: metric == .distance ? unit.convert(meters: value) : value)) ?? ""
+    }
+    private var parsedGoal: Double? {
+        // Saving an unchanged distance must not round-trip meters through rounded miles.
+        if input == editText(value) { return value }
+        let separator = formatter.decimalSeparator ?? "."
+        let parts = input.components(separatedBy: separator)
+        guard parts.count <= (metric == .distance ? 2 : 1),
+              parts.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }),
+              let number = formatter.number(from: input) else { return nil }
+        let displayed = number.doubleValue
+        let canonical = metric == .distance ? displayed * (unit == .kilometers ? 1_000 : 1_609.344) : displayed
+        return metric.acceptsGoal(canonical) ? canonical : nil
+    }
+    private var presets: [Double] {
+        switch metric {
+        case .steps: [5_000, 8_000, 10_000, 12_000]
+        case .distance: unit == .kilometers ? [3_000, 5_000, 8_000, 10_000] : [2, 3, 5, 6].map { $0 * 1_609.344 }
+        case .energy: [200, 400, 600, 800]
+        case .exerciseTime: [15, 30, 45, 60]
+        case .floors: [5, 10, 15, 20]
+        }
+    }
+    private var rangeText: String {
+        func bound(_ value: Double) -> String {
+            let displayed = metric == .distance ? unit.convert(meters: value) : value
+            return displayed.formatted(.number.locale(AppLocalization.locale).precision(.fractionLength(0...3))) + " " + metric.clockUnit(unit)
+        }
+        return String(format: L("goals.range %@ %@"), bound(metric.goalRange.lowerBound), bound(metric.goalRange.upperBound))
     }
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("goal.title", text: $input).keyboardType(.numberPad).font(.system(.largeTitle, design: .rounded, weight: .bold))
-                        .accessibilityIdentifier("goal.input")
-                        .accessibilityLabel(Text("goal.title"))
-                    Text("goal.range").font(.caption).foregroundStyle(.secondary)
+                    HStack {
+                        TextField(L(metric.titleKey), text: $input)
+                            .keyboardType(metric == .distance ? .decimalPad : .numberPad)
+                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                            .accessibilityIdentifier("goal.input")
+                            .accessibilityLabel(Text(L(metric.titleKey)))
+                        Text(metric.clockUnit(unit)).foregroundStyle(.secondary)
+                    }
+                    Text(rangeText).font(.caption).foregroundStyle(.secondary)
                 }
                 Section("goal.presets") {
-                    ForEach([5000, 8000, 10000, 12000], id: \.self) { value in
-                        Button { input = value.formatted() } label: {
-                            HStack { Text(value.formatted()); Spacer(); if parsedGoal == value { Image(systemName: "checkmark") } }
+                    ForEach(presets, id: \.self) { value in
+                        Button { input = editText(value) } label: {
+                            HStack {
+                                Text(metric == .steps ? metric.clockNumber(value, unit: unit) : metric.clockText(value, unit: unit))
+                                Spacer()
+                                if let parsedGoal, abs(parsedGoal - value) < 0.001 { Image(systemName: "checkmark") }
+                            }
                         }
                     }
                 }
-                Section { Text("goal.note").font(.subheadline).foregroundStyle(.secondary) }
+                if metric == .steps {
+                    Section { Text("goal.note").font(.subheadline).foregroundStyle(.secondary) }
+                }
             }
             .scrollContentBackground(.hidden)
             .background(WalkunoStyle.background(scheme))
-            .navigationTitle("goal.edit").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(L(metric.shortTitleKey)).navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("common.cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("common.save") { if let value = parsedGoal { model.setGoal(value); dismiss() } }.disabled(parsedGoal == nil)
+                    Button("common.save") {
+                        if let value = parsedGoal { model.setGoal(value, for: metric); dismiss() }
+                    }.disabled(parsedGoal == nil)
+                    .accessibilityIdentifier("goal.save")
                 }
             }
-            .onAppear { input = model.goal.formatted() }
+            .onAppear { input = editText(value) }
             .appHeader()
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
     }
 }
 
@@ -256,7 +320,7 @@ struct PrivacyView: View {
                     Text("privacy.permissions").font(.body)
                     Text("privacy.widgets").font(.body)
                     Text("privacy.purchases").font(.body)
-                    Text("privacy.reset").font(.body)
+                    Text("privacy.wellbeing").font(.body)
                     Text("privacy.sharing").font(.body)
                     Text("privacy.storage").font(.body)
                     Text("privacy.editor").font(.caption).foregroundStyle(.secondary)

@@ -79,6 +79,7 @@ struct RootView: View {
     @Environment(\.colorScheme) private var scheme
     @State private var selection = 0
     @State private var appIcon = ThemeAppIcon()
+    @State private var showPro = false
     @Environment(\.scenePhase) private var scenePhase
     var body: some View {
         content.tint(model.effectiveTheme.tint(for: scheme))
@@ -93,6 +94,7 @@ struct RootView: View {
                     Task { await appIcon.synchronize(with: model.effectiveTheme) }
                 }
             }
+            .sheet(isPresented: $showPro) { PremiumView() }
             .alert("icon.update.title", isPresented: Binding(
                 get: { appIcon.error != nil },
                 set: { if !$0 { appIcon.clearError() } }
@@ -105,7 +107,7 @@ struct RootView: View {
         if model.preferences.onboardingComplete {
             TabView(selection: $selection) {
                 NavigationStack { TodayView().appHeader() }
-                    .tabItem { Label("tab.today", systemImage: "circle.dotted.circle.fill") }.tag(0)
+                    .tabItem { Label("tab.home", systemImage: "circle.dotted.circle.fill") }.tag(0)
                 NavigationStack { StatisticsView().appHeader() }
                     .tabItem { Label("tab.statistics", systemImage: "chart.bar.xaxis") }.tag(1)
                 NavigationStack { ExplorerView().appHeader() }
@@ -118,6 +120,7 @@ struct RootView: View {
             .onOpenURL { url in
                 guard url.scheme == "walkuno" else { return }
                 switch url.host {
+                case "pro": showPro = true
                 case "today": selection = 0
                 case "statistics": selection = 1
                 case "explorer": selection = 2

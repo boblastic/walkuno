@@ -24,6 +24,12 @@ struct ExplorerView: View {
         return calendar
     }
     private var interval: DateInterval { period.interval(containing: anchor, calendar: calendar) }
+    private var calendarWeekdays: [String] {
+        var localizedCalendar = calendar
+        localizedCalendar.locale = AppLocalization.locale
+        let symbols = localizedCalendar.shortStandaloneWeekdaySymbols
+        return (0..<7).map { symbols[(calendar.firstWeekday - 1 + $0) % 7] }
+    }
     private var earliestFree: Date { calendar.date(byAdding: .day, value: -30, to: calendar.startOfDay(for: .now))! }
     private var earliest: Date? { model.purchases.isPremium ? nil : earliestFree }
     private var dateStyle: Date.FormatStyle { .init(capitalizationContext: .beginningOfSentence).locale(AppLocalization.locale) }
@@ -174,10 +180,8 @@ struct ExplorerView: View {
                         .accessibilityIdentifier("explorer.best.day")
                         LabeledContent("metric.floors", value: ActivityMetric.floors.text(page.total(for: .floors), unit: model.preferences.unit))
                             .accessibilityIdentifier("explorer.total.floors")
-                        if model.preferences.showEnergy {
-                            LabeledContent("metric.energy", value: ActivityMetric.energy.text(page.total(for: .energy), unit: model.preferences.unit))
-                                .accessibilityIdentifier("explorer.total.energy")
-                        }
+                        LabeledContent("metric.energy", value: ActivityMetric.energy.text(page.total(for: .energy), unit: model.preferences.unit))
+                            .accessibilityIdentifier("explorer.total.energy")
                         LabeledContent("metric.exercise", value: ActivityMetric.exerciseTime.text(page.total(for: .exerciseTime), unit: model.preferences.unit))
                             .accessibilityIdentifier("explorer.total.exercise")
                         if period == .year, let bestMonth = page.bestMonth {
@@ -336,6 +340,12 @@ struct ExplorerView: View {
                     monthGrid(page)
                 } else {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 12) {
+                        ForEach(0..<7, id: \.self) { index in
+                            Text(calendarWeekdays[index])
+                                .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                                .frame(maxWidth: .infinity)
+                        }
                         ForEach(0..<page.calendarOffset, id: \.self) { _ in Color.clear.accessibilityHidden(true) }
                         ForEach(page.calendarDays) { day in
                             let locked = !model.purchases.isPremium && day.date < earliestFree
@@ -346,11 +356,6 @@ struct ExplorerView: View {
                                 if locked { showPremium = true } else { detailDate = day.date }
                             } label: {
                                 VStack(spacing: 5) {
-                                    if period == .week {
-                                        Text(day.date.formatted(.dateTime.locale(AppLocalization.locale).weekday(.abbreviated)))
-                                            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-                                            .lineLimit(1).minimumScaleFactor(0.7)
-                                    }
                                     CompactStepCounterFace(progress: progress, text: day.date.formatted(.dateTime.locale(AppLocalization.locale).day()),
                                                            theme: model.effectiveTheme, style: model.effectiveCounter)
                                         .aspectRatio(1, contentMode: .fit)
@@ -525,9 +530,7 @@ struct DayDetailContent: View {
                 }
             }
             LabeledContent("metric.distance", value: distanceText(day?.meters, unit: model.preferences.unit))
-            if model.preferences.showEnergy {
-                LabeledContent("metric.energy", value: day?.kilocalories.map { Int($0).formatted() + " kcal" } ?? "—")
-            }
+            LabeledContent("metric.energy", value: day?.kilocalories.map { Int($0).formatted() + " kcal" } ?? "—")
             LabeledContent("metric.exercise", value: ActivityMetric.exerciseTime.text(day?.exerciseMinutes, unit: model.preferences.unit))
             LabeledContent("metric.floors", value: ActivityMetric.floors.text(day?.floors, unit: model.preferences.unit))
             if let peak = hours.filter({ $0.steps != nil }).max(by: { ($0.steps ?? 0) < ($1.steps ?? 0) }) {

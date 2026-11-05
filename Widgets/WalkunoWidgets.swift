@@ -28,11 +28,13 @@ struct WalkunoChartIntent: WidgetConfigurationIntent {
 struct WalkunoEntry: TimelineEntry {
     var date: Date
     var snapshot: WidgetSnapshot?
+    var access: ProAccess = .init()
 }
 
 struct WalkunoChartEntry: TimelineEntry {
     var date: Date
     var snapshot: WidgetSnapshot?
+    var access: ProAccess = .init()
     var style: WidgetChartStyle
 }
 
@@ -41,25 +43,35 @@ private enum WidgetCache {
         guard let snapshot = LocalStore.snapshot(), snapshot.isCurrent() else { return nil }
         return snapshot
     }
-    static func snapshot(isPreview: Bool) -> WidgetSnapshot? {
-        current() ?? (isPreview ? .preview() : nil)
+    static func snapshot(isPreview: Bool) -> WalkunoEntry {
+        let access = LocalStore.proAccess()
+        if isPreview {
+            return .init(date: .now, snapshot: access.isActive() ? current() ?? .preview() : .preview(),
+                         access: .init(granted: true))
+        }
+        return .init(date: .now, snapshot: access.isActive() ? current() : nil, access: access)
     }
-    static func midnight(after date: Date) -> Date {
-        Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: date))!
+    static func timeline() -> Timeline<WalkunoEntry> {
+        let now = Date.now
+        let access = LocalStore.proAccess()
+        let midnight = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: now))!
+        var entries = [WalkunoEntry(date: now, snapshot: access.isActive(at: now) ? current() : nil, access: access)]
+        if access.isActive(at: now), let expiration = access.expiresAt, expiration < midnight {
+            entries.append(.init(date: expiration, snapshot: nil, access: access))
+        }
+        entries.append(.init(date: midnight, snapshot: nil, access: access))
+        return .init(entries: entries, policy: .after(min(now.addingTimeInterval(30 * 60), midnight)))
     }
 }
 
-// Keep the widget kind stable while taking display settings from the app.
+// Keep widget kinds stable; a locked widget never receives health measurements.
 struct WalkunoProvider: TimelineProvider {
-    func placeholder(in context: Context) -> WalkunoEntry { .init(date: .now, snapshot: .preview()) }
+    func placeholder(in context: Context) -> WalkunoEntry { WidgetCache.snapshot(isPreview: true) }
     func getSnapshot(in context: Context, completion: @escaping (WalkunoEntry) -> Void) {
-        completion(.init(date: .now, snapshot: WidgetCache.snapshot(isPreview: context.isPreview)))
+        completion(WidgetCache.snapshot(isPreview: context.isPreview))
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<WalkunoEntry>) -> Void) {
-        let now = Date.now, midnight = WidgetCache.midnight(after: .now)
-        completion(.init(entries: [.init(date: now, snapshot: WidgetCache.current()),
-                                   .init(date: midnight, snapshot: nil)],
-                         policy: .after(min(now.addingTimeInterval(30 * 60), midnight))))
+        completion(WidgetCache.timeline())
     }
 }
 
@@ -71,15 +83,51 @@ struct WalkunoChartProvider: AppIntentTimelineProvider {
             return .init(intent: intent, description: style.title)
         }
     }
-    func placeholder(in context: Context) -> WalkunoChartEntry { .init(date: .now, snapshot: .preview(), style: .hourly) }
+    func placeholder(in context: Context) -> WalkunoChartEntry {
+        let entry = WidgetCache.snapshot(isPreview: true)
+        return .init(date: entry.date, snapshot: entry.snapshot, access: entry.access, style: .hourly)
+    }
     func snapshot(for configuration: WalkunoChartIntent, in context: Context) async -> WalkunoChartEntry {
-        .init(date: .now, snapshot: WidgetCache.snapshot(isPreview: context.isPreview), style: configuration.style)
+        let entry = WidgetCache.snapshot(isPreview: context.isPreview)
+        return .init(date: entry.date, snapshot: entry.snapshot, access: entry.access, style: configuration.style)
     }
     func timeline(for configuration: WalkunoChartIntent, in context: Context) async -> Timeline<WalkunoChartEntry> {
-        let now = Date.now, midnight = WidgetCache.midnight(after: .now)
-        return Timeline(entries: [.init(date: now, snapshot: WidgetCache.current(), style: configuration.style),
-                                  .init(date: midnight, snapshot: nil, style: configuration.style)],
-                        policy: .after(min(now.addingTimeInterval(30 * 60), midnight)))
+        let timeline = WidgetCache.timeline()
+        return .init(entries: timeline.entries.map {
+            .init(date: $0.date, snapshot: $0.snapshot, access: $0.access, style: configuration.style)
+        }, policy: timeline.policy)
+    }
+}
+
+private struct WidgetProGate<Content: View>: View {
+    var access: ProAccess
+    var date: Date
+    @ViewBuilder var content: () -> Content
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        if access.isActive(at: date) {
+            content()
+        } else {
+            Group {
+                if family == .accessoryInline {
+                    Label("Walkuno Pro", systemImage: "lock.fill")
+                } else if family == .accessoryCircular {
+                    VStack(spacing: 3) {
+                        Image(systemName: "lock.fill")
+                        Text("Pro").font(.caption2.bold())
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Walkuno Pro", systemImage: "lock.fill").font(.headline)
+                        Text("widget.pro.required").font(.caption).foregroundStyle(.secondary)
+                    }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                }
+            }
+            .modifier(WidgetSurface(theme: .mint))
+            .widgetURL(URL(string: "walkuno://pro"))
+            .accessibilityElement(children: .combine)
+        }
     }
 }
 
@@ -140,9 +188,7 @@ struct WalkunoWidgetView: View {
             parts.append("\(L("widget.average")) \(stepsText(ActivitySummary(days: week, goals: .init()).average))")
             parts.append("\(L("metric.floors")) \(stepsText(entry.snapshot?.today.floors.map { Int($0.rounded()) }))")
             parts.append("\(L("metric.exercise")) \(entry.snapshot?.today.exerciseMinutes.map { Int($0.rounded()).formatted() } ?? "—") min")
-            if entry.snapshot?.display?.showEnergy != false {
-                parts.append("\(L("metric.energy")) \(entry.snapshot?.today.kilocalories.map { Int($0.rounded()).formatted() } ?? "—") kcal")
-            }
+            parts.append("\(L("metric.energy")) \(entry.snapshot?.today.kilocalories.map { Int($0.rounded()).formatted() } ?? "—") kcal")
             parts.append(L("widget.chart.goal.accessibility"))
         }
         #endif
@@ -317,6 +363,7 @@ private struct WidgetHourlyBars: View {
 
 private struct WidgetGoalChart: View {
     var snapshot: WidgetSnapshot?
+    var access: ProAccess = .init()
     var accent: Color
     var compact: Bool
     var body: some View {
@@ -553,7 +600,9 @@ extension WidgetSnapshot {
 struct WalkunoActivityWidget: Widget {
     let kind = "WalkunoActivity"
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: WalkunoProvider()) { WalkunoWidgetView(entry: $0) }
+        StaticConfiguration(kind: kind, provider: WalkunoProvider()) { entry in
+            WidgetProGate(access: entry.access, date: entry.date) { WalkunoWidgetView(entry: entry) }
+        }
             .configurationDisplayName("widget.name").description("widget.description")
             #if os(iOS)
             .supportedFamilies([.systemSmall, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline])
@@ -566,7 +615,9 @@ struct WalkunoActivityWidget: Widget {
 struct WalkunoChartWidget: Widget {
     let kind = "WalkunoCharts"
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: WalkunoChartIntent.self, provider: WalkunoChartProvider()) { WalkunoChartWidgetView(entry: $0) }
+        AppIntentConfiguration(kind: kind, intent: WalkunoChartIntent.self, provider: WalkunoChartProvider()) { entry in
+            WidgetProGate(access: entry.access, date: entry.date) { WalkunoChartWidgetView(entry: entry) }
+        }
             .configurationDisplayName("widget.charts.name").description("widget.charts.description")
             #if os(iOS)
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
@@ -638,15 +689,14 @@ private struct WidgetValue: View {
 
 private struct WidgetSummaryRow: View {
     var snapshot: WidgetSnapshot?
+    var access: ProAccess = .init()
     var body: some View {
         HStack(spacing: 10) {
             WidgetValue(title: "metric.floors", value: stepsText(snapshot?.today.floors.map { Int($0.rounded()) }))
             Spacer(minLength: 0)
             WidgetValue(title: "metric.exercise", value: (snapshot?.today.exerciseMinutes.map { Int($0.rounded()).formatted() } ?? "—") + " min")
             Spacer(minLength: 0)
-            if snapshot?.display?.showEnergy != false {
-                WidgetValue(title: "metric.energy", value: (snapshot?.today.kilocalories.map { Int($0.rounded()).formatted() } ?? "—") + " kcal")
-            }
+            WidgetValue(title: "metric.energy", value: (snapshot?.today.kilocalories.map { Int($0.rounded()).formatted() } ?? "—") + " kcal")
         }
     }
 }
@@ -691,6 +741,7 @@ private struct WidgetWeekReferences: View {
 #if os(iOS)
 private struct WidgetLargeOverview: View {
     var snapshot: WidgetSnapshot?
+    var access: ProAccess = .init()
     var date: Date
     private var theme: WalkunoTheme { snapshot?.theme ?? .mint }
     private var week: [ActivityDay] { snapshot?.recentWeek() ?? [] }
@@ -720,6 +771,7 @@ private struct WidgetLargeOverview: View {
 /// Static versions of the app's five counters, sized for a WidgetKit snapshot.
 private struct WidgetCounter: View {
     var snapshot: WidgetSnapshot?
+    var access: ProAccess = .init()
     private var theme: WalkunoTheme { snapshot?.theme ?? .mint }
     private var progress: Double { ActivityMath.progress(steps: snapshot?.today.steps, goal: snapshot?.goal ?? 8000) }
     private var style: CounterStyle { snapshot?.display?.counter ?? .horizon }
@@ -837,6 +889,7 @@ private struct WidgetRouteShape: Shape {
 /// The home page's 24 clock-hour pairs: today in the palette, yesterday in grey.
 private struct WidgetDailyRhythm: View {
     var snapshot: WidgetSnapshot?
+    var access: ProAccess = .init()
     var compact: Bool
     private var theme: WalkunoTheme { snapshot?.theme ?? .mint }
     var body: some View {
@@ -927,7 +980,9 @@ struct WalkunoDashboardView: View {
 struct WalkunoDashboardWidget: Widget {
     let kind = "WalkunoDashboard"
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: WalkunoProvider()) { WalkunoDashboardView(entry: $0) }
+        StaticConfiguration(kind: kind, provider: WalkunoProvider()) { entry in
+            WidgetProGate(access: entry.access, date: entry.date) { WalkunoDashboardView(entry: entry) }
+        }
             .configurationDisplayName("widget.dashboard.name").description("widget.dashboard.description")
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
     }
