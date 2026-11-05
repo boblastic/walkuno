@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Walkuno — Foulée</title>
+  <desc id="desc">Un W ivoire aux deux appuis décalés, dont la dernière branche se prolonge par une touche menthe sur fond encre.</desc>
+  <rect width="1024" height="1024" fill="#0C1723"/>
+  <path fill="#F6F0DF" d="
+    M151 407
+    C171 364 210 333 246 333
+    C279 333 303 355 311 397
+    L352 621 464 395
+    C476 370 492 356 519 356
+    L554 356 597 578 697 402 790 402 641 656
+    C626 680 611 690 584 690
+    L537 690 491 483 382 704
+    C372 724 359 736 333 736
+    L279 736 217 437
+    C211 401 194 390 151 407Z"/>
+  <path fill="#6FF2BB" d="
+    M717 368 732 341
+    C758 294 813 280 853 306
+    L815 368Z"/>
+</svg>

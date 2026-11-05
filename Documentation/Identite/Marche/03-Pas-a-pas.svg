@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-labelledby="titre description">
+  <title id="titre">Walkuno — Pas à pas</title>
+  <desc id="description">Deux semelles de marche aux rainures arquées. L’empreinte gauche, en bas, est suivie de la droite, plus haut, sur un fond vert sapin.</desc>
+  <defs>
+    <g id="semelle">
+      <path d="M-42 232C-83 225-95 192-92 155C-90 116-77 79-79 38C-80 10-87-20-97-53C-108-91-120-124-113-157C-104-196-62-225-17-245C16-260 49-266 76-249C104-232 115-202 115-163L112-119C109-81 91-50 65-20C41 7 13 34 8 65C4 90 39 106 49 139C67 191 48 219 14 232C-1 239-27 237-42 232Z"/>
+      <g fill="#0D5349">
+        <path d="M-91-153Q-37-203 80-188L81-168Q-18-177-85-133Z"/>
+        <path d="M-81-82Q-30-124 86-125L80-103Q-14-101-75-63Z"/>
+        <path d="M-75 124Q-43 120 24 100L29 117Q-18 139-76 144Z"/>
+        <path d="M-54-4Q-29-25 26-42L13-17Q-24-4-49 17Z"/>
+        <path d="M4-227Q5-167-6-111L-22-109Q-11-170-14-223Z"/>
+        <path d="M-27 131L-9 125L6 204Q-2 213-11 211Z"/>
+      </g>
+    </g>
+  </defs>
+  <rect width="1024" height="1024" fill="#0D5349"/>
+  <use xlink:href="#semelle" fill="#D4ECA2" transform="translate(387 655) rotate(-10)"/>
+  <use xlink:href="#semelle" fill="#FCF1D6" transform="translate(632 380) rotate(10) scale(-1 1)"/>
+</svg>

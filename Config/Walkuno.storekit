@@ -1,0 +1,123 @@
+{
+  "identifier": "2B89B784-6D1A-4E00-A9F3-635A9D4BB7C1",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "29.99",
+      "familyShareable": false,
+      "internalID": "walkuno-lifetime-local",
+      "localizations": [
+        {
+          "description": "Tous les thèmes et votre historique complet.",
+          "displayName": "Premium à vie",
+          "locale": "fr"
+        },
+        {
+          "description": "All themes and your complete history.",
+          "displayName": "Lifetime Premium",
+          "locale": "en_US"
+        },
+        {
+          "description": "Alle Themen und dein vollständiger Verlauf.",
+          "displayName": "Premium auf Lebenszeit",
+          "locale": "de_DE"
+        },
+        {
+          "description": "Todos los temas y tu historial completo.",
+          "displayName": "Premium de por vida",
+          "locale": "es_ES"
+        },
+        {
+          "description": "Tutti i temi e la cronologia completa.",
+          "displayName": "Premium a vita",
+          "locale": "it_IT"
+        },
+        {
+          "description": "Todos os temas e o teu histórico completo.",
+          "displayName": "Premium vitalício",
+          "locale": "pt_PT"
+        },
+        {
+          "description": "すべてのテーマと全履歴。",
+          "displayName": "Premium 無期限",
+          "locale": "ja_JP"
+        }
+      ],
+      "productID": "fr.orbelio.walkuno.premium.lifetime",
+      "referenceName": "Walkuno Premium Lifetime",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_applicationInternalID": "",
+    "_developerTeamID": "",
+    "_failTransactionsEnabled": false,
+    "_locale": "fr_FR",
+    "_storefront": "FRA",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [
+    {
+      "id": "walkuno-premium-local",
+      "localizations": [],
+      "name": "Walkuno Premium",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "14.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "walkuno-annual-local",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Un an de personnalisation et de statistiques avancées.",
+              "displayName": "Premium annuel",
+              "locale": "fr"
+            },
+            {
+              "description": "One year of themes and advanced statistics.",
+              "displayName": "Annual Premium",
+              "locale": "en_US"
+            },
+            {
+              "description": "Ein Jahr mit Themen und erweiterten Statistiken.",
+              "displayName": "Premium jährlich",
+              "locale": "de_DE"
+            },
+            {
+              "description": "Un año de temas y estadísticas avanzadas.",
+              "displayName": "Premium anual",
+              "locale": "es_ES"
+            },
+            {
+              "description": "Un anno di temi e statistiche avanzate.",
+              "displayName": "Premium annuale",
+              "locale": "it_IT"
+            },
+            {
+              "description": "Um ano de temas e estatísticas avançadas.",
+              "displayName": "Premium anual",
+              "locale": "pt_PT"
+            },
+            {
+              "description": "1年間のテーマと詳細な統計。",
+              "displayName": "Premium 年間",
+              "locale": "ja_JP"
+            }
+          ],
+          "productID": "fr.orbelio.walkuno.premium.annual",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Walkuno Premium Annual",
+          "subscriptionGroupID": "walkuno-premium-local",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

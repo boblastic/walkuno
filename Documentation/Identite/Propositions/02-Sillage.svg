@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Walkuno — Sillage</title>
+  <desc id="desc">Trois rubans pâles dessinent un chemin sinueux et se rejoignent au loin sur un fond bleu outremer.</desc>
+  <rect width="1024" height="1024" fill="#4438C8"/>
+  <path fill="#F0F3FF" d="M216 740
+    C246 611 429 576 542 495
+    C697 385 331 408 369 280
+    C391 204 528 184 648 211
+    C529 189.8 402.5 219 396.8 290.6
+    C380.9 399.7 759.1 382.1 606 508.8
+    C502 593 348.4 633.1 346.9 765.6Z"/>
+  <path fill="#DEDFFF" d="M384.5 773
+    C377.8 639.4 522.9 597.8 624.4 512.7
+    C776.9 381.3 395.3 397.3 404.8 293.6
+    C405.8 223.4 529.2 191.4 648 211
+    C530.1 196.5 416 236.7 429.5 302.9
+    C439.4 389.9 831.8 378.7 681 524.9
+    C587.5 612.8 468.4 659 500.3 795.6Z"/>
+  <path fill="#C4C8FF" d="M539.1 803.2
+    C498.8 665.5 609.1 617.9 700 529
+    C850.3 377.9 454.2 387.5 437.7 306.1
+    C419.4 241.1 530.4 198.2 648 211
+    C531 202 427 251 456 313
+    C487 382 891 376 742 538
+    C657 629 566 680 625 820Z"/>
+</svg>

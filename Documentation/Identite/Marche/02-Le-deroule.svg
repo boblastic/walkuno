@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Walkuno — Le Déroulé</title>
+  <desc id="desc">Deux jambes de profil en plein pas. Le talon de la basket menthe est levé et le pied ivoire prend appui à plat.</desc>
+  <rect width="1024" height="1024" fill="#102B32"/>
+  <g transform="translate(-41 -30) scale(1.08)">
+  <g transform="translate(0 20)">
+  <path fill="#5C8B80" d="M376 -49H586L553 199Q545 272 513 323L345 611L219 529L323 310Q346 263 352 208Z"/>
+  <path fill="#ADCCAD" d="M235 503L363 585L344 614L213 535Z"/>
+  <path fill="#F8EED7" d="M231 548L327 610L300 652L208 595Z"/>
+  <path fill="#72E4AA" d="M209 557Q217 551 228 565Q249 592 276 596L293 580Q304 567 318 585L337 620Q347 644 374 681L424 716Q446 731 443 744Q445 756 428 760L384 759Q363 758 342 740L181 612Q167 598 180 581Z"/>
+  <path fill="#DAF1D3" d="M176 599Q184 611 204 624L354 735Q371 748 390 748H442Q446 761 436 770Q430 776 410 776H381Q360 775 336 758L172 631Q156 617 176 599Z"/>
+  <path d="M298 625L319 617M309 646L331 638" fill="none" stroke="#18504A" stroke-width="11" stroke-linecap="round"/>
+
+  </g>
+
+  <path fill="#99B59A" d="M380 -24H574Q583 84 610 169Q629 228 636 298L690 579L700 608L554 658L450 398Q440 370 413 345Q380 314 375 277L361 125Z"/>
+  <path fill="#85A48A" d="M393 278Q437 309 482 307Q462 326 422 333Q407 318 393 278Z"/>
+  <path fill="#B8CAAF" d="M542 620L690 571L704 607L554 658Z"/>
+  <path fill="#75DEA9" d="M561 658L675 620L697 678L658 716L586 707Z"/>
+  <path fill="#F8EFD9" d="M557 687Q555 671 573 667Q584 665 596 674Q626 692 655 684L666 658Q669 644 684 648Q700 654 713 674Q730 701 760 717L827 732Q852 737 868 750Q879 760 875 771Q873 779 853 782L553 780Q540 776 542 764L548 723Z"/>
+  <path fill="#CEE1C9" d="M543 755Q566 763 602 762L784 766Q839 767 875 757Q883 772 871 784Q857 796 822 796H562Q547 796 539 787Q532 775 543 755Z"/>
+  <path d="M555 701Q594 703 607 737" fill="none" stroke="#D3D6BD" stroke-width="9"/>
+  <path d="M679 684L700 675M693 705L715 695" fill="none" stroke="#244D45" stroke-width="11" stroke-linecap="round"/>
+  </g>
+</svg>

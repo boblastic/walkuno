@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 256 256" role="img" aria-labelledby="titre description">
+  <title id="titre">Walkuno — Cadence</title>
+  <desc id="description">Un marcheur vert électrique avance à grands pas sur un fond encre. Son bras arrière laisse un écho fuselé derrière lui, tandis que le talon avant touche le sol.</desc>
+  <rect width="256" height="256" fill="#0A242C"/>
+  <g fill="#31B99F">
+    <path d="M133 74Q141 75 145 84L155 105L194 80L190 95Q189 101 184 104L160 123Q151 130 146 121L121 93Z"/>
+    <path d="M110 129L129 136L111 163Q108 168 103 171L74 190Q70 193 74 196L85 204L77 209Q73 211 69 208L49 197Q43 193 50 185L87 156Z"/>
+  </g>
+  <path fill="#A3FF70" d="M52 123L87 102L105 84Q108 79 114 76L132 67Q141 63 147 69Q152 74 148 83L127 129Q124 136 129 141L153 164L171 187Q175 192 180 191L204 185L218 197L176 205Q166 207 158 198L138 177L109 155Q99 147 101 136Q102 130 105 123L115 101L103 119Q100 123 95 126L70 141Q63 146 55 146L43 147L72 125L37 137Q42 129 52 123Z"/>
+  <circle cx="152" cy="45" r="15" fill="#A3FF70"/>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Walkuno — Allure</title>
+  <desc id="desc">Un marcheur de profil, découpé en trois formes encre sur un carré menthe. Sa manche se balance et une chaussure se pose au sol.</desc>
+  <rect width="1024" height="1024" fill="#80EBC0"/>
+  <g transform="translate(14 20)" fill="#0A3434">
+    <path d="
+      M494 225 Q491 191 530 177 Q558 168 594 181
+      L608 187 599 213 602 240 611 258 598 264
+      Q596 288 571 295 Q539 304 515 283 Q497 267 494 225Z"/>
+    <path d="
+      M470 324 Q501 303 533 314 Q561 325 575 357
+      L611 431 690 414 Q708 410 714 425
+      L720 440 623 481 Q601 492 582 477
+      L530 434 526 495 361 562 400 439 349 493
+      Q320 523 285 513 L273 508 334 420
+      Q354 392 379 377Z"/>
+    <path d="
+      M524 522 Q535 553 556 589 L657 741 716 753
+      Q736 757 737 779 L661 781 Q638 781 617 761
+      L469 624 Q448 668 410 702 L316 753 326 776
+      Q329 783 319 786 L310 788 Q301 790 292 783
+      L245 748 Q237 741 245 729 L328 613 346 588Z"/>
+  </g>
+</svg>

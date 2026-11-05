@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title description">
+  <title id="title">Aube · Walkuno</title>
+  <desc id="description">Sur un fond de papier crème, trois marches en réserve séparent un soleil vermillon de sa moitié d’encre. Les appuis se raccourcissent vers l’horizon.</desc>
+  <defs>
+    <clipPath id="disque">
+      <circle cx="512" cy="512" r="335"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="#F8EEDC"/>
+  <g clip-path="url(#disque)">
+    <circle cx="512" cy="512" r="335" fill="#FA5935"/>
+    <path d="M150 681H374V568H525V471H655V390H874V862H150Z" fill="#272337"/>
+    <path d="M150 681H374V568H525V471H655V390H874" fill="none" stroke="#F8EEDC" stroke-width="43"/>
+  </g>
+</svg>
