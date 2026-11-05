@@ -432,4 +432,4 @@
 "widget.trends.name" = "Walkuno · Tendenze";
 "widget.trends.description" = "Scegli misura, 7 giorni, mese o anno e curva, barre, confronto o calendario mensile. L’anno richiede Pro; gli altri periodi usano la cronologia disponibile.";
 "widget.dashboard.name" = "Walkuno · Riepilogo";
-"widget.dashboard.description" = "Passi, obiettivo, distanza e media settimanale. I formati maggiori aggiungono esercizio, energia o piani, ritmo giornaliero e monitoraggio obiettivo.";
+"widget.dashboard.description" = "Passi, distanza e media settimanale. Il formato grande aggiunge piani saliti, esercizio, energia facoltativa e monitoraggio dell’obiettivo fino a mezzanotte.";

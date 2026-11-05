@@ -433,4 +433,4 @@
 "widget.trends.name" = "Walkuno · Trends";
 "widget.trends.description" = "Choose a metric, 7 days, month or year, and a curve, bars, period comparison or monthly calendar. Year requires Pro; other periods follow your available history.";
 "widget.dashboard.name" = "Walkuno · Dashboard";
-"widget.dashboard.description" = "Steps, goal, distance and weekly average. Larger sizes add exercise, energy or floors, daily rhythm and goal tracking.";
+"widget.dashboard.description" = "Steps, distance and weekly average. The large widget adds floors climbed, exercise, optional energy and goal tracking through midnight.";

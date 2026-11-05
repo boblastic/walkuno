@@ -125,21 +125,24 @@ final class HealthService {
             let days = try await quantities(.stepCount, unit: .count(), from: start, to: today,
                                             hourly: false, calendar: calendar)
             let candidates = days.keys.filter { $0 < today }.sorted(by: >).prefix(7)
-            let history = try await withThrowingTaskGroup(of: [HourActivity].self) { group in
+            let history = try await withThrowingTaskGroup(of: (partial: [HourActivity], full: [HourActivity]).self) { group in
                 for day in candidates {
                     guard let cutoff = WidgetActivityDetail.clockCutoff(on: day, matching: now, calendar: calendar) else { continue }
                     group.addTask { @MainActor in
-                        try await self.hours(on: day, through: cutoff, now: now, calendar: calendar, strictEnd: true)
+                        async let partial = self.hours(on: day, through: cutoff, now: now, calendar: calendar, strictEnd: true)
+                        async let full = self.hours(on: day, now: now, calendar: calendar)
+                        return try await (partial, full)
                     }
                 }
-                var result: [[HourActivity]] = []
+                var result: [(partial: [HourActivity], full: [HourActivity])] = []
                 for try await hours in group { result.append(hours) }
                 return result
             }
             try Task.checkCancellation()
             let clock = calendar.dateComponents([.hour, .minute, .second], from: now)
             let cutoff = Double(clock.hour ?? 0) + Double(clock.minute ?? 0) / 60 + Double(clock.second ?? 0) / 3600
-            return .init(comparison: .init(today: [], history: history, metric: .steps, cutoffHour: cutoff, calendar: calendar))
+            return .init(comparison: .init(today: [], history: history.map(\.partial), metric: .steps,
+                                          cutoffHour: cutoff, calendar: calendar, fullDayHistory: history.map(\.full)))
         } catch { return nil }
     }
 

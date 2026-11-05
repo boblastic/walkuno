@@ -163,6 +163,45 @@ struct WidgetTests {
         #expect(restored == snapshot)
     }
 
+    @Test func goalTrackingExtendsOnlyHistoricalProfileToMidnight() throws {
+        let now = date("2026-11-05T13:37:12Z")
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: now))!
+        let cutoff = 14.0 + 37.0 / 60 + 12.0 / 3600
+        let morning = HourActivity(date: yesterday.addingTimeInterval(10 * 3600), steps: 2000)
+        let evening = HourActivity(date: yesterday.addingTimeInterval(20 * 3600), steps: 3000)
+        var value = snapshot(at: now)
+        value.activity?.usual = .init(comparison: .init(today: [], history: [[morning]], metric: .steps,
+                                                       cutoffHour: cutoff, calendar: calendar,
+                                                       fullDayHistory: [[morning, evening]]))
+        let points = try #require(value.activity?.goalTracking(todaySteps: 6000, calendar: calendar))
+        let current = try #require(points.last(where: { $0.current != nil }))
+        #expect(current.hour == cutoff)
+        #expect(current.current == 6000)
+        #expect(current.usual == 2000)
+        #expect(points.last?.hour == 24)
+        #expect(points.last?.usual == 5000)
+        #expect(points.filter { $0.hour > cutoff }.allSatisfy { $0.current == nil })
+        #expect(points.map(\.hour) == points.map(\.hour).sorted())
+        #expect(Set(points.map(\.hour)).count == points.count)
+        #expect(try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(value)) == value)
+    }
+
+    @Test func legacyUsualProfileDoesNotInventAFutureTrend() throws {
+        var value = snapshot(at: date("2026-11-05T13:37:12Z"))
+        value.activity?.usual = .init(comparison: .init(today: [], history: [], metric: .steps,
+                                                       cutoffHour: 14.62, calendar: calendar))
+        var json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) as? [String: Any])
+        var activity = try #require(json["activity"] as? [String: Any])
+        var usual = try #require(activity["usual"] as? [String: Any])
+        usual.removeValue(forKey: "dayPoints")
+        activity["usual"] = usual
+        json["activity"] = activity
+        let restored = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONSerialization.data(withJSONObject: json))
+        #expect(restored.activity?.usual?.dayPoints == nil)
+        #expect(restored.activity?.goalTracking(todaySteps: 6000, calendar: calendar)
+                == restored.activity?.cumulative(todaySteps: 6000, calendar: calendar))
+    }
+
     @Test func oldHourlyCacheStillLoadsWithoutUsualCurve() throws {
         let original = snapshot(at: date("2026-11-05T13:37:12Z"))
         var json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as? [String: Any])

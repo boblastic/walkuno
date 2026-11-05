@@ -57,6 +57,14 @@ public struct WidgetActivityDetail: Codable, Equatable, Sendable {
                                usual: baseline[point.hour] ?? nil)
         }
     }
+
+    /// Real measurements stop at the refresh time; only the historical profile extends to midnight.
+    public func goalTracking(todaySteps: Int?, calendar: Calendar = .current) -> [DayComparisonPoint] {
+        let observed = cumulative(todaySteps: todaySteps, calendar: calendar)
+        guard let cutoff = observed.last?.hour else { return observed }
+        let remaining = (usual?.dayPoints ?? []).filter { $0.hour > cutoff }
+        return observed + remaining.map { .init(hour: $0.hour, current: nil, usual: $0.usual) }
+    }
 }
 
 public struct WidgetHourBucket: Identifiable, Equatable, Sendable {
@@ -68,10 +76,12 @@ public struct WidgetHourBucket: Identifiable, Equatable, Sendable {
 
 public struct WidgetUsualActivity: Codable, Equatable, Sendable {
     public var points: [DayComparisonPoint]
+    public var dayPoints: [DayComparisonPoint]?
     public var baselineDays: Int
 
     public init(comparison: DayComparison) {
         points = Array(comparison.points.prefix(26)).map { .init(hour: $0.hour, current: nil, usual: $0.usual) }
+        dayPoints = comparison.usualDayTotal == nil ? nil : Array(comparison.usualDayPoints.prefix(25))
         baselineDays = comparison.baselineDays
     }
 }

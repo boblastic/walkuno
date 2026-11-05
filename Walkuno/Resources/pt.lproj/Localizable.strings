@@ -432,4 +432,4 @@
 "widget.trends.name" = "Walkuno · Resumo de tendências";
 "widget.trends.description" = "Escolha medida, 7 dias, mês ou ano e curva, barras, comparação ou calendário mensal. O ano requer Pro; os outros períodos usam o histórico disponível.";
 "widget.dashboard.name" = "Walkuno · Painel";
-"widget.dashboard.description" = "Passos, objetivo, distância e média semanal. Os formatos maiores incluem exercício, energia ou andares, ritmo diário e acompanhamento do objetivo.";
+"widget.dashboard.description" = "Passos, distância e média semanal. O formato grande inclui andares subidos, exercício, energia opcional e acompanhamento do objetivo até à meia-noite.";

@@ -433,4 +433,4 @@
 "widget.trends.name" = "Walkuno · Tendances";
 "widget.trends.description" = "Choisissez une mesure, 7 jours, le mois ou l’année, puis une courbe, des barres, une comparaison ou le calendrier du mois. L’année nécessite Pro ; les autres périodes suivent l’historique disponible.";
 "widget.dashboard.name" = "Walkuno · Tableau de bord";
-"widget.dashboard.description" = "Pas, objectif, distance et moyenne de la semaine. Les grands formats ajoutent exercice, énergie ou étages, rythme de la journée et suivi de l’objectif.";
+"widget.dashboard.description" = "Pas, distance et moyenne de la semaine. Le grand format ajoute les étages montés, l’exercice, l’énergie optionnelle et le suivi de l’objectif jusqu’à minuit.";

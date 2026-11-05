@@ -433,3 +433,37 @@ Installation par mise à jour sur l’iPhone physique : les métadonnées confir
 L’ensemble cohérent des sources, ressources, tests et documents est préparé sur `main` pour le dépôt GitHub `boblastic/walkuno`. Aucun binaire signé, profil de provisioning ni journal d’appareil n’est inclus dans Git.
 
 Preuves locales : `/tmp/walkuno-release-6-build.log`, `/tmp/walkuno-release-6-install.json`, `/tmp/walkuno-release-6-launch.json`, `/tmp/walkuno-release-6-iphone-before.json`, `/tmp/walkuno-release-6-iphone-after.json`, `/tmp/walkuno-widgets-tests-final.log`. Aperçu : `Documentation/Captures/Widgets-iPhone.png`.
+
+## Ajustements des widgets iPhone — 5 novembre 2026
+
+- Compteurs : format moyen retiré ; petit compteur agrandi avec pas complets, distance et pourcentage, rendu proportionnel des cinq styles transmis par l’application et représentation des dépassements. Le grand compteur et le grand tableau de bord partagent une disposition : compteur à gauche, courbe des sept jours à droite, objectif et moyenne en pointillés avec valeurs complètes, étages/exercice/énergie optionnelle, puis suivi d’objectif agrandi.
+- Famille Tendances et son implémentation retirées de l’extension. Les identifiants Compteurs, Graphiques et Tableau de bord sont conservés.
+- Le cache partage aussi le profil habituel des journées historiques complètes (25 points au maximum). Le tracé habituel continue jusqu’à 24 h ; aucune mesure future n’est attribuée à aujourd’hui. Les comparaisons à l’heure exacte et le chargement des anciens caches restent compatibles.
+- 103 tests Foundation réussis, dont deux nouveaux tests sur le profil jusqu’à minuit, l’absence de mesures futures et les anciens caches : `/tmp/walkuno-widgets-revision-tests.log`. Compilation Debug des quatre cibles iOS/watchOS Simulator réussie : `/tmp/walkuno-widgets-revision-build.log`.
+- 21 rendus natifs ImageRenderer contrôlés sur iOS Simulator : cinq styles en petit, grand et grand sur petit écran ; absence de pas, zéro, dépassement, suivi moyen, grand tableau de bord et petit compteur sans cache. Harnais temporaire avec une clé de famille dédiée ; données synthétiques et dimensions de widgets, sans validation de la composition finale par WidgetKit ni installation sur matériel. Rendus : `/tmp/walkuno-widget-revision-preview/`.
+
+## Livraison locale de Walkuno 1.0.0 (7) — 5 novembre 2026
+
+Le build 7 de développement Debug inclut les corrections des widgets : petit compteur agrandi et synchronisé avec le style de l’application, suppression du compteur moyen et de la famille Tendances, grand compteur réorganisé, étages et profil habituel jusqu’à minuit. Le numéro est mis à jour pour les quatre cibles et dans le générateur.
+
+Compilation signée iPhone/Watch réussie ; signature complète vérifiée avec `codesign --verify --deep --strict`. Version, identifiants et profils embarqués contrôlés dans les quatre bundles. Les 408 textes sont vérifiés dans les sept langues des quatre bundles compilés. La validation métier précédente compte 103 tests réussis.
+
+Mise à jour installée sur l’iPhone physique iBoblastic, sans désinstallation. Les métadonnées de l’appareil confirment le passage de 1.0.0 (6) à 1.0.0 (7). La tentative de lancement sans argument de démonstration est refusée par iOS car l’iPhone est verrouillé ; le démarrage sur appareil reste à vérifier après déverrouillage. Le compagnon Watch est embarqué, sans installation directe sur la montre.
+
+Preuves : `/tmp/walkuno-release-7-build.log`, `/tmp/walkuno-release-7-install.json`, `/tmp/walkuno-release-7-iphone-before.json`, `/tmp/walkuno-release-7-iphone-after.json`, `/tmp/walkuno-release-7-launch.log`.
+
+## Lisibilité des widgets et cohérence de l’aperçu — 5 novembre 2026
+
+- Le snapshot de galerie utilise le même cache courant que la timeline, avec ses préférences de compteur, palette et unités. Les données de démonstration restent le repli en l’absence de cache dans la galerie. Les configurations historiques « Pas · grands chiffres » reprennent le dessin choisi sur l’écran d’accueil ; le petit compteur dispose d’une taille carrée explicite.
+- Le grand compteur affiche « Semaine », les tableaux de bord moyen et grand « Cette semaine ». Les Graphiques retirent l’unité « pas » à côté du nombre ; le petit format y affiche la distance en couleur, les autres gardent la distance à droite.
+- Courbes hebdomadaires : plage verticale resserrée sur les valeurs et repères, jours abrégés alignés avec les points et sept lignes verticales à faible opacité. Le petit tableau de bord ajoute les jours, moyenne et objectif chiffrés, et la distance remplace le libellé « pas ». Le moyen ajoute les deux valeurs. Le grand graphique Semaine courbe ajoute les deux lignes et leurs chiffres dans une légende condensée.
+- Compilation des quatre cibles iOS/watchOS Simulator réussie : `/tmp/walkuno-widget-polish-build.log`. Validation des traductions et `git diff --check` réussis. Aucun changement de calcul métier ; les 103 tests Foundation de la validation précédente restent la référence.
+- 41 rendus synthétiques natifs sur iOS Simulator : cinq styles de compteur en trois dimensions et leurs cinq configurations historiques, quinze graphiques, trois tableaux de bord et trois cas de courbe (objectif élevé, valeurs constantes, jours absents). Lecture du cache de galerie vérifiée pour les cinq styles ; égalité des PNG des anciennes configurations et du compteur courant. Dossier : `/tmp/walkuno-widget-polish-preview/`. Les sept jours et les petits formats sont contrôlés visuellement. Le harnais ImageRenderer ne reproduit pas l’hôte WidgetKit de l’écran d’accueil ; l’écart signalé sur l’iPhone reste à confirmer sur cet hôte après mise à jour.
+
+## Livraison locale de Walkuno 1.0.0 (8) — 5 novembre 2026
+
+Le build 8 de développement Debug réunit les ajustements de lisibilité et de cohérence de l’aperçu ci-dessus. Numéro synchronisé dans les quatre cibles et le générateur. Compilation signée iPhone/Watch réussie, signature complète vérifiée et traductions contrôlées dans les quatre bundles.
+
+Mise à jour installée sur l’iPhone iBoblastic sans désinstallation, puis lancement sans argument de démonstration réussi. Les métadonnées de l’appareil confirment 1.0.0 (8). Le compagnon Watch reste embarqué sans installation directe sur la montre. La correction visuelle de l’écart signalé dans l’hôte WidgetKit physique reste à confirmer sur l’écran d’accueil ; les contrôles de rendu décrits plus haut portent sur le harnais natif du simulateur.
+
+Preuves : `/tmp/walkuno-release-8-build.log`, `/tmp/walkuno-release-8-install.json`, `/tmp/walkuno-release-8-launch.json`, `/tmp/walkuno-release-8-iphone-after.json`. Aperçu actualisé : `Documentation/Captures/Widgets-iPhone.png`.

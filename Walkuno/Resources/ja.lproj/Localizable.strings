@@ -432,4 +432,4 @@
 "widget.trends.name" = "Walkuno · 傾向";
 "widget.trends.description" = "指標、7日間・月・年、曲線・棒・期間比較・月間カレンダーを選択。年の表示にはProが必要です。ほかの期間は利用可能な履歴に従います。";
 "widget.dashboard.name" = "Walkuno · ダッシュボード";
-"widget.dashboard.description" = "歩数、目標、距離、週平均。大きいサイズでは運動、エネルギーまたは階数、一日のリズム、目標の推移も表示します。";
+"widget.dashboard.description" = "歩数、距離、週平均。大きいサイズでは上った階数、運動、任意のエネルギー表示と深夜までの目標の推移を追加します。";

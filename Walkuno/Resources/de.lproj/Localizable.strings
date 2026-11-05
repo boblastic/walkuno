@@ -432,4 +432,4 @@
 "widget.trends.name" = "Walkuno · Trends";
 "widget.trends.description" = "Messwert, 7 Tage, Monat oder Jahr und Kurve, Balken, Vergleich oder Monatskalender wählen. Das Jahr benötigt Pro; andere Zeiträume nutzen den verfügbaren Verlauf.";
 "widget.dashboard.name" = "Walkuno · Übersicht";
-"widget.dashboard.description" = "Schritte, Ziel, Distanz und Wochendurchschnitt. Größere Formate ergänzen Training, Energie oder Stockwerke, Tagesrhythmus und Zielverfolgung.";
+"widget.dashboard.description" = "Schritte, Distanz und Wochendurchschnitt. Das große Widget ergänzt gestiegene Stockwerke, Training, optionale Energie und Zielverfolgung bis Mitternacht.";
