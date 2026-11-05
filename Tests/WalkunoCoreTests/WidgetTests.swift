@@ -174,4 +174,90 @@ struct WidgetTests {
         #expect(restored.change(for: .steps, calendar: calendar) == 0.5)
         #expect(restored.activity?.cumulative(todaySteps: 6000, calendar: calendar).last?.usual == nil)
     }
+
+    @Test func historyKeepsMissingDaysFutureSlotsAndHistoricalGoals() throws {
+        let now = date("2026-11-05T13:37:12Z")
+        let today = calendar.startOfDay(for: now)
+        let first = calendar.date(byAdding: .day, value: -4, to: today)!
+        var goals = GoalHistory()
+        goals.set(4000, on: first, calendar: calendar)
+        goals.set(8000, on: today, calendar: calendar)
+        let history = WidgetHistory(days: [
+            .init(date: first, steps: 4000, meters: 3000),
+            .init(date: calendar.date(byAdding: .day, value: -1, to: today)!, steps: 0, meters: 0),
+            .init(date: today, steps: 4000, meters: 2000),
+            .init(date: calendar.date(byAdding: .day, value: 1, to: today)!, steps: 99000)
+        ], goals: goals, includeYear: false, now: now, calendar: calendar)
+        let month = try #require(history.periods.first { $0.period == "month" })
+        #expect(month.current.count == 30)
+        #expect(month.previous.count == 31)
+        #expect(month.current[1].steps == nil)
+        #expect(month.current[3].steps == 0)
+        #expect(month.current[5].steps == nil)
+        #expect(month.average.steps == 2667)
+        #expect(month.average.meters == 5000.0 / 3)
+        #expect(history.monthProgress[0] == 1)
+        #expect(history.monthProgress[3] == 0)
+        #expect(history.monthProgress[4] == 0.5)
+        #expect(history.monthProgress[5] == nil)
+        #expect(history.periods.contains { $0.period == "year" } == false)
+    }
+
+    @Test func annualChartUsesMonthlyDailyAveragesAndRetainsMonthlyTotals() throws {
+        let now = date("2026-03-02T13:00:00Z")
+        let history = WidgetHistory(days: [
+            .init(date: date("2026-01-01T12:00:00Z"), steps: 2000, meters: 1000),
+            .init(date: date("2026-01-02T12:00:00Z"), steps: 4000, meters: 3000),
+            .init(date: date("2026-02-01T12:00:00Z"), steps: 9000, meters: 6000),
+            .init(date: date("2025-01-01T12:00:00Z"), steps: 5000)
+        ], goals: .init(), includeYear: true, now: now, calendar: calendar)
+        let year = try #require(history.periods.first { $0.period == "year" })
+        #expect(year.current.count == 12)
+        #expect(year.previous.count == 12)
+        #expect(year.current[0].steps == 6000)
+        #expect(year.dailyAverages[0].steps == 3000)
+        #expect(year.dailyAverages[0].meters == 2000)
+        #expect(year.previousDailyAverages[0].steps == 5000)
+        #expect(year.average.steps == 5000) // Weighted by observed days, not by months.
+        #expect(year.dailyAverages[2].steps == nil)
+        #expect(year.dailyAverages[11].steps == nil)
+    }
+
+    @Test func leapMonthAndRollingWeekStayCalendarAligned() throws {
+        let now = date("2028-02-29T14:00:00Z")
+        let today = calendar.startOfDay(for: now)
+        let history = WidgetHistory(days: [.init(date: today, steps: 100)], goals: .init(),
+                                    includeYear: false, now: now, calendar: calendar)
+        let week = try #require(history.periods.first { $0.period == "week" })
+        let month = try #require(history.periods.first { $0.period == "month" })
+        #expect(month.current.count == 29)
+        #expect(month.previous.count == 31)
+        #expect(week.current.count == 7)
+        #expect(week.current.last?.steps == 100)
+        #expect(calendar.dateComponents([.day], from: week.current[0].date, to: week.current[6].date).day == 6)
+        #expect(calendar.dateComponents([.day], from: week.previous[6].date, to: week.current[0].date).day == 1)
+    }
+
+    @Test func extendedCacheStaysBoundedAndLegacyPreferencesRemainOptional() throws {
+        let now = date("2026-11-05T13:37:12Z")
+        let today = calendar.startOfDay(for: now)
+        let days = (0..<5000).map { offset in
+            ActivityDay(date: calendar.date(byAdding: .day, value: -offset, to: today)!, steps: 12345,
+                        meters: 9876.54, kilocalories: 432.1, exerciseMinutes: 54.3, floors: 12)
+        }
+        var value = snapshot(at: now)
+        value.history = WidgetHistory(days: days, goals: .init(), includeYear: true, now: now, calendar: calendar)
+        value.display = .init(counter: .milestones, showEnergy: false)
+        let encoded = try JSONEncoder().encode(value)
+        #expect(encoded.count < 100_000)
+        #expect(try JSONDecoder().decode(WidgetSnapshot.self, from: encoded) == value)
+        var legacy = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacy.removeValue(forKey: "history")
+        legacy.removeValue(forKey: "display")
+        let restored = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONSerialization.data(withJSONObject: legacy))
+        #expect(restored.history == nil)
+        #expect(restored.display == nil)
+        #expect(restored.today == value.today)
+    }
+
 }

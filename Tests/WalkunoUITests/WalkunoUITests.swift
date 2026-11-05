@@ -285,7 +285,7 @@ final class WalkunoUITests: XCTestCase {
         app.tabBars.buttons["Statistiques"].tap()
         trendPeriod(app).buttons["Année"].tap()
         XCTAssertFalse(app.navigationBars["Walkuno Premium"].exists)
-        trendPeriod(app).buttons["Semaine"].tap()
+        trendPeriod(app).buttons["7 jours"].tap()
 
         let enabledToggle = openDevelopmentSwitch()
         XCTAssertEqual(enabledToggle.value as? String, "1")
@@ -311,6 +311,91 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["today.counter"].exists)
     }
 
+    func testStatisticsChartsShowValuesOnTapAndDrag() {
+        let app = launch(pro: true)
+        app.tabBars.buttons["Statistiques"].tap()
+        for id in ["insights.day.chart", "insights.trend.chart", "insights.record.chart"] {
+            let chart = app.descendants(matching: .any)[id].firstMatch
+            revealChart(chart, in: app)
+            let first = chart.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.75))
+            first.tap()
+            let selection = app.descendants(matching: .any)[id + ".selection"].firstMatch
+            // Read immediately: XCTest's one-second polling interval outlasts the tooltip.
+            let initial = selection.label
+            XCTAssertFalse(initial.isEmpty, id)
+            if id == "insights.trend.chart" { XCTAssertTrue(initial.contains("Période précédente")) }
+            first.press(forDuration: 0.6, thenDragTo: chart.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.75)),
+                        withVelocity: .slow, thenHoldForDuration: 1.3)
+            let final = selection.label
+            XCTAssertFalse(final.isEmpty, id)
+            if id == "insights.trend.chart" { XCTAssertTrue(final.contains("Période actuelle")) }
+            if id == "insights.record.chart" { XCTAssertEqual(final, final.uppercased()) }
+            capture("Valeurs-" + id)
+            XCTAssertTrue(selection.waitForNonExistence(timeout: 3), id)
+        }
+        let picker = app.segmentedControls["insights.record.period"]
+        reveal(picker, in: app)
+        picker.buttons["Jour"].tap()
+        let hourly = app.descendants(matching: .any)["insights.record.hourly"].firstMatch
+        revealChart(hourly, in: app)
+        hourly.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.7)).tap()
+        let hourlySelection = app.descendants(matching: .any)["insights.record.hourly.selection"].firstMatch
+        XCTAssertFalse(hourlySelection.label.isEmpty)
+        XCTAssertTrue(hourlySelection.waitForNonExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["insights.record.details"].exists)
+    }
+
+    func testExplorerChartScrubbingKeepsPeriodAndShowsValues() {
+        let app = launch(pro: true)
+        app.tabBars.buttons["Explorer"].tap()
+        let picker = app.segmentedControls["statistics.explorer.period"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        for period in ["Semaine", "Mois", "Année", "Jour"] {
+            picker.buttons[period].tap()
+            let title = app.staticTexts["explorer.period.title"]
+            let original = title.label
+            let id = period == "Jour" ? "explorer.day.hourly" : "explorer.chart"
+            let chart = app.descendants(matching: .any)[id].firstMatch
+            revealChart(chart, in: app)
+            let first = chart.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.8))
+            first.tap()
+            let selection = app.descendants(matching: .any)[id + ".selection"].firstMatch
+            let initial = selection.label
+            XCTAssertFalse(initial.isEmpty, period)
+            first.press(forDuration: 0.6, thenDragTo: chart.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.8)),
+                        withVelocity: .slow, thenHoldForDuration: 0.2)
+            let final = selection.label
+            XCTAssertFalse(final.isEmpty, period)
+            XCTAssertNotEqual(final, initial, period)
+            XCTAssertEqual(title.label, original, "Chart inspection must not navigate to another period")
+            capture("Valeurs-Explorer-" + period)
+            XCTAssertTrue(selection.waitForNonExistence(timeout: 3), period)
+        }
+    }
+
+    func testChartsAllowVerticalScrollingWithoutInspectingValues() {
+        let app = launch(pro: true)
+        for (tab, id) in [("Statistiques", "insights.day.chart"), ("Explorer", "explorer.chart")] {
+            app.tabBars.buttons[tab].tap()
+            let chart = app.descendants(matching: .any)[id].firstMatch
+            let selection = app.descendants(matching: .any)[id + ".selection"].firstMatch
+            for pause in [0.01, 0.25] {
+                revealChart(chart, in: app)
+                let initialY = chart.frame.minY
+                let title = app.staticTexts["explorer.period.title"]
+                let originalPeriod = title.exists ? title.label : nil
+                let start = chart.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85))
+                let end = start.withOffset(CGVector(dx: 0, dy: -120))
+                // Start inside the plot, including after a short pause, and keep the drag slow.
+                start.press(forDuration: pause, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0)
+                XCTAssertLessThan(chart.frame.minY, initialY - 40, "Scrolling was captured by \(id)")
+                XCTAssertFalse(selection.exists, "Scrolling must not inspect \(id)")
+                if let originalPeriod { XCTAssertEqual(title.label, originalPeriod) }
+                XCTAssertFalse(app.sheets.firstMatch.exists)
+            }
+        }
+    }
+
     func testStatisticsInsightsMetricsRecordsAndYearHistory() {
         let app = launch()
         app.tabBars.buttons["Réglages"].tap()
@@ -332,7 +417,7 @@ final class WalkunoUITests: XCTestCase {
             XCTAssertTrue(button.isHittable)
             button.tap()
             XCTAssertTrue(button.isSelected)
-            for card in ["day", "trends", "weekday", "record.year", "all.years"] {
+            for card in ["day", "trends", "record.year", "all.years"] {
                 XCTAssertEqual(app.staticTexts["insights.header.insights." + card].value as? String, title)
             }
         }
@@ -340,15 +425,17 @@ final class WalkunoUITests: XCTestCase {
         capture("12-Statistiques-Distance")
 
         trendPeriod(app).buttons["7 jours"].tap()
+        XCTAssertFalse(trendPeriod(app).buttons["Semaine"].exists)
         capture("13-Statistiques-Tendances")
+        trendPeriod(app).buttons["Mois"].tap()
+        capture("13b-Statistiques-Tendances-Mois")
+        trendPeriod(app).buttons["Année"].tap()
+        capture("13c-Statistiques-Tendances-Annee")
         let recordPeriod = app.segmentedControls["insights.record.period"]
         reveal(recordPeriod, in: app)
         recordPeriod.buttons["Année"].tap()
         capture("14-Statistiques-Record")
-        let details = app.buttons["insights.record.details"]
-        reveal(details, in: app)
-        details.tap()
-        capture("14b-Statistiques-Record-Details")
+        XCTAssertFalse(app.buttons["insights.record.details"].exists)
         let historyMode = app.segmentedControls["insights.history.mode"]
         reveal(historyMode, in: app)
         historyMode.buttons["Totaux"].tap()
@@ -582,14 +669,21 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(streak.label.contains("30 jours d’affilée"))
         XCTAssertFalse(app.descendants(matching: .any)["trophies.streak.60"].exists)
         capture("Trophees-Series")
-        let track = app.descendants(matching: .any)["trophies.journey.track"].firstMatch
-        reveal(track, in: app)
-        XCTAssertTrue(track.label.contains("fois"))
+        XCTAssertFalse(app.descendants(matching: .any)["trophies.journey.track"].exists)
+        XCTAssertFalse(app.buttons["trophies.collection"].exists)
+        let bridge = app.descendants(matching: .any)["trophies.journey.goldenGate"].firstMatch
+        reveal(bridge, in: app)
+        XCTAssertTrue(bridge.label.contains("fois"))
         capture("Trophees-Traversees")
-        let collection = app.buttons["trophies.collection"]
-        reveal(collection, in: app)
-        XCTAssertTrue(collection.label.contains("18"))
-        collection.tap()
+        for id in ["nile", "australia", "transSiberian", "greatWall", "transCanada"] {
+            let journey = app.descendants(matching: .any)["trophies.journey.\(id)"].firstMatch
+            reveal(journey, in: app)
+            XCTAssertTrue(journey.isHittable)
+            if id == "greatWall" {
+                XCTAssertTrue(journey.label.contains("La Grande Muraille de Chine"))
+                capture("Trophees-Grande-Muraille")
+            }
+        }
         let earth = app.descendants(matching: .any)["trophies.journey.earth"].firstMatch
         reveal(earth, in: app)
         XCTAssertTrue(earth.label.contains("Terre"))
@@ -600,6 +694,23 @@ final class WalkunoUITests: XCTestCase {
         capture("Trophees-Espace")
     }
 
+    private func revealChart(_ chart: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<12 {
+            let metric = app.buttons["statistics.metric.steps"]
+            let explorer = app.segmentedControls["statistics.explorer.period"]
+            let top = metric.exists ? metric.frame.maxY + 16 : explorer.exists ? explorer.frame.maxY + 70 : app.frame.height * 0.2
+            let bottom = app.tabBars.firstMatch.frame.minY - 8
+            if chart.exists && chart.frame.minY >= top && chart.frame.maxY <= bottom { return }
+            let down = chart.exists && chart.frame.minY < top
+            let start = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: down ? 0.48 : 0.72))
+            let end = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: down ? 0.72 : 0.48))
+            start.press(forDuration: 0.01, thenDragTo: end)
+        }
+        XCTAssertTrue(chart.exists)
+        XCTAssertGreaterThan(chart.frame.maxY, 0)
+        XCTAssertLessThan(chart.frame.maxY, app.tabBars.firstMatch.frame.minY)
+    }
+
     private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
         for _ in 0..<32 {
             let navigationBar = app.navigationBars.firstMatch
@@ -608,9 +719,9 @@ final class WalkunoUITests: XCTestCase {
             let bottom = tabBar.exists ? tabBar.frame.minY - 8 : app.frame.height * 0.9
             if element.isHittable && element.frame.minY >= top && element.frame.maxY <= bottom { return }
             // Drag in the margin so chart selection does not capture the scroll gesture.
-            let scrollDown = element.exists && element.frame.minY < top
-            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: scrollDown ? 0.48 : 0.72))
-            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: scrollDown ? 0.72 : 0.48))
+            let scrollDown = element.exists && !element.frame.isEmpty && element.frame.minY < top
+            let start = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: scrollDown ? 0.48 : 0.72))
+            let end = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: scrollDown ? 0.72 : 0.48))
             start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         }
         XCTAssertTrue(element.isHittable)
@@ -1065,6 +1176,177 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["theme.mint"].isSelected)
         XCTAssertFalse(app.alerts["Icône de l’application"].exists)
         capture("Palette-retour-Grande-foulee")
+    }
+
+    func testCounterGallerySelectsFiveStylesAndSupportsPeriods() {
+        let app = launch(pro: true)
+        let counter = app.buttons["today.counter"]
+        XCTAssertTrue(counter.waitForExistence(timeout: 15))
+        let styles = [("ring", "Anneau"), ("horizon", "Horizon"), ("path", "Chemin"),
+                      ("milestones", "Paliers"), ("minimal", "Typographique")]
+        for (identifier, name) in styles {
+            app.tabBars.buttons["Réglages"].tap()
+            // Return from the gallery if the tab retained its navigation state.
+            if !app.buttons["counter.style." + identifier].exists {
+                reveal(app.buttons["settings.counter"], in: app)
+                app.buttons["settings.counter"].tap()
+            }
+            let option = app.buttons["counter.style." + identifier]
+            XCTAssertTrue(option.waitForExistence(timeout: 5), app.debugDescription)
+            reveal(option, in: app)
+            option.tap()
+            XCTAssertTrue(option.isSelected)
+            let preview = app.descendants(matching: .any).matching(identifier: "counter.preview").firstMatch
+            reveal(preview, in: app)
+            XCTAssertEqual(preview.value as? String, name)
+            capture("Compteur-Galerie-" + identifier)
+            app.tabBars.buttons["Aujourd’hui"].tap()
+            XCTAssertEqual(counter.value as? String, name)
+            let initial = counter.label
+            counter.swipeRight()
+            XCTAssertTrue(app.buttons["today.current"].waitForExistence(timeout: 4))
+            XCTAssertNotEqual(counter.label, initial)
+            counter.swipeLeft()
+            XCTAssertTrue(app.buttons["today.current"].waitForNonExistence(timeout: 4))
+            XCTAssertEqual(counter.label, initial)
+            capture("Compteur-Accueil-" + identifier)
+            app.segmentedControls["today.period"].buttons["Année"].tap()
+            XCTAssertEqual(counter.value as? String, name)
+            Thread.sleep(forTimeInterval: 2.2)
+            capture("Compteur-Annuel-" + identifier)
+            app.segmentedControls["today.period"].buttons["Jour"].tap()
+        }
+        counter.tap()
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "fr_FR")
+        formatter.setLocalizedDateFormatFromTemplate("dMMMM")
+        XCTAssertTrue(app.navigationBars[formatter.string(from: .now)].waitForExistence(timeout: 5))
+    }
+
+    func testCounterEffectsCanBeSelectedAndReplayed() {
+        let app = launch(pro: true)
+        XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["Réglages"].tap()
+        reveal(app.buttons["settings.counter"], in: app)
+        app.buttons["settings.counter"].tap()
+        for effect in ["fire", "aurora", "liquid", "stars"] {
+            let option = app.buttons["counter.effect." + effect]
+            reveal(option, in: app)
+            option.tap()
+            XCTAssertTrue(option.isSelected)
+            let replay = app.buttons["counter.effect.replay"]
+            reveal(replay, in: app)
+            replay.tap()
+            Thread.sleep(forTimeInterval: 0.8)
+            capture("Effet-Animation-" + effect)
+            Thread.sleep(forTimeInterval: 2.2)
+            capture("Effet-Repos-" + effect)
+        }
+        app.tabBars.buttons["Aujourd’hui"].tap()
+        XCTAssertTrue(app.buttons["today.counter"].isHittable)
+    }
+
+    func testCounterSelectionPersistsWithoutHealthData() {
+        // Demo mode deliberately never saves preferences. Verify persistence in
+        // the real onboarding flow without granting Health access.
+        let app = launch(demo: false, pro: true)
+        if app.buttons["Continuer"].waitForExistence(timeout: 5) {
+            for label in ["Continuer", "Continuer sans connecter Santé", "Continuer", "C’est parti"] {
+                let button = app.buttons[label]
+                // Onboarding has an inset scroll view: swipe its content instead
+                // of the outer margin used to avoid charts on dashboard pages.
+                for _ in 0..<8 {
+                    if button.isHittable { break }
+                    app.scrollViews.firstMatch.swipeUp()
+                }
+                XCTAssertTrue(button.isHittable)
+                button.tap()
+            }
+        }
+        XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["Réglages"].tap()
+        reveal(app.buttons["settings.counter"], in: app)
+        app.buttons["settings.counter"].tap()
+        let option = app.buttons["counter.style.minimal"]
+        reveal(option, in: app)
+        option.tap()
+        XCTAssertTrue(option.isSelected)
+        app.terminate()
+        app.launch()
+        let counter = app.buttons["today.counter"]
+        XCTAssertTrue(counter.waitForExistence(timeout: 15))
+        XCTAssertEqual(counter.value as? String, "Typographique")
+        XCTAssertTrue(counter.label.contains("—"))
+        capture("Compteur-Persistant-Sans-donnees")
+    }
+
+    func testCounterPathFollowsEveryColourPalette() {
+        let app = launch(pro: true)
+        app.tabBars.buttons["Réglages"].tap()
+        reveal(app.buttons["settings.counter"], in: app)
+        app.buttons["settings.counter"].tap()
+        reveal(app.buttons["counter.style.path"], in: app)
+        app.buttons["counter.style.path"].tap()
+        app.navigationBars.buttons.firstMatch.tap()
+        for theme in ["mint", "coral", "glacier", "sunshine", "lime", "rose", "violet", "indigo", "turquoise"] {
+            reveal(app.buttons["settings.palette"], in: app)
+            app.buttons["settings.palette"].tap()
+            let colour = app.descendants(matching: .any).matching(identifier: "theme." + theme).firstMatch
+            reveal(colour, in: app)
+            colour.tap()
+            // Alternate home-screen icons can be unavailable on an unsigned
+            // simulator build. They are separate from the in-app colour preview.
+            if app.alerts["Icône de l’application"].waitForExistence(timeout: 1) {
+                app.alerts["Icône de l’application"].buttons["Terminé"].tap()
+            }
+            let systemAlert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
+            if systemAlert.exists { systemAlert.buttons.firstMatch.tap() }
+            XCTAssertTrue(colour.isSelected)
+            app.navigationBars.buttons.firstMatch.tap()
+            app.tabBars.buttons["Aujourd’hui"].tap()
+            XCTAssertEqual(app.buttons["today.counter"].value as? String, "Chemin")
+            capture("Compteur-Couleur-" + theme)
+            app.tabBars.buttons["Réglages"].tap()
+        }
+    }
+
+    func testFreeCounterPreviewDoesNotOverwriteTheSelectedStyle() {
+        let app = launch(pro: false)
+        XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
+        XCTAssertEqual(app.buttons["today.counter"].value as? String, "Anneau")
+        app.tabBars.buttons["Réglages"].tap()
+        reveal(app.buttons["settings.counter"], in: app)
+        app.buttons["settings.counter"].tap()
+        let option = app.buttons["counter.style.horizon"]
+        reveal(option, in: app)
+        option.tap()
+        XCTAssertFalse(option.isSelected)
+        XCTAssertTrue(app.buttons["counter.style.ring"].isSelected)
+        let unlock = app.buttons["counter.unlock"]
+        reveal(unlock, in: app)
+        unlock.tap()
+        XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
+        app.buttons["Terminé"].firstMatch.tap()
+        app.tabBars.buttons["Aujourd’hui"].tap()
+        XCTAssertEqual(app.buttons["today.counter"].value as? String, "Anneau")
+    }
+
+    func testCounterRemainsReadableWithAccessibilityText() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "-development.proEnabled", "YES", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        if app.alerts["Icône de l’application"].waitForExistence(timeout: 2) {
+            app.alerts["Icône de l’application"].buttons["Terminé"].tap()
+        }
+        let counter = app.buttons["today.counter"]
+        XCTAssertTrue(counter.waitForExistence(timeout: 15))
+        XCTAssertGreaterThanOrEqual(counter.frame.height, 320)
+        reveal(counter, in: app)
+        XCTAssertTrue(counter.isHittable)
+        XCTAssertLessThanOrEqual(counter.frame.maxY, app.tabBars.firstMatch.frame.minY)
+        Thread.sleep(forTimeInterval: 2.2)
+        capture("Compteur-Texte-accessibilite")
     }
 
     private func capture(_ name: String) {

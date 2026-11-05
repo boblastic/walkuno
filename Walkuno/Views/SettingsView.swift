@@ -46,13 +46,12 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityIdentifier("settings.palette")
-                Picker("settings.counter", selection: Binding(get: { model.effectiveCounter }, set: { style in
-                    if model.purchases.isPremium || style == .ring { model.preferences.counterStyle = style }
-                    else { showPremium = true }
-                })) {
-                    Text("counter.ring").tag(CounterStyle.ring)
-                    Text("counter.minimal").tag(CounterStyle.minimal)
+                NavigationLink {
+                    CounterStylePickerView().appHeader()
+                } label: {
+                    LabeledContent("settings.counter", value: L(model.effectiveCounter.titleKey))
                 }
+                .accessibilityIdentifier("settings.counter")
                 Toggle("settings.period.animations", isOn: $model.preferences.animatePeriodChanges)
                     .accessibilityIdentifier("settings.period.animations")
                 Text("settings.period.animations.description").font(.caption).foregroundStyle(.secondary)

@@ -105,7 +105,7 @@
 "settings.mode" = "外観";
 "settings.counter" = "カウンターのスタイル";
 "settings.period.animations" = "期間の切り替えをアニメーション表示";
-"settings.period.animations.description" = "日・週・月・年を切り替えるときに、リングと歩数のアニメーションを再生します。オフの場合は、最終的な値がすぐに表示されます。";
+"settings.period.animations.description" = "日付間を移動するときに、進捗と歩数のアニメーションを再生します。日・週・月・年の切り替えでは、常にアニメーションを再生します。";
 "settings.data" = "ヘルスケアとプライバシー";
 "settings.purchases" = "購入";
 "settings.version %@" = "バージョン %@";
@@ -115,7 +115,7 @@
 "appearance.light" = "ライト";
 "appearance.system" = "システム";
 "counter.ring" = "リング";
-"counter.minimal" = "ミニマル · Premium";
+"counter.minimal" = "タイポグラフィ";
 "theme.mint" = "大きな一歩";
 "theme.coral" = "コーラル";
 "theme.glacier" = "氷河";
@@ -138,7 +138,7 @@
 "privacy.headline" = "あなたの歩みは、あなたのもの。";
 "privacy.body" = "Orbelioが提供するWalkunoは、アカウントや追跡サーバーなしで動作します。Appleヘルスケアで許可された歩数、ウォーキングとランニングの距離、アクティブエネルギー、エクササイズ時間、上った階数のみを読み取ります。ヘルスケアに測定値を書き込んだり、健康データをOrbelio、分析サービス、広告ネットワークに送信したりすることはありません。広告やトラッカーはありません。";
 "privacy.permissions" = "アクセス権はAppleが管理します。ヘルスケア → プロフィール → アプリとサービス → Walkunoで変更できます。測定値がない場合でも、アクセスを拒否したかどうかをWalkunoが判断することはできません。";
-"privacy.widgets" = "すべての履歴はヘルスケアに残ります。グラフはメモリ内で計算されます。ウィジェットには最大7日分のローカルキャッシュを使います。このキャッシュはバックアップの対象外で、デバイスのロック中は保護されます。ウィジェットの測定値は機密情報として扱われます。iPhoneとWatchの通信で送るのは目標と表示設定のみで、健康の測定値は送信しません。";
+"privacy.widgets" = "全履歴はヘルスケアに残り、グラフはメモリ内で計算されます。上限のあるローカルキャッシュには直近7日の日別合計、時間別プロフィール、今月と先月の日別集計、Proでは2年分の月別集計を保存します。バックアップ対象外で、端末ロック中は保護されます。ウィジェットの測定値は機密情報として扱います。iPhoneとWatch間では目標と表示設定のみを送信し、健康データは送信しません。";
 "privacy.purchases" = "購入はAppleが処理します。WalkunoはStoreKitで利用権を確認し、支払い情報を受け取ることはありません。設定と目標はローカルに保存されます。Walkunoは健康データをiCloudに同期しません。";
 "privacy.reset" = "「設定」でローカルデータを消去できます。Appleヘルスケアの内容、サブスクリプション、Appleが管理するアクセス権は変更されません。Walkunoはウェルネスアプリであり、医療診断機能はありません。";
 "privacy.editor" = "Orbelio · 2026年11月4日付アプリ内ポリシー · バージョン1.0";
@@ -170,7 +170,7 @@
 "premium.settings.subtitle" = "すべての履歴。すべてのカラー。";
 "premium.feature.history" = "全履歴、年間表示、カレンダー";
 "premium.feature.themes" = "鮮やかな9つのカラーパレット";
-"premium.feature.counter" = "ミニマルなカウンターとウィジェットのテーマ";
+"premium.feature.counter" = "4つの追加カウンタースタイルとウィジェットテーマ";
 "premium.feature.records" = "週間・月間の記録";
 "premium.history.cta" = "Premiumですべての履歴を見る";
 "premium.annual.condition" = "自動更新の年間サブスクリプション";
@@ -215,7 +215,8 @@
 "metric.floors" = "上った階数";
 "insights.metric" = "項目";
 "insights.details" = "詳細を表示";
-"insights.day" = "私の1日";
+"insights.day" = "今日のアクティビティ";
+"insights.day.goal %@" = "目標：%@歩";
 "insights.today" = "今日";
 "insights.usual" = "いつも";
 "insights.day.unavailable" = "最近の日の同じ時刻に時間ごとの測定値があれば、比較を表示します。";
@@ -336,10 +337,7 @@
 "trophies.distance.progress" = "%@ / %@";
 "trophies.journey.next" = "次の冒険";
 "trophies.journey.again" = "次の周回";
-"trophies.collection.all" = "%ldの旅をすべて見る";
-"trophies.collection.less" = "表示を減らす";
 "trophies.journeys.scope" = "基準距離を丸めた象徴的な換算です。Appleヘルスケアで取得できるウォーキング・ランニング距離のみを使用し、歩数から推定しません。×は達成回数、バーは次の周回の進捗です。";
-"journey.track" = "トラックを1周";
 "journey.goldenGate" = "ゴールデンゲートを渡る";
 "journey.centralPark" = "セントラルパークを1周";
 "journey.halfMarathon" = "ハーフマラソン";
@@ -357,6 +355,11 @@
 "journey.earth" = "地球を1周";
 "journey.moon" = "月までの旅";
 "journey.sun" = "太陽を目指して";
+"journey.nile" = "ナイル川をたどる";
+"journey.australia" = "オーストラリア一周";
+"journey.transSiberian" = "シベリア鉄道を往復";
+"journey.greatWall" = "万里の長城";
+"journey.transCanada" = "トランス・カナダ・トレイル";
 
 "widget.chart.hourly" = "1時間ごとの歩数";
 "widget.chart.goalTracking" = "目標の進捗";
@@ -368,3 +371,65 @@
 "widget.goal.short" = "目標";
 
 "calendar.legend.months" = "色が濃いほど月の目標に近づいています。点は利用できるデータがない月を示します。";
+
+"counter.horizon" = "ホライズン";
+
+"counter.path" = "小道";
+
+"counter.milestones" = "ステップ";
+
+"counter.ring.description" = "光のリングで、シンプルに。";
+
+"counter.horizon.description" = "開いたアーチで、すっきりと。";
+
+"counter.path.description" = "歩数とともに進む小道。";
+
+"counter.milestones.description" = "目標までの10のステップ。";
+
+"counter.minimal.description" = "大きな数字で、ひと目でわかる。";
+
+"counter.preview" = "プレビュー";
+
+"counter.selected" = "選択中のカウンター";
+
+"counter.unlock" = "Premiumでこのスタイルを選ぶ";
+
+"counter.palette.note" = "すべてのカウンターに選択したカラーパレットが反映されます。";
+
+"counter.complete" = "目標達成";
+
+"counter.remaining %@" = "あと%@歩";
+
+"counter.extra %@" = "目標を%@歩超えました";
+
+"counter.next %@" = "次のステップ：%@";
+
+/* Counter animation effects */
+"counter.effect.title" = "アニメーション効果";
+"counter.effect.replay" = "アニメーションを再生";
+"counter.effect.stars" = "星";
+"counter.effect.stars.description" = "妖精の粉と真珠のような輝き。";
+"counter.effect.fire" = "生きた炎";
+"counter.effect.fire.description" = "揺らめく炎と金色の火の粉。";
+"counter.effect.aurora" = "オーロラ";
+"counter.effect.aurora.description" = "虹色のベールと流れる光。";
+"counter.effect.liquid" = "水の波";
+"counter.effect.liquid.description" = "光る真珠となめらかな反射。";
+
+"widget.chart.dailyRhythm" = "一日のリズム";
+"widget.metric" = "指標";
+"widget.graph" = "グラフ";
+"widget.graph.curve" = "曲線";
+"widget.graph.bars" = "棒グラフ";
+"widget.graph.comparison" = "期間を比較";
+"widget.graph.calendar" = "月間アクティビティカレンダー";
+"widget.average" = "平均";
+"widget.dailyAverage" = "1日の平均 · データのある日";
+"widget.total" = "合計";
+"widget.best" = "最高";
+"widget.current" = "現在";
+"widget.previous" = "前回";
+"widget.trends.name" = "Walkuno · 傾向";
+"widget.trends.description" = "指標、7日間・月・年、曲線・棒・期間比較・月間カレンダーを選択。年の表示にはProが必要です。ほかの期間は利用可能な履歴に従います。";
+"widget.dashboard.name" = "Walkuno · ダッシュボード";
+"widget.dashboard.description" = "歩数、目標、距離、週平均。大きいサイズでは運動、エネルギーまたは階数、一日のリズム、目標の推移も表示します。";

@@ -25,7 +25,6 @@ La distance cumulée additionne les journées chargées depuis Santé, sans plaf
 
 | Trophée | Seuil | Visuel | Référence |
 | --- | ---: | --- | --- |
-| Un tour de piste | 400 m | Marcheur, chemin | [World Athletics : 400 m](https://worldathletics.org/disciplines/sprints/400-metres) |
 | Traverser le Golden Gate | 2,737 km | Pont suspendu dessiné | [Golden Gate Bridge District](https://www.goldengate.org/bridge/history-research/statistics-data/design-construction-stats/) : longueur totale, accès compris |
 | Le tour de Central Park | 9,8 km | Arbre et sentier | [Central Park Conservancy](https://www.centralparknyc.org/activities/guides/Running) : grande boucle de 6,1 miles, arrondie |
 | Un semi-marathon | 21,0975 km | Drapeau à damier | Moitié du marathon ; [parcours certifié JAAF/World Athletics](https://hakodate-marathon.jp/wp-content/themes/hakodate_marathon_new/pdf/2025_Race%20Information.pdf) |
@@ -39,15 +38,20 @@ La distance cumulée additionne les journées chargées depuis Santé, sans plaf
 | Le sentier des Appalaches | 3 540 km | Feuille et chemin | [Appalachian Trail Conservancy, référence 2026](https://appalachiantrail.org/news-stories/2026-official-mileage/) : 2 197,9 miles, arrondis à la dizaine de kilomètres |
 | La mythique Route 66 | 3 860 km | Route | [National Park Service](https://home.nps.gov/articles/route-66-overview.htm) : environ 2 400 miles, arrondis à la dizaine de kilomètres |
 | Le Pacific Crest Trail | 4 265 km | Chaîne de montagnes | [Pacific Crest Trail Association](https://www.pcta.org/discover-the-trail/) |
+| Suivre le Nil | 6 650 km | Ondes et chemin | [NASA MODIS](https://modis.gsfc.nasa.gov/gallery/individual.php?db_date=2026-02-07) : longueur de référence du fleuve |
 | Traverser l’Europe · E4 | 12 000 km | Globe européen | [Fédération européenne de randonnée](https://www.era-ewv-ferp.org/es/e-paths/) : 12 070 km, arrondis au millier ; Tarifa–Larnaca |
+| Le tour de l’Australie | 14 500 km | Globe australien | [Guinness World Records](https://www.guinnessworldrecords.com/world-records/100353-longest-continuous-road) : Highway One, 14 523 km arrondis à la centaine |
+| Le Transsibérien aller-retour | 18 600 km | Train et chemin | [Musée ferroviaire canadien, Canadian Rail](https://exporail.org/canrail/canadian_rail_1990_plus/canadian-rail-455-1996.pdf) : Moscou–Vladivostok, 9 288 km ; double trajet arrondi à la centaine |
+| La Grande Muraille de Chine | 21 200 km | Fortification et chemin | [Conseil des affaires d’État chinois](https://english.scio.gov.cn/chinavoices/2018-06/08/content_51805883.htm) : 21 196,18 km arrondis à la centaine, ensemble des sections historiques, pas un chemin continu |
+| Le Sentier Transcanadien | 30 000 km | Feuille et cercle pointillé | [Trans Canada Trail, juin 2026](https://tctrail.ca/news/trans-canada-trail-reaches-30000-kilometres-now-its-asking-canadians-to-help-protect-what-connects-us/) : ensemble du réseau, y compris voies d’eau, utilisé comme équivalence |
 | Le tour de la Terre | 40 075 km | Globe et cercle pointillé | [Caltech/IPAC](https://coolcosmos.ipac.caltech.edu/ask/57-How-large-is-Earth) : circonférence à l’équateur |
 | Décrocher la Lune | 384 400 km | Lune, étoiles et orbite | [NASA](https://science.nasa.gov/moon/facts/) : distance moyenne Terre–Lune |
 | Cap sur le Soleil | 149 600 000 km | Soleil et orbite | [NASA](https://science.nasa.gov/moon/by-the-numbers/) : distance de référence Terre–Soleil, arrondie |
 
-Le **multiplicateur ×N** est le nombre de traversées terminées. La barre suit la traversée suivante : à 1 050 m, le tour de piste affiche ×2 et 250 / 400 m ; à 1 200 m, il affiche ×3 et 0 / 400 m. Cette règle s’applique aussi aux longs voyages, pour une collection qui continue de progresser au fil des années. La collection condensée présente les trois premiers trophées et la prochaine aventure ; un bouton ouvre les 18 traversées. L’unité choisie, kilomètres ou miles, est respectée.
+Le **multiplicateur ×N** est le nombre de traversées terminées. La barre suit la traversée suivante : à 6 842,5 m, le Golden Gate affiche ×2 et 1 368,5 / 2 737 m ; à 8 211 m, il affiche ×3 et 0 / 2 737 m. Cette règle s’applique aussi aux longs voyages, pour une collection qui continue de progresser au fil des années. Les 22 traversées sont affichées en permanence, par distance croissante, sans bouton de déploiement ni de réduction. La première traversée non terminée porte la mention « Prochaine aventure ». L’unité choisie, kilomètres ou miles, est respectée.
 
 Les seuils sont fixes afin de conserver des multiplicateurs cohérents lorsque les itinéraires réels évoluent. Les corrections Santé ou des objectifs enregistrés peuvent recalculer une récompense : aucun compteur additionnel ni nouvelle copie de l’historique n’est stocké.
 
 ## Vérifications
 
-`AchievementTests` couvre les objectifs historiques, les seuils exacts, les actualisations répétées, les doublons de dates, les données absentes, les cinq records indépendants, les périodes incomplètes, les semaines à cheval sur deux années, les changements d’heure, les mois et années bissextiles, les séries interrompues et les répétitions de distances. Le test UI `testTrophiesRecordsGoalsStreaksAndJourneyCollection` parcourt les quatre catégories et ouvre toute la collection.
+`AchievementTests` couvre les objectifs historiques, les seuils exacts, les actualisations répétées, les doublons de dates, les données absentes, les cinq records indépendants, les périodes incomplètes, les semaines à cheval sur deux années, les changements d’heure, les mois et années bissextiles, les séries interrompues et les répétitions de distances. Le test UI `testTrophiesRecordsGoalsStreaksAndJourneyCollection` parcourt les quatre catégories et toute la collection sans action de déploiement, y compris les nouveaux jalons terrestres.

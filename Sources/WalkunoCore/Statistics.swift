@@ -69,7 +69,50 @@ public struct WeekdayAverage: Identifiable, Sendable {
     public var id: Int { weekday }
 }
 
+/// Matching calendar positions, including empty slots for dates still to come.
+public struct TrendChartSlot: Identifiable, Sendable {
+    public let id: Int
+    public let previous: ActivityBucket?
+    public let current: ActivityBucket?
+}
+
 public enum ActivityStatistics {
+    /// The chart shows full calendar periods; the summary compares completed, matching spans.
+    public static func trendChart(days: [ActivityDay], period: TrendPeriod,
+                                  now: Date = .now, calendar: Calendar = .current) -> [TrendChartSlot] {
+        let currentInterval: DateInterval
+        let previousInterval: DateInterval
+        if period == .sevenDays {
+            let today = calendar.startOfDay(for: now)
+            let start = calendar.date(byAdding: .day, value: -7, to: today)!
+            currentInterval = DateInterval(start: start, end: today)
+            previousInterval = DateInterval(start: calendar.date(byAdding: .day, value: -7, to: start)!, end: start)
+        } else {
+            let unit: ActivityPeriod = period == .year ? .year : period == .month ? .month : .week
+            currentInterval = unit.interval(containing: now, calendar: calendar)
+            previousInterval = unit.interval(containing: unit.previous(now, calendar: calendar), calendar: calendar)
+        }
+        let component: Calendar.Component = period == .year ? .month : .day
+        let available = days.filter { $0.date <= now }
+        func slots(in interval: DateInterval) -> [ActivityBucket] {
+            var result: [ActivityBucket] = []
+            var start = interval.start
+            while start < interval.end {
+                let end = min(calendar.date(byAdding: component, value: 1, to: start)!, interval.end)
+                result.append(ActivityBucket(interval: DateInterval(start: start, end: end),
+                                             days: available.filter { $0.date >= start && $0.date < end }))
+                start = end
+            }
+            return result
+        }
+        let previous = slots(in: previousInterval)
+        let current = slots(in: currentInterval)
+        return (0..<max(previous.count, current.count)).map { index in
+            TrendChartSlot(id: index, previous: index < previous.count ? previous[index] : nil,
+                           current: index < current.count ? current[index] : nil)
+        }
+    }
+
     /// Only completed days are compared, with equal calendar spans. Missing days remain absent.
     public static func trend(days: [ActivityDay], metric: ActivityMetric, period: TrendPeriod,
                              now: Date = .now, calendar: Calendar = .current) -> ActivityTrend {
@@ -136,24 +179,28 @@ public struct DayComparisonPoint: Codable, Equatable, Identifiable, Sendable {
 /// Each history query ends at the same local clock time as today's query, including the partial hour.
 public struct DayComparison: Sendable {
     public let points: [DayComparisonPoint]
+    /// Complete historical days for the chart; same-time totals still come from `points`.
+    public let usualDayPoints: [DayComparisonPoint]
     public let baselineDays: Int
     public var current: Double? { points.last?.current }
     public var usual: Double? { points.last?.usual }
+    /// Average total at the end of a complete historical day.
+    public var usualDayTotal: Double? { usualDayPoints.last?.usual }
 
     public init(today: [HourActivity], history: [[HourActivity]], metric: ActivityMetric,
-                cutoffHour: Double, calendar: Calendar = .current) {
+                cutoffHour: Double, calendar: Calendar = .current, fullDayHistory: [[HourActivity]] = []) {
         let cutoff = min(24, max(0, cutoffHour))
-        func values(_ hours: [HourActivity]) -> [Int: Double]? {
+        func values(_ hours: [HourActivity], through limit: Double) -> [Int: Double]? {
             let observed = hours.compactMap { hour -> (Int, Double)? in
                 let clockHour = calendar.component(.hour, from: hour.date)
-                guard Double(clockHour) < cutoff, let value = metric.value(in: hour) else { return nil }
+                guard Double(clockHour) < limit, let value = metric.value(in: hour) else { return nil }
                 return (clockHour, value)
             }
             guard !observed.isEmpty else { return nil }
             return Dictionary(observed, uniquingKeysWith: +)
         }
-        let currentValues = values(today)
-        let baseline = history.compactMap(values)
+        let currentValues = values(today, through: cutoff)
+        let baseline = history.compactMap { values($0, through: cutoff) }
         baselineDays = baseline.count
         var hours = (0...Int(cutoff)).map(Double.init)
         if cutoff > (hours.last ?? 0) { hours.append(cutoff) }
@@ -163,6 +210,11 @@ public struct DayComparison: Sendable {
         points = hours.map { hour in
             DayComparisonPoint(hour: hour, current: currentValues.map { cumulative($0, at: hour) },
                                usual: baseline.isEmpty ? nil : baseline.map { cumulative($0, at: hour) }.reduce(0, +) / Double(baseline.count))
+        }
+        let fullBaseline = fullDayHistory.compactMap { values($0, through: 24) }
+        usualDayPoints = (0...24).map { hour in
+            DayComparisonPoint(hour: Double(hour), current: nil,
+                               usual: fullBaseline.isEmpty ? nil : fullBaseline.map { cumulative($0, at: Double(hour)) }.reduce(0, +) / Double(fullBaseline.count))
         }
     }
 }

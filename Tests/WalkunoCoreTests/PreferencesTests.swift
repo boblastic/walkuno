@@ -3,6 +3,39 @@ import Testing
 @testable import WalkunoCore
 
 struct PreferencesTests {
+    @Test func counterChoicesPreservePreferencesAcrossSaving() throws {
+        for style in CounterStyle.allCases {
+            var original = Preferences()
+            original.counterStyle = style
+            original.theme = .violet
+            original.goals.set(11_500)
+            original.onboardingComplete = true
+            let restored = try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(original))
+            #expect(restored == original)
+        }
+        // "minimal" was saved by the previous two-style selector.
+        #expect(try JSONDecoder().decode(CounterStyle.self, from: Data("\"minimal\"".utf8)) == .minimal)
+    }
+
+    @Test func effectChoiceSurvivesSavingAndLegacyPreferencesKeepStars() throws {
+        for effect in CounterEffect.allCases {
+            var original = Preferences()
+            original.counterEffect = effect
+            original.counterStyle = .path
+            original.theme = .violet
+            let encoded = try JSONEncoder().encode(original)
+            #expect(try JSONDecoder().decode(Preferences.self, from: encoded) == original)
+            var legacy = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+            legacy.removeValue(forKey: "counterEffect")
+            let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy))
+            #expect(restored.counterEffect == .stars)
+            #expect(restored.counterStyle == .path)
+            #expect(restored.theme == .violet)
+            legacy["counterEffect"] = "future-effect"
+            #expect(try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy)).counterEffect == .stars)
+        }
+    }
+
     @Test func addingPeriodAnimationsPreservesExistingPreferences() throws {
         var original = Preferences()
         original.goals.set(12_000)

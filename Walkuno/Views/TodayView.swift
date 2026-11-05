@@ -17,7 +17,7 @@ struct TodayView: View {
     @State private var ringReplay = 0
     @State private var pageWindow: DashboardPageWindow?
     @State private var paging = CounterPagingState()
-    @State private var hasNavigated = false
+    @State private var replayCounterOnEntry = true
     @State private var selectedHours: [HourActivity] = []
     @State private var selectedPreviousHours: [HourActivity] = []
     @State private var loadedHoursDate: Date?
@@ -100,7 +100,7 @@ struct TodayView: View {
                 Picker("statistics.period", selection: Binding(get: { period }, set: { value in
                     guard !paging.isSliding else { return }
                     if value == .year && !model.purchases.isPremium { showPremium = true }
-                    else if value != period { hasNavigated = true; period = value }
+                    else if value != period { replayCounterOnEntry = true; period = value }
                 })) {
                     ForEach(ActivityPeriod.allCases) { value in
                         Text(L("period.\(value.rawValue)")).tag(value)
@@ -152,7 +152,6 @@ struct TodayView: View {
                         .sensoryFeedback(.success, trigger: model.celebration)
                 }
                 if period == .day { hourlyCard } else { periodSummary }
-                comparisonCard
                 if activity.summary.total != nil && (activity.total(for: .exerciseTime) == nil || activity.total(for: .floors) == nil) {
                     Button { Task { await model.connectHealth() } } label: {
                         Label("today.health.metrics", systemImage: "heart.text.clipboard").font(.caption)
@@ -186,7 +185,7 @@ struct TodayView: View {
         .onChange(of: model.purchases.isPremium) { _, premium in
             if !premium {
                 chartWindowAnchor = nil
-                if period == .year { period = .day }
+                if period == .year { replayCounterOnEntry = true; period = .day }
                 if let earliest, anchor < earliest { anchor = .now }
             }
         }
@@ -215,15 +214,15 @@ struct TodayView: View {
 
     private var counter: some View {
         TodayCounterCarousel(
-            current: TodayAnimatedCounter(steps: activity.summary.total, goal: activity.goal, title: title,
-                                          theme: model.effectiveTheme, showsRing: model.effectiveCounter == .ring,
+            current: AnimatedStepCounter(steps: activity.summary.total, goal: activity.goal, title: title,
+                                          theme: model.effectiveTheme, style: model.effectiveCounter, effect: model.preferences.counterEffect,
                                           replay: counterReplay,
-                                          animateEntry: model.preferences.animatePeriodChanges || (!hasNavigated && period == .day && calendar.isDateInToday(anchor)),
+                                          animateEntry: model.preferences.animatePeriodChanges || replayCounterOnEntry,
                                           animateUpdates: model.preferences.animatePeriodChanges || (period == .day && calendar.isDateInToday(anchor)))
                 .id("\(period.rawValue)-\(activity.interval.start.timeIntervalSinceReferenceDate)")
-                .frame(width: counterDiameter, height: counterDiameter),
+                .frame(height: counterHeight),
             previous: preparedCounter(pageWindow?.previous), next: preparedCounter(pageWindow?.next), paging: paging)
-                .frame(height: counterDiameter)
+                .frame(height: counterHeight)
                 .clipped()
                 .background {
                     RadialGradient(colors: [accent.opacity(0.14), .clear], center: .center, startRadius: 20, endRadius: 150)
@@ -239,6 +238,7 @@ struct TodayView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(Text(dateRange) + Text(", ") + Text("today.counter.accessibility \(stepsText(activity.summary.total)) \(activity.goal.formatted())"))
+        .accessibilityValue(Text(LocalizedStringKey(model.effectiveCounter.titleKey)))
         .accessibilityHint(period == .day ? Text("today.detail.hint") : Text("today.swipe.hint"))
         .accessibilityAction { if period == .day && !paging.isSliding { showDetail = true } }
         .accessibilityAction(named: Text("statistics.previous")) { move(-1) }
@@ -246,17 +246,19 @@ struct TodayView: View {
         .accessibilityIdentifier("today.counter")
     }
 
-    private var counterDiameter: CGFloat { typeSize.isAccessibilitySize ? 280 : 232 }
+    private var counterHeight: CGFloat { typeSize.isAccessibilitySize ? 320 : 232 }
 
     private func preparedCounter(_ page: DashboardPageWindow.Page?) -> some View {
         Group {
             if let page {
-                TodayCounterFrame(displayedSteps: Double(page.activity.summary.total ?? 0), phase: 1,
+                // Match the incoming counter's first frame: never reveal its target before a replay.
+                StepCounterFace(displayedSteps: model.preferences.animatePeriodChanges && !reduceMotion
+                                    ? 0 : Double(page.activity.summary.total ?? 0),
                                   hasSteps: page.activity.summary.total != nil, goal: page.activity.goal,
                                   title: title(for: page.anchor, activity: page.activity), theme: model.effectiveTheme,
-                                  showsRing: model.effectiveCounter == .ring)
-                    .frame(width: counterDiameter, height: counterDiameter)
-            } else { Color.clear.frame(width: counterDiameter, height: counterDiameter) }
+                                  style: model.effectiveCounter)
+                    .frame(height: counterHeight)
+            } else { Color.clear.frame(height: counterHeight) }
         }
         .accessibilityHidden(true)
         .allowsHitTesting(false)
@@ -283,7 +285,11 @@ struct TodayView: View {
     private var hourlyCard: some View {
         WalkunoCard {
             VStack(alignment: .leading, spacing: 14) {
-                HStack { Text("today.rhythm").font(.headline); Spacer(); Image(systemName: "chart.bar.xaxis").foregroundStyle(ink) }
+                HStack(spacing: 12) {
+                    Text("today.rhythm").font(.headline).fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    comparisonBadge
+                }
                 DailyRhythmChart(date: anchor, hours: hours, previousHours: previousHours, title: title, accent: ink)
                 if loadingHours { ProgressView() }
                 else if hoursError { Text("health.refresh.error").font(.caption).foregroundStyle(.secondary) }
@@ -311,26 +317,41 @@ struct TodayView: View {
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Text("statistics.coverage \(activity.summary.observedDays)").font(.caption2).foregroundStyle(.secondary)
+                HStack(spacing: 12) {
+                    Text(L("today.comparison.\(period.rawValue)"))
+                        .font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    comparisonBadge
+                }
+                if isCurrentPeriod {
+                    Text("today.comparison.elapsed").font(.caption2).foregroundStyle(.secondary)
+                }
             }
         }
     }
 
-    private var comparisonCard: some View {
-        WalkunoCard {
-            HStack(spacing: 14) {
-                Image(systemName: (ActivityMath.change(current: activity.summary.total, previous: previousSteps) ?? 0) < 0 ? "arrow.down.right" : "arrow.up.right")
-                    .font(.title3.weight(.semibold)).foregroundStyle(WalkunoStyle.ink)
-                    .frame(width: 40, height: 40).background(accent, in: RoundedRectangle(cornerRadius: 14))
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L("today.comparison.\(period.rawValue)")).font(.subheadline.weight(.semibold))
-                    if let change = ActivityMath.change(current: activity.summary.total, previous: previousSteps) {
-                        Text(change.formatted(.percent.precision(.fractionLength(0)).sign(strategy: .always()))).font(.title3.weight(.bold))
-                    } else { Text("comparison.unavailable").font(.caption).foregroundStyle(.secondary) }
-                    if isCurrentPeriod { Text("today.comparison.elapsed").font(.caption2).foregroundStyle(.secondary) }
-                }
-                Spacer(minLength: 0)
-            }
+    private var comparisonBadge: some View {
+        let change = ActivityMath.change(current: activity.summary.total, previous: previousSteps)
+        let value = change.map {
+            $0.formatted(.percent.precision(.fractionLength(0)).sign(strategy: .always(includingZero: false)))
         }
+        return HStack(spacing: 5) {
+            if let change {
+                Image(systemName: change == 0 ? "equal" : change < 0 ? "arrow.down.right" : "arrow.up.right")
+            }
+            Text(value ?? "—").monospacedDigit()
+        }
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(change == nil ? Color.secondary : ink)
+        .padding(.horizontal, 9).padding(.vertical, 5)
+        .background(ink.opacity(0.1), in: Capsule())
+        .fixedSize()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(L("today.comparison.\(period.rawValue)")))
+        .accessibilityValue(Text(value ?? L("comparison.unavailable")))
+        .accessibilityHint(isCurrentPeriod ? Text(LocalizedStringKey(period == .day ? "today.comparison.note" : "today.comparison.elapsed")) : Text(""))
+        .accessibilityIdentifier("today.comparison")
     }
 
     private func move(_ offset: Int) {
@@ -355,7 +376,7 @@ struct TodayView: View {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
-            hasNavigated = true
+            replayCounterOnEntry = false
             anchor = date
             paging.offset = 0
             preparePages()
@@ -500,14 +521,16 @@ private struct TodayTrendChart: View {
                 }
             }
             .chartYScale(domain: 0...max(Double(goal), activity.points.compactMap(\.steps).max() ?? 0) * 1.15)
-            .chartXScale(domain: activity.domain, range: .plotDimension(padding: 0))
+            // Leave room for centered labels at both ends of the date range.
+            .chartXScale(domain: activity.domain, range: .plotDimension(padding: 10))
             .chartYAxis(.hidden)
             .chartXAxis {
-                AxisMarks(values: activity.tickDates) { value in
-                    AxisGridLine().foregroundStyle(Color.primary.opacity(0.07))
+                AxisMarks(preset: .aligned, values: activity.tickDates) { value in
+                    AxisGridLine(centered: false).foregroundStyle(Color.primary.opacity(0.07))
                     AxisValueLabel(centered: false, anchor: .top, collisionResolution: .disabled, offsetsMarks: false) {
                         if let date = value.as(Date.self) {
                             Text(tickLabel(date))
+                                .fixedSize()
                                 .accessibilityIdentifier("today.trend.tick.\(value.index)")
                         }
                     }
@@ -597,181 +620,6 @@ private struct TodayCounterCarousel<Current: View, Neighbor: View>: View {
     }
 }
 
-/// One interpolated step value drives both the number and the ring, including totals above the goal.
-private struct TodayAnimatedCounter: View {
-    var steps: Int?
-    var goal: Int
-    var title: String
-    var theme: WalkunoTheme
-    var showsRing: Bool
-    var replay: String
-    var animateEntry: Bool
-    var animateUpdates: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var displayedSteps = 0.0
-    @State private var sweepPhase = 1.0
-    @State private var lastReplay: String?
-
-    init(steps: Int?, goal: Int, title: String, theme: WalkunoTheme, showsRing: Bool, replay: String,
-         animateEntry: Bool, animateUpdates: Bool) {
-        self.steps = steps
-        self.goal = goal
-        self.title = title
-        self.theme = theme
-        self.showsRing = showsRing
-        self.replay = replay
-        self.animateEntry = animateEntry
-        self.animateUpdates = animateUpdates
-        _displayedSteps = State(initialValue: animateEntry ? 0 : Double(steps ?? 0))
-    }
-
-    private struct Request: Equatable {
-        var steps: Int?
-        var goal: Int
-        var replay: String
-        var reduceMotion: Bool
-        var animateEntry: Bool
-        var animateUpdates: Bool
-    }
-
-    var body: some View {
-        let animates = !reduceMotion && (lastReplay == nil ? animateEntry : animateUpdates)
-        TodayCounterFrame(displayedSteps: animates ? displayedSteps : Double(steps ?? 0), phase: animates ? sweepPhase : 1, hasSteps: steps != nil,
-                          goal: goal, title: title, theme: theme, showsRing: showsRing)
-            .task(id: Request(steps: steps, goal: goal, replay: replay, reduceMotion: reduceMotion,
-                              animateEntry: animateEntry, animateUpdates: animateUpdates)) {
-                let shouldReplay = lastReplay != replay
-                let animationEnabled = lastReplay == nil ? animateEntry : animateUpdates
-                lastReplay = replay
-                let target = Double(steps ?? 0)
-                guard !reduceMotion, animationEnabled, target > 0 else { snap(to: target); return }
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    if shouldReplay { displayedSteps = 0 }
-                    sweepPhase = 0
-                }
-                do {
-                    try await Task.sleep(for: .milliseconds(40))
-                    withAnimation(.easeInOut(duration: shouldReplay ? 2.0 : 1.2)) {
-                        displayedSteps = target; sweepPhase = 1
-                    }
-                } catch { return }
-            }
-            .onDisappear { snap(to: Double(steps ?? 0)); lastReplay = nil }
-    }
-
-    private func snap(to value: Double) {
-        var transaction = Transaction()
-        transaction.disablesAnimations = true
-        withTransaction(transaction) { displayedSteps = value; sweepPhase = 1 }
-    }
-}
-
-private struct TodayCounterFrame: View, Animatable {
-    var displayedSteps: Double
-    var phase: Double
-    var hasSteps: Bool
-    var goal: Int
-    var title: String
-    var theme: WalkunoTheme
-    var showsRing: Bool
-    @ScaledMetric(relativeTo: .largeTitle) private var counterSize = 55
-    @Environment(\.colorScheme) private var scheme
-
-    var animatableData: AnimatablePair<Double, Double> {
-        get { AnimatablePair(displayedSteps, phase) }
-        set { displayedSteps = newValue.first; phase = newValue.second }
-    }
-    private var progress: Double { goal > 0 ? max(0, displayedSteps) / Double(goal) : 0 }
-
-    var body: some View {
-        ZStack {
-            if showsRing {
-                SparklingRing(progress: progress, phase: phase, accent: theme.tint(for: scheme),
-                              secondaryAccent: theme.secondaryTint(for: scheme))
-                    .transaction { $0.animation = nil; $0.disablesAnimations = true }.padding(10)
-            }
-            VStack(spacing: 5) {
-                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(theme.tint(for: scheme))
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                Text(hasSteps ? Int(max(0, displayedSteps).rounded()).formatted() : "—")
-                    .font(.system(size: min(counterSize, 82), weight: .bold, design: .rounded)).monospacedDigit()
-                    .tracking(-2).minimumScaleFactor(0.4).lineLimit(1)
-                    .frame(maxWidth: .infinity)
-                Text("today.of \(goal.formatted())").font(.caption).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.7)
-                Text(progress.formatted(.percent.precision(.fractionLength(0))))
-                    .font(.caption2.weight(.bold)).foregroundStyle(WalkunoStyle.ink)
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(theme.accent, in: Capsule()).padding(.top, 4)
-            }.padding(.horizontal, 32)
-                .transaction { $0.animation = nil; $0.disablesAnimations = true }
-        }
-    }
-}
-
-/// Interpolating the ring and its trail together keeps every star attached to the moving tip.
-private struct SparklingRing: View, Animatable {
-    var progress: Double
-    var phase: Double
-    var accent: Color
-    var secondaryAccent: Color
-
-    var animatableData: AnimatablePair<Double, Double> {
-        get { AnimatablePair(progress, phase) }
-        set { progress = newValue.first; phase = newValue.second }
-    }
-
-    var body: some View {
-        ZStack {
-            ProgressRing(progress: progress, accent: accent, secondaryAccent: secondaryAccent)
-                // The enclosing animatable view already supplies the interpolated progress.
-                .transaction { $0.animation = nil; $0.disablesAnimations = true }
-            if phase > 0, phase < 1, progress > 0 {
-                Canvas { context, size in
-                    drawTrail(context: &context, size: size)
-                }
-                .padding(-40)
-            }
-        }
-    }
-
-    /// One drawing surface for the whole trail; no timer or particle views remain at rest.
-    private func drawTrail(context: inout GraphicsContext, size: CGSize) {
-        // Leave room outside the stroke so the drawing surface never clips stars or their glow.
-        let radius = min(size.width, size.height) / 2 - 40
-        let center = CGPoint(x: size.width / 2, y: size.height / 2)
-        let visibility = pow(max(0, sin(.pi * phase)), 0.35)
-
-        for index in 0..<32 {
-            let tail = Double(index) / 31
-            let fraction = progress - tail * 0.14
-            guard fraction > 0 else { continue }
-            let angle = fraction * 2 * .pi - .pi / 2
-            let drift = index == 0 ? 0 : sin(Double(index) * 2.4 + phase * 8) * (16 + tail * 10)
-            let starRadius = radius + drift
-            let pulse = sin(phase * 25 + Double(index) * 1.8)
-            let twinkle = 0.45 + 0.55 * pulse * pulse
-            let length = index == 0 ? 22 : Double(9 + (index * 7) % 8) * (0.6 + 0.4 * twinkle)
-            let half = length / 2
-            var particle = context
-            particle.opacity = visibility * (index == 0 ? 1 : twinkle * (1 - tail * 0.5))
-            particle.translateBy(x: center.x + cos(angle) * starRadius,
-                                 y: center.y + sin(angle) * starRadius)
-            particle.rotate(by: .degrees(phase * 70 + Double(index) * 31))
-            particle.addFilter(.shadow(color: accent.opacity(0.85), radius: index == 0 ? 8 : 4))
-
-            var star = Path()
-            star.move(to: CGPoint(x: 0, y: -half))
-            star.addQuadCurve(to: CGPoint(x: half, y: 0), control: .zero)
-            star.addQuadCurve(to: CGPoint(x: 0, y: half), control: .zero)
-            star.addQuadCurve(to: CGPoint(x: -half, y: 0), control: .zero)
-            star.addQuadCurve(to: CGPoint(x: 0, y: -half), control: .zero)
-            star.closeSubpath()
-            particle.fill(star, with: .color(index % 3 == 0 ? .white : accent))
-        }
-    }
-}
 
 struct MetricCard: View {
     var title: LocalizedStringKey

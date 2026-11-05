@@ -97,3 +97,80 @@ public enum WidgetNumbers {
         return (number.hasSuffix(".0") ? String(number.dropLast(2)) : number) + suffix
     }
 }
+
+/// Only effective, already-authorized display choices are shared with the extension.
+public struct WidgetDisplayPreferences: Codable, Equatable, Sendable {
+    public var counter: CounterStyle
+    public var showEnergy: Bool
+    public init(counter: CounterStyle = .ring, showEnergy: Bool = true) {
+        self.counter = counter; self.showEnergy = showEnergy
+    }
+}
+
+/// Calendar slots contain daily totals or monthly aggregates, never the full Health history.
+public struct WidgetHistory: Codable, Equatable, Sendable {
+    public var periods: [WidgetHistoryPeriod]
+    public var monthProgress: [Double?]
+
+    public init(days: [ActivityDay], goals: GoalHistory, includeYear: Bool,
+                now: Date = .now, calendar: Calendar = .current) {
+        let yearStart = calendar.dateInterval(of: .year, for: now)!.start
+        let monthStart = calendar.dateInterval(of: .month, for: now)!.start
+        let earliest = includeYear
+            ? calendar.date(byAdding: .year, value: -1, to: yearStart)!
+            : min(calendar.date(byAdding: .month, value: -1, to: monthStart)!,
+                  calendar.date(byAdding: .day, value: -13, to: calendar.startOfDay(for: now))!)
+        let available = days.filter { $0.date >= earliest && $0.date <= now }
+        periods = ["week", "month", "year"].filter { $0 != "year" || includeYear }.map { period in
+            let slots: [TrendChartSlot]
+            if period == "week" {
+                // Unlike the Statistics comparison, this overview includes today's partial total.
+                let start = calendar.date(byAdding: .day, value: -6, to: calendar.startOfDay(for: now))!
+                let previous = calendar.date(byAdding: .day, value: -7, to: start)!
+                func day(_ date: Date) -> ActivityBucket {
+                    .init(interval: .init(start: date, end: calendar.date(byAdding: .day, value: 1, to: date)!),
+                          days: available.filter { calendar.isDate($0.date, inSameDayAs: date) })
+                }
+                slots = (0..<7).map { index in
+                    .init(id: index, previous: day(calendar.date(byAdding: .day, value: index, to: previous)!),
+                          current: day(calendar.date(byAdding: .day, value: index, to: start)!))
+                }
+            } else {
+                slots = ActivityStatistics.trendChart(days: available, period: period == "year" ? .year : .month,
+                                                     now: now, calendar: calendar)
+            }
+            let currentDays = slots.flatMap { $0.current?.days ?? [] }
+            let previousDays = slots.flatMap { $0.previous?.days ?? [] }
+            return WidgetHistoryPeriod(period: period,
+                current: slots.compactMap { $0.current.map { Self.aggregate($0.days, at: $0.interval.start) } },
+                previous: slots.compactMap { $0.previous.map { Self.aggregate($0.days, at: $0.interval.start) } },
+                dailyAverages: slots.compactMap { $0.current.map { Self.aggregate($0.days, at: $0.interval.start, average: true) } },
+                previousDailyAverages: slots.compactMap { $0.previous.map { Self.aggregate($0.days, at: $0.interval.start, average: true) } },
+                average: Self.aggregate(currentDays, at: now, average: true),
+                previousAverage: Self.aggregate(previousDays, at: now, average: true))
+        }
+        let month = periods.first { $0.period == "month" }?.current ?? []
+        monthProgress = month.map { day in
+            day.steps.map { ActivityMath.progress(steps: $0, goal: goals.value(on: day.date, calendar: calendar)) }
+        }
+    }
+
+    private static func aggregate(_ days: [ActivityDay], at date: Date, average: Bool = false) -> ActivityDay {
+        func value(_ metric: ActivityMetric) -> Double? {
+            let summary = MetricSummary(days: days, metric: metric)
+            return average ? summary.average : summary.total
+        }
+        return .init(date: date, steps: value(.steps).map { Int($0.rounded()) }, meters: value(.distance),
+                     kilocalories: value(.energy), exerciseMinutes: value(.exerciseTime), floors: value(.floors))
+    }
+}
+
+public struct WidgetHistoryPeriod: Codable, Equatable, Sendable {
+    public var period: String
+    public var current: [ActivityDay]
+    public var previous: [ActivityDay]
+    public var dailyAverages: [ActivityDay]
+    public var previousDailyAverages: [ActivityDay]
+    public var average: ActivityDay
+    public var previousAverage: ActivityDay
+}

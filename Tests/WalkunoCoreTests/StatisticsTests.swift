@@ -99,6 +99,56 @@ struct StatisticsTests {
         #expect(ActivityStatistics.record(days: days, metric: .floors, period: .year, now: now, calendar: calendar) == nil)
     }
 
+    @Test func monthChartShowsWholePreviousMonthAndKeepsFutureDaysEmpty() {
+        let days = [day("2026-10-31", steps: 9000), day("2026-11-05", steps: 3000),
+                    day("2026-11-06", steps: 100000)]
+        let slots = ActivityStatistics.trendChart(days: days, period: .month,
+                                                 now: date("2026-11-05T12:00:00Z"), calendar: calendar)
+        #expect(slots.count == 31)
+        #expect(slots[30].previous?.summary(for: .steps).average == 9000)
+        #expect(slots[30].current == nil) // November has only 30 days.
+        #expect(slots[4].current?.summary(for: .steps).average == 3000)
+        #expect(slots[5].current?.summary(for: .steps).average == nil)
+        #expect(slots[29].current != nil) // Reserve the full current month.
+    }
+
+    @Test func monthChartPreservesLeapDayAndDoesNotClipLongerCurrentMonth() {
+        let slots = ActivityStatistics.trendChart(days: [day("2024-02-29", steps: 0), day("2024-03-30", steps: 1234)],
+                                                 period: .month, now: date("2024-03-31T12:00:00Z"), calendar: calendar)
+        #expect(slots.count == 31)
+        #expect(slots[28].previous?.summary(for: .steps).average == 0)
+        #expect(slots[29].previous == nil)
+        #expect(slots[29].current?.summary(for: .steps).average == 1234)
+        #expect(calendar.component(.day, from: slots[30].current!.id) == 31)
+    }
+
+    @Test func yearChartAlignsTwelveMonthsAcrossLeapYearsAndKeepsMissingMetricsAbsent() {
+        let days = [day("2024-12-31", steps: 7000), day("2025-01-01", steps: 2000),
+                    day("2025-01-02", steps: 4000), day("2025-12-01", steps: 100000)]
+        let slots = ActivityStatistics.trendChart(days: days, period: .year,
+                                                 now: date("2025-01-03T12:00:00Z"), calendar: calendar)
+        #expect(slots.count == 12)
+        #expect(slots.allSatisfy { $0.current != nil && $0.previous != nil })
+        #expect(slots[11].previous?.summary(for: .steps).average == 7000)
+        #expect(slots[0].current?.summary(for: .steps).average == 3000)
+        #expect(slots[0].current?.summary(for: .distance).average == nil)
+        #expect(slots.dropFirst().allSatisfy { $0.current?.summary(for: .steps).average == nil })
+        #expect(calendar.component(.month, from: slots[2].previous!.id) == 3)
+        #expect(calendar.component(.month, from: slots[2].current!.id) == 3)
+    }
+
+    @Test func sevenDayChartAlignsWeekdaysAcrossClockChangeAndYearBoundary() {
+        for now in [date("2026-10-27T12:00:00Z"), date("2026-01-03T12:00:00Z")] {
+            let slots = ActivityStatistics.trendChart(days: [], period: .sevenDays, now: now, calendar: calendar)
+            #expect(slots.count == 7)
+            #expect(slots.last?.current?.interval.end == calendar.startOfDay(for: now))
+            for slot in slots {
+                #expect(calendar.component(.weekday, from: slot.current!.id) == calendar.component(.weekday, from: slot.previous!.id))
+                #expect(slot.current?.summary(for: .steps).average == nil)
+            }
+        }
+    }
+
     @Test func weeklyBucketsRespectWeekAcrossNewYear() {
         let days = [day("2025-12-31", steps: 1000), day("2026-01-01", steps: 2000)]
         let buckets = ActivityStatistics.buckets(days: days, period: .week, now: date("2026-11-04T12:00:00Z"), calendar: calendar)
@@ -122,6 +172,37 @@ struct StatisticsTests {
         let unavailable = DayComparison(today: [], history: [], metric: .steps, cutoffHour: 10.5, calendar: calendar)
         #expect(unavailable.current == nil)
         #expect(unavailable.usual == nil)
+    }
+
+    @Test func fullDayReferenceIncludesEveningWithoutChangingSameTimeComparison() {
+        let today = [HourActivity(date: date("2026-11-04T09:00:00Z"), steps: 25)]
+        let partial = [HourActivity(date: date("2026-11-03T09:00:00Z"), steps: 50)]
+        let complete = [HourActivity(date: date("2026-11-03T09:00:00Z"), steps: 200),
+                        HourActivity(date: date("2026-11-03T22:00:00Z"), steps: 800)]
+        let otherDay = [HourActivity(date: date("2026-11-02T22:00:00Z"), steps: 2000)]
+        let missing = [HourActivity(date: date("2026-11-01T22:00:00Z"), steps: nil)]
+        let comparison = DayComparison(today: today, history: [partial], metric: .steps, cutoffHour: 10.5,
+                                       calendar: calendar, fullDayHistory: [complete, otherDay, missing])
+        #expect(comparison.current == 25)
+        #expect(comparison.usual == 50)
+        #expect(comparison.points.last?.hour == 10.5)
+        #expect(comparison.usualDayPoints.first?.usual == 0)
+        #expect(comparison.usualDayPoints.last?.hour == 24)
+        #expect(comparison.usualDayPoints.last?.usual == 1500)
+        #expect(comparison.usualDayTotal == 1500)
+        #expect(comparison.usualDayPoints.allSatisfy { $0.current == nil })
+    }
+
+    @Test func fullDayReferenceUsesSelectedMetricAndPreservesMissingData() {
+        let history = [[HourActivity(date: date("2026-11-03T22:00:00Z"), steps: 800, meters: 640)]]
+        let distance = DayComparison(today: [], history: [], metric: .distance, cutoffHour: 0,
+                                     calendar: calendar, fullDayHistory: history)
+        #expect(distance.current == nil)
+        #expect(distance.usualDayPoints.last?.usual == 640)
+        let floors = DayComparison(today: [], history: [], metric: .floors, cutoffHour: 0,
+                                   calendar: calendar, fullDayHistory: history)
+        #expect(floors.usualDayPoints.allSatisfy { $0.usual == nil })
+        #expect(floors.usualDayTotal == nil)
     }
 
     @Test func repeatedHourIsCountedOncePerSampleDuringClockChange() {

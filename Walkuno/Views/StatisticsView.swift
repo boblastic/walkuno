@@ -5,6 +5,7 @@ struct StatisticsView: View {
     @Environment(\.colorScheme) private var scheme
     @State private var metric: ActivityMetric = .steps
     @State private var showPremium = false
+    @State private var chartScrubbing = false
     private var earliestFree: Date { Calendar.current.date(byAdding: .day, value: -30, to: .now)! }
 
     var body: some View {
@@ -14,7 +15,10 @@ struct StatisticsView: View {
                     showPremium = true
                 }
                 .padding(24)
+                .contentShape(Rectangle())
             }
+            .scrollDisabled(chartScrubbing)
+            .environment(\.chartScrubbing, $chartScrubbing)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Reserve the menu's height initially, then let the insights scroll behind its glass.

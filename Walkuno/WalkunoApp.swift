@@ -115,8 +115,13 @@ struct RootView: View {
                     .tabItem { Label("tab.settings", systemImage: "slider.horizontal.3") }.tag(4)
             }
             .onOpenURL { url in
-                guard url.scheme == "walkuno", url.host == "today" else { return }
-                selection = 0
+                guard url.scheme == "walkuno" else { return }
+                switch url.host {
+                case "today": selection = 0
+                case "statistics": selection = 1
+                case "explorer": selection = 2
+                default: break
+                }
             }
         } else { OnboardingView().appHeader() }
     }

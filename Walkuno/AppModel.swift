@@ -22,10 +22,17 @@ final class AppModel {
     @ObservationIgnored private var historyTask: Task<Void, Never>?
     @ObservationIgnored private var loadedSnapshot: WidgetSnapshot?
     private var widgetActivity: WidgetActivityDetail?
+    @ObservationIgnored private var hasLoadedWidgetHistory = false
+    @ObservationIgnored private var recentRefreshStart: Date?
 
     init() {
         if let snapshot = LocalStore.snapshot(), snapshot.isCurrent() {
-            days = snapshot.week
+            // Restore only the bounded daily cache, so a settings edit before Health
+            // responds cannot replace an existing month with just seven days.
+            let month = snapshot.history?.periods.first { $0.period == "month" }
+            let cached = (month?.previous ?? []) + (month?.current ?? []) + snapshot.week + [snapshot.today]
+            days = Dictionary(cached.filter { $0.date <= Date.now }.map { ($0.date, $0) }, uniquingKeysWith: { _, latest in latest })
+                .values.sorted { $0.date < $1.date }
             lastUpdated = snapshot.updatedAt
             usingCache = true
             loadedSnapshot = snapshot
@@ -110,12 +117,18 @@ final class AppModel {
         if today.steps == nil { celebration = false }
         do {
             let refreshTime = Date.now
-            let from = Calendar.current.date(byAdding: .day, value: -6, to: Calendar.current.startOfDay(for: refreshTime))!
+            let calendar = Calendar.current
+            // Keep widget calendars current during background deliveries, with a bounded query.
+            let from = purchases.isPremium
+                ? calendar.date(byAdding: .year, value: -1, to: calendar.dateInterval(of: .year, for: refreshTime)!.start)!
+                : calendar.date(byAdding: .day, value: -30, to: calendar.startOfDay(for: refreshTime))!
             async let widgetQuery = health.widgetActivity(at: refreshTime)
             let newDays = try await health.history(from: from, now: refreshTime)
             try Task.checkCancellation()
-            guard token == generation else { return false }
+            guard token == generation, calendar.timeZone == Calendar.current.timeZone else { return false }
             days = days.filter { $0.date < from } + newDays
+            recentRefreshStart = from
+            if purchases.isPremium { hasLoadedWidgetHistory = true }
             usingCache = false; lastUpdated = refreshTime
             errorMessage = nil
             celebration = progress >= 1
@@ -151,7 +164,7 @@ final class AppModel {
         guard historyTask == nil else { return }
         let token = generation
         let calendar = Calendar.current
-        let from = calendar.date(byAdding: .day, value: -6, to: calendar.startOfDay(for: .now))!
+        let from = recentRefreshStart ?? calendar.date(byAdding: .day, value: -30, to: calendar.startOfDay(for: .now))!
         historyTask = Task { [weak self] in
             guard let self else { return }
             defer { if token == generation { historyTask = nil } }
@@ -161,16 +174,20 @@ final class AppModel {
                 try Task.checkCancellation()
                 guard token == generation, calendar.timeZone == Calendar.current.timeZone else { return }
                 days = olderDays.filter { $0.date < from } + days.filter { $0.date >= from }
+                hasLoadedWidgetHistory = true
+                writeSnapshot()
             } catch is CancellationError { }
             catch { if token == generation { errorMessage = String(localized: "health.history.error") } }
         }
     }
 
-    func hourly(on date: Date) async throws -> [HourActivity] {
-        if Calendar.current.isDateInToday(date) { return hours }
+    func hourly(on date: Date, metric: ActivityMetric = .steps) async throws -> [HourActivity] {
+        if metric == .steps, Calendar.current.isDateInToday(date) { return hours }
         if isDemo { return demoHours(on: date) }
-        if Calendar.current.isDateInYesterday(date), !yesterdayHours.isEmpty { return yesterdayHours }
-        return try await health.hours(on: date)
+        if metric == .steps, Calendar.current.isDateInYesterday(date), !yesterdayHours.isEmpty {
+            return yesterdayHours
+        }
+        return try await health.hours(on: date, metric: metric)
     }
 
     func dayComparison(metric: ActivityMetric, earliest: Date?) async throws -> DayComparison {
@@ -189,15 +206,25 @@ final class AppModel {
             $0.date >= max(earliest ?? recentStart, recentStart) && $0.date < calendar.startOfDay(for: cutoff) && metric.value(in: $0) != nil
         }.sorted { $0.date > $1.date }.prefix(7)
         var history: [[HourActivity]] = []
+        var fullDayHistory: [[HourActivity]] = []
         for day in candidates {
             try Task.checkCancellation()
             guard let end = calendar.date(bySettingHour: clock.hour ?? 0, minute: clock.minute ?? 0,
                                           second: clock.second ?? 0, of: day.date) else { continue }
-            if isDemo { history.append(demoHours(on: day.date, through: end)) }
-            else { history.append(try await health.hours(on: day.date, metric: metric, through: end)) }
+            if isDemo {
+                history.append(demoHours(on: day.date, through: end))
+                fullDayHistory.append(demoHours(on: day.date))
+            } else {
+                async let partial = health.hours(on: day.date, metric: metric, through: end)
+                async let complete = health.hours(on: day.date, metric: metric)
+                let (partialHours, completeHours) = try await (partial, complete)
+                history.append(partialHours)
+                fullDayHistory.append(completeHours)
+            }
         }
         try Task.checkCancellation()
-        return .init(today: current, history: history, metric: metric, cutoffHour: cutoffHour, calendar: calendar)
+        return .init(today: current, history: history, metric: metric, cutoffHour: cutoffHour, calendar: calendar,
+                     fullDayHistory: fullDayHistory)
     }
 
     func setGoal(_ value: Int) {
@@ -220,8 +247,12 @@ final class AppModel {
 
     private func writeSnapshot() {
         guard !isDemo, preferences.healthRequested else { return }
+        let history = WidgetHistory(
+            days: days.filter { purchases.isPremium || $0.date >= Calendar.current.date(byAdding: .day, value: -30, to: Calendar.current.startOfDay(for: .now))! },
+            goals: preferences.goals, includeYear: purchases.isPremium && hasLoadedWidgetHistory, now: lastUpdated ?? .now)
         let snapshot = WidgetSnapshot(updatedAt: lastUpdated ?? .now, today: today, goal: goal,
-                                      week: days, theme: effectiveTheme, unit: preferences.unit, activity: widgetActivity)
+                                      week: days, theme: effectiveTheme, unit: preferences.unit, activity: widgetActivity,
+                                      display: .init(counter: effectiveCounter, showEnergy: preferences.showEnergy), history: history)
         do {
             try LocalStore.save(snapshot)
             loadedSnapshot = snapshot
@@ -241,6 +272,8 @@ final class AppModel {
         do {
             try LocalStore.clear()
             days = []; hours = []; lastUpdated = nil; usingCache = false; loadedSnapshot = nil; widgetActivity = nil
+            hasLoadedWidgetHistory = false
+            recentRefreshStart = nil
             preferences = .init()
             celebration = false
             WidgetCenter.shared.reloadAllTimelines()

@@ -6,7 +6,6 @@ struct AchievementsView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showPremium = false
     @State private var showShare = false
-    @State private var showAllJourneys = false
     @State private var goalCardHeight: CGFloat = 0
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
     private var columns: [GridItem] { Array(repeating: GridItem(.flexible(), alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2) }
@@ -146,8 +145,6 @@ struct AchievementsView: View {
     private func journeys(_ summary: AchievementSummary) -> some View {
         let catalog = DistanceTrophy.catalog
         let next = catalog.first { $0.progress(totalMeters: summary.totalMeters).completed == 0 }
-        let previewIDs = Set(catalog.prefix(3).map(\.id) + [next?.id].compactMap { $0 })
-        let visible = showAllJourneys ? catalog : catalog.filter { previewIDs.contains($0.id) }
         return VStack(alignment: .leading, spacing: 14) {
             sectionTitle("trophies.journeys", subtitle: "trophies.journeys.note", symbol: "map.fill")
             WalkunoCard {
@@ -162,17 +159,10 @@ struct AchievementsView: View {
                     Spacer(minLength: 0)
                 }
             }
-            ForEach(visible) { trophy in
+            ForEach(catalog) { trophy in
                 JourneyTrophyCard(trophy: trophy, totalMeters: summary.totalMeters, unit: model.preferences.unit,
                                   accent: accent, isNext: trophy.id == next?.id)
             }
-            Button { showAllJourneys.toggle() } label: {
-                HStack {
-                    Text(showAllJourneys ? L("trophies.collection.less") : String(format: L("trophies.collection.all"), catalog.count))
-                    Spacer()
-                    Image(systemName: showAllJourneys ? "chevron.up" : "chevron.down")
-                }.font(.subheadline.weight(.semibold)).padding(.vertical, 10)
-            }.accessibilityIdentifier("trophies.collection")
             Text("trophies.journeys.scope").font(.caption).foregroundStyle(.secondary)
         }
     }

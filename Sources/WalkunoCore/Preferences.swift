@@ -53,7 +53,16 @@ public enum DistanceUnit: String, CaseIterable, Codable, Sendable {
 }
 
 public enum Appearance: String, CaseIterable, Codable, Sendable { case dark, light, system }
-public enum CounterStyle: String, CaseIterable, Codable, Sendable { case ring, minimal }
+public enum CounterStyle: String, CaseIterable, Codable, Identifiable, Sendable {
+    // Keep "minimal" on disk so existing choices become the typographic design.
+    case ring, horizon, path, milestones, minimal
+    public var id: String { rawValue }
+}
+
+public enum CounterEffect: String, CaseIterable, Codable, Identifiable, Sendable {
+    case stars, fire, aurora, liquid
+    public var id: String { rawValue }
+}
 
 public struct Preferences: Codable, Equatable, Sendable {
     public var goals = GoalHistory()
@@ -62,6 +71,7 @@ public struct Preferences: Codable, Equatable, Sendable {
     // Retained for compatibility with saved preferences; the app always uses dark mode.
     public var appearance: Appearance = .dark
     public var counterStyle: CounterStyle = .ring
+    public var counterEffect: CounterEffect = .stars
     public var animatePeriodChanges = false
     public var showEnergy = true
     public var onboardingComplete = false
@@ -70,7 +80,7 @@ public struct Preferences: Codable, Equatable, Sendable {
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case goals, theme, unit, appearance, counterStyle, animatePeriodChanges, showEnergy, onboardingComplete, healthRequested, glassTransparency
+        case goals, theme, unit, appearance, counterStyle, counterEffect, animatePeriodChanges, showEnergy, onboardingComplete, healthRequested, glassTransparency
     }
 
     public init(from decoder: Decoder) throws {
@@ -80,6 +90,7 @@ public struct Preferences: Codable, Equatable, Sendable {
         unit = try values.decode(DistanceUnit.self, forKey: .unit)
         appearance = try values.decode(Appearance.self, forKey: .appearance)
         counterStyle = try values.decode(CounterStyle.self, forKey: .counterStyle)
+        counterEffect = (try values.decodeIfPresent(String.self, forKey: .counterEffect)).flatMap(CounterEffect.init(rawValue:)) ?? .stars
         animatePeriodChanges = try values.decodeIfPresent(Bool.self, forKey: .animatePeriodChanges) ?? false
         showEnergy = try values.decode(Bool.self, forKey: .showEnergy)
         onboardingComplete = try values.decode(Bool.self, forKey: .onboardingComplete)
@@ -89,7 +100,7 @@ public struct Preferences: Codable, Equatable, Sendable {
     }
 }
 
-/// A bounded display cache: seven daily totals, two hourly profiles and one averaged curve.
+/// A bounded display cache: recent measurements and precomputed chart summaries.
 public struct WidgetSnapshot: Codable, Equatable, Sendable {
     public var updatedAt: Date
     public var timeZoneIdentifier: String
@@ -99,12 +110,16 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     public var theme: WalkunoTheme
     public var unit: DistanceUnit
     public var activity: WidgetActivityDetail?
+    public var display: WidgetDisplayPreferences?
+    public var history: WidgetHistory?
     public init(updatedAt: Date = .now, timeZoneIdentifier: String = TimeZone.current.identifier,
                 today: ActivityDay, goal: Int, week: [ActivityDay], theme: WalkunoTheme, unit: DistanceUnit,
-                activity: WidgetActivityDetail? = nil) {
+                activity: WidgetActivityDetail? = nil, display: WidgetDisplayPreferences? = nil,
+                history: WidgetHistory? = nil) {
         self.updatedAt = updatedAt; self.timeZoneIdentifier = timeZoneIdentifier
         self.today = today; self.goal = goal; self.week = Array(week.sorted { $0.date < $1.date }.suffix(7))
         self.theme = theme; self.unit = unit; self.activity = activity
+        self.display = display; self.history = history
     }
     public func isCurrent(now: Date = .now, calendar: Calendar = .current) -> Bool {
         calendar.isDate(today.date, inSameDayAs: now) && timeZoneIdentifier == calendar.timeZone.identifier

@@ -116,7 +116,6 @@ public struct DistanceTrophy: Identifiable, Sendable {
     /// Fixed reference distances keep earned multipliers stable when real routes change.
     /// References and rounding conventions: Documentation/Trophees.md.
     public static let catalog: [DistanceTrophy] = [
-        .init(id: "track", meters: 400, symbol: "figure.walk", landscape: .city),
         .init(id: "goldenGate", meters: 2_737, symbol: "water.waves", landscape: .city),
         .init(id: "centralPark", meters: 9_800, symbol: "tree.fill", landscape: .city),
         .init(id: "halfMarathon", meters: 21_097.5, symbol: "flag.checkered", landscape: .city),
@@ -130,7 +129,12 @@ public struct DistanceTrophy: Identifiable, Sendable {
         .init(id: "appalachian", meters: 3_540_000, symbol: "leaf.fill", landscape: .trail),
         .init(id: "route66", meters: 3_860_000, symbol: "road.lanes", landscape: .trail),
         .init(id: "pacificCrest", meters: 4_265_000, symbol: "mountain.2.fill", landscape: .trail),
+        .init(id: "nile", meters: 6_650_000, symbol: "water.waves", landscape: .trail),
         .init(id: "europe", meters: 12_000_000, symbol: "globe.europe.africa.fill", landscape: .world),
+        .init(id: "australia", meters: 14_500_000, symbol: "globe.asia.australia.fill", landscape: .world),
+        .init(id: "transSiberian", meters: 18_600_000, symbol: "tram.fill", landscape: .trail),
+        .init(id: "greatWall", meters: 21_200_000, symbol: "building.columns.fill", landscape: .trail),
+        .init(id: "transCanada", meters: 30_000_000, symbol: "leaf.fill", landscape: .world),
         .init(id: "earth", meters: 40_075_000, symbol: "globe.europe.africa.fill", landscape: .world),
         .init(id: "moon", meters: 384_400_000, symbol: "moon.stars.fill", landscape: .space),
         .init(id: "sun", meters: 149_600_000_000, symbol: "sun.max.fill", landscape: .space)

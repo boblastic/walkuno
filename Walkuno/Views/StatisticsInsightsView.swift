@@ -38,9 +38,10 @@ extension ActivityMetric {
 private struct InsightHeader: View {
     var title: String
     var metric: ActivityMetric
+    var font: Font = .headline
 
     var body: some View {
-        Text(L(title)).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+        Text(L(title)).font(font).frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityValue(Text(L(metric.titleKey)))
             .accessibilityIdentifier("insights.header.\(title)")
     }
@@ -59,24 +60,19 @@ private struct InsightValue: View {
     }
 }
 
-private struct InsightDetails: View {
-    var days: [ActivityDay]
-    var identifier = "insights.details"
-    @Environment(AppModel.self) private var model
+private struct RecordAverageLabel: View {
+    @Environment(\.colorScheme) private var scheme
+    var value: String
+
     var body: some View {
-        DisclosureGroup("insights.details") {
-            Text("insights.details.totals").font(.caption).foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12)
-            LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], alignment: .leading, spacing: 18) {
-                ForEach(ActivityMetric.allCases.filter { model.preferences.showEnergy || $0 != .energy }) { metric in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(L(metric.titleKey)).font(.caption).foregroundStyle(.secondary)
-                        Text(metric.text(MetricSummary(days: days, metric: metric).total, unit: model.preferences.unit))
-                            .font(.system(.headline, design: .rounded)).minimumScaleFactor(0.6).lineLimit(1)
-                    }
-                }
-            }.padding(.top, 16)
-        }.font(.subheadline).accessibilityIdentifier(identifier)
+        Text("today.chart.average \(value)")
+            .font(.caption2.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(Color.secondary)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(WalkunoStyle.card(scheme), in: RoundedRectangle(cornerRadius: 4))
+            .allowsHitTesting(false)
     }
 }
 
@@ -91,17 +87,13 @@ struct StatisticsInsightsView: View {
         VStack(spacing: 20) {
             DailyComparisonCard(earliest: earliest, metric: metric)
             TrendsCard(days: days, onPremium: onPremium, metric: metric)
-            WeekdayProfileCard(days: days, metric: metric)
             ActivityRecordCard(days: days, onPremium: onPremium, metric: metric)
             YearHistoryCard(days: days, metric: metric)
-            VStack(alignment: .leading, spacing: 10) {
-                Text("insights.data.note").font(.caption).foregroundStyle(.secondary)
-                if !model.isDemo && (model.today.exerciseMinutes == nil || model.today.floors == nil) {
-                    Button("insights.health.connect") { Task { await model.connectHealth() } }
-                        .font(.caption.weight(.semibold))
-                    Text("insights.exercise.note").font(.caption2).foregroundStyle(.secondary)
-                }
-            }.frame(maxWidth: .infinity, alignment: .leading)
+            if !model.isDemo && (model.today.exerciseMinutes == nil || model.today.floors == nil) {
+                Button("insights.health.connect") { Task { await model.connectHealth() } }
+                    .font(.caption.weight(.semibold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 }
@@ -116,29 +108,39 @@ private struct DailyComparisonCard: View {
     @Environment(\.colorScheme) private var scheme
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
     private var baseline: Color { model.effectiveTheme.secondaryTint(for: scheme) }
+    private var chartMaximum: Double {
+        let values = (comparison?.points.compactMap(\.current) ?? []) + (comparison?.usualDayPoints.compactMap(\.usual) ?? [])
+        return max(values.max() ?? 0, metric == .steps ? Double(model.goal) : 1) * 1.15
+    }
     private var taskID: String {
         "\(metric.rawValue)-\(earliest?.timeIntervalSince1970 ?? 0)-\(model.lastUpdated?.timeIntervalSince1970 ?? 0)-\(model.preferences.healthRequested)-\(model.days.count)"
     }
-    private var message: String {
-        guard let current = comparison?.current, let usual = comparison?.usual else { return L("insights.day.unavailable") }
-        let delta = usual > 0 ? (current - usual) / usual : (current > 0 ? 1 : 0)
-        return L(abs(delta) <= 0.05 ? "insights.day.same" : delta > 0 ? "insights.day.ahead" : "insights.day.behind")
-    }
-
     var body: some View {
         WalkunoCard {
             VStack(alignment: .leading, spacing: 20) {
-                InsightHeader(title: "insights.day", metric: metric)
-                HStack(alignment: .top, spacing: 12) {
-                    InsightValue(title: "insights.today", value: metric.text(comparison?.current, unit: model.preferences.unit), color: accent)
-                    InsightValue(title: "insights.usual", value: metric.text(comparison?.usual, unit: model.preferences.unit), color: baseline)
+                HStack(alignment: .center, spacing: 10) {
+                    InsightHeader(title: "insights.day", metric: metric, font: .subheadline.weight(.semibold))
+                        .lineLimit(2).minimumScaleFactor(0.8)
+                    dayLegend(title: "insights.today", value: comparison?.current, color: accent, dashed: false)
+                    dayLegend(title: "insights.usual", value: comparison?.usualDayTotal, color: baseline, dashed: true)
                 }
                 Chart {
-                    ForEach(comparison?.points ?? []) { point in
+                    if metric == .steps {
+                        RuleMark(y: .value(L("goal.title"), model.goal))
+                            .foregroundStyle(Color.secondary.opacity(0.5))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 4]))
+                            .annotation(position: .bottom, alignment: .trailing, spacing: 3) {
+                                Text("insights.day.goal \(model.goal.formatted())")
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                    }
+                    ForEach(comparison?.usualDayPoints ?? []) { point in
                         if let usual = point.usual {
                             LineMark(x: .value(L("chart.hour"), point.hour), y: .value(L("insights.usual"), usual), series: .value("series", "usual"))
                                 .foregroundStyle(baseline).lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5, 4]))
                         }
+                    }
+                    ForEach(comparison?.points ?? []) { point in
                         if let current = point.current {
                             LineMark(x: .value(L("chart.hour"), point.hour), y: .value(L("insights.today"), current), series: .value("series", "today"))
                                 .foregroundStyle(accent).lineStyle(StrokeStyle(lineWidth: 4, lineCap: .round))
@@ -150,21 +152,39 @@ private struct DailyComparisonCard: View {
                             .foregroundStyle(accent).symbolSize(55)
                     }
                 }
-                .chartXScale(domain: 0...24).chartYScale(domain: .automatic(includesZero: true)).chartYAxis(.hidden)
+                .chartXScale(domain: 0...24, range: .plotDimension(padding: 0))
+                .chartYScale(domain: 0...chartMaximum).chartYAxis(.hidden)
                 .chartXAxis {
                     AxisMarks(values: [0, 6, 12, 18, 24]) { value in
-                        AxisValueLabel { if let hour = value.as(Int.self) { Text("\(hour):00").font(.caption2) } }
+                        AxisGridLine().foregroundStyle(Color.primary.opacity(0.07))
+                        AxisValueLabel(anchor: value.index == 0 ? .topLeading : value.index == 4 ? .topTrailing : .top,
+                                       collisionResolution: .disabled) {
+                            if let hour = value.as(Int.self) { Text("\(hour):00").font(.caption2) }
+                        }
                     }
                 }
                 .frame(height: 180)
+                .accessibilityIdentifier("insights.day.chart")
                 .overlay { if loading { ProgressView() } }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text("\(L(metric.titleKey)), \(L("insights.today")) \(metric.text(comparison?.current, unit: model.preferences.unit)), \(L("insights.usual")) \(metric.text(comparison?.usual, unit: model.preferences.unit))"))
-                Text(failed ? L("health.refresh.error") : message).font(.subheadline).foregroundStyle(.secondary)
-                if let comparison, comparison.baselineDays > 0 {
-                    Text(String(format: L("insights.day.basis"), comparison.baselineDays,
-                                (model.lastUpdated ?? .now).formatted(date: .omitted, time: .shortened)))
-                        .font(.caption2).foregroundStyle(.secondary)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(Text("\(L(metric.titleKey)), \(L("insights.today")) \(metric.text(comparison?.current, unit: model.preferences.unit)), \(L("insights.usual")) \(metric.text(comparison?.usualDayTotal, unit: model.preferences.unit))"))
+                .accessibilityValue(metric == .steps ? Text("insights.day.goal \(model.goal.formatted())") : Text(""))
+                .chartInspection("insights.day.chart", resetKey: metric.rawValue) { proxy in
+                    let usual = comparison?.usualDayPoints ?? []
+                    let current = comparison?.points ?? []
+                    let hours = Set(usual.map(\.hour) + current.map(\.hour)).sorted()
+                    return hours.compactMap { hour in
+                        let today = current.first { $0.hour == hour }?.current
+                        let baselineValue = usual.first { $0.hour == hour }?.usual
+                        guard today != nil || baselineValue != nil else { return nil }
+                        let label = String(format: "%d:%02d", Int(hour), Int((hour * 60).rounded()) % 60)
+                        let value = "\(L("insights.today")): \(metric.text(today, unit: model.preferences.unit))\n\(L("insights.usual")): \(metric.text(baselineValue, unit: model.preferences.unit))"
+                        return ChartInspectionPoint(proxy: proxy, x: hour, y: today ?? baselineValue,
+                                                    title: label, value: value, color: accent)
+                    }
+                }
+                if failed {
+                    Text("health.refresh.error").font(.subheadline).foregroundStyle(.secondary)
                 }
             }
         }
@@ -178,6 +198,30 @@ private struct DailyComparisonCard: View {
             catch { if !Task.isCancelled { failed = true; loading = false } }
         }
     }
+
+    private func dayLegend(title: String, value: Double?, color: Color, dashed: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 4) {
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: 3))
+                    path.addLine(to: CGPoint(x: 12, y: 3))
+                }
+                .stroke(color, style: StrokeStyle(lineWidth: dashed ? 2 : 3, lineCap: .round, dash: dashed ? [4, 3] : []))
+                .frame(width: 12, height: 6)
+                .accessibilityHidden(true)
+                Text(L(title)).font(.caption2.weight(.medium))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+            }
+            Text(metric.text(value, unit: model.preferences.unit))
+                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                .monospacedDigit().contentTransition(.numericText())
+                .lineLimit(1).minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .foregroundStyle(color)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("insights.day.legend." + title)
+    }
 }
 
 private struct TrendBar: Identifiable {
@@ -185,6 +229,7 @@ private struct TrendBar: Identifiable {
     var value: Double?
     var current: Bool
     var date: Date
+    var position: Int
 }
 
 private struct TrendsCard: View {
@@ -192,137 +237,134 @@ private struct TrendsCard: View {
     var onPremium: () -> Void
     @Environment(AppModel.self) private var model
     var metric: ActivityMetric
-    @State private var period: TrendPeriod = .week
+    @State private var period: TrendPeriod = .sevenDays
     @Environment(\.colorScheme) private var scheme
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
     private var trend: ActivityTrend { ActivityStatistics.trend(days: days, metric: metric, period: period) }
-    private func bars(_ trend: ActivityTrend) -> [TrendBar] {
-        let aggregation: ActivityPeriod = period == .year ? .month : .day
-        func buckets(_ interval: DateInterval, _ rows: [ActivityDay], current: Bool) -> [TrendBar] {
-            let allDays = ActivityMath.days(in: interval, available: rows)
-            return ActivityStatistics.buckets(days: allDays, period: aggregation).enumerated().map { index, bucket in
-                TrendBar(id: index, value: bucket.summary(for: metric).average, current: current, date: bucket.id)
-            }
+    private func bars(_ slots: [TrendChartSlot]) -> [TrendBar] {
+        // Each period keeps all its calendar positions, including unmeasured and future dates.
+        let previous = slots.compactMap(\.previous)
+        let current = slots.compactMap(\.current)
+        return (previous + current).enumerated().map { index, bucket in
+            TrendBar(id: index, value: bucket.summary(for: metric).average,
+                     current: index >= previous.count, date: bucket.id, position: index)
         }
-        let previous = buckets(trend.previousInterval, trend.previousDays, current: false)
-        let current = buckets(trend.currentInterval, trend.currentDays, current: true)
-        return previous + current.enumerated().map { index, bar in
-            TrendBar(id: previous.count + index, value: bar.value, current: true, date: bar.date)
+    }
+
+    private func axisPositions(_ bars: [TrendBar]) -> [Int] {
+        guard period == .month else { return bars.map(\.position) }
+        return bars.filter { bar in
+            let day = Calendar.current.component(.day, from: bar.date)
+            let last = Calendar.current.range(of: .day, in: .month, for: bar.date)?.count ?? 31
+            return day == 1 || day == 10 || day == 20 || day == last
+        }.map(\.position)
+    }
+
+    private func axisLabelAnchor(_ bar: TrendBar) -> UnitPoint {
+        guard period == .month else { return .top }
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: bar.date)
+        // Keep month endpoints inside the plot and separate the adjacent last/first labels.
+        if day == 1 { return .topLeading }
+        if day == calendar.range(of: .day, in: .month, for: bar.date)?.count { return .topTrailing }
+        return .top
+    }
+
+    private func axisLabel(_ bar: TrendBar) -> String {
+        switch period {
+        case .sevenDays, .week: return bar.date.formatted(.dateTime.weekday(.narrow))
+        case .month: return bar.date.formatted(.dateTime.day())
+        case .year: return bar.date.formatted(.dateTime.month(.narrow))
         }
     }
 
     var body: some View {
         let trend = trend
+        let slots = ActivityStatistics.trendChart(days: days, period: period)
+        let chartBars = bars(slots)
+        let boundary = Double(chartBars.first(where: \.current)?.position ?? chartBars.count) - 0.5
         WalkunoCard {
             VStack(alignment: .leading, spacing: 20) {
-                InsightHeader(title: "insights.trends", metric: metric)
+                HStack(alignment: .center, spacing: 12) {
+                    InsightHeader(title: "insights.trends", metric: metric)
+                    if let difference = trend.difference {
+                        Label {
+                            Text(metric.text(difference, unit: model.preferences.unit, signed: true))
+                                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        } icon: {
+                            Image(systemName: abs(difference) < 0.5 ? "equal.circle.fill" : difference > 0 ? "arrow.up.right.circle.fill" : "arrow.down.right.circle.fill")
+                        }
+                        .foregroundStyle(difference >= 0 ? accent : WalkunoTheme.coral.tint(for: scheme))
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                        .fixedSize(horizontal: true, vertical: false)
+                    }
+                }
                 Picker("statistics.period", selection: Binding(get: { period }, set: { value in
                     if value == .year && !model.purchases.isPremium { onPremium() } else { period = value }
                 })) {
-                    ForEach(TrendPeriod.allCases) { Text(L("trend.\($0.rawValue)")).tag($0) }
+                    ForEach([TrendPeriod.sevenDays, .month, .year]) { Text(L("trend.\($0.rawValue)")).tag($0) }
                 }.pickerStyle(.segmented).accessibilityIdentifier("insights.trend.period")
-                HStack(alignment: .top) {
-                    InsightValue(title: "insights.daily.average", value: metric.text(trend.current.average, unit: model.preferences.unit))
-                    if let difference = trend.difference {
-                        VStack(alignment: .trailing, spacing: 6) {
-                            Image(systemName: abs(difference) < 0.5 ? "equal.circle.fill" : difference > 0 ? "arrow.up.right.circle.fill" : "arrow.down.right.circle.fill")
-                            Text(metric.text(difference, unit: model.preferences.unit, signed: true)).font(.system(.title3, design: .rounded, weight: .bold))
-                                .minimumScaleFactor(0.6).lineLimit(1)
-                        }.foregroundStyle(difference >= 0 ? accent : WalkunoTheme.coral.tint(for: scheme))
-                    }
-                }
                 Chart {
-                    ForEach(bars(trend)) { bar in
+                    ForEach(chartBars) { bar in
                         if let value = bar.value {
-                            BarMark(x: .value(L("chart.date"), bar.id), y: .value(L(metric.titleKey), value))
-                                .foregroundStyle(bar.current ? accent.gradient : Color.secondary.opacity(0.35).gradient).cornerRadius(5)
+                            BarMark(x: .value(L("chart.date"), bar.position), y: .value(L(metric.titleKey), value),
+                                    width: period == .month ? .fixed(2) : .automatic)
+                                .foregroundStyle(bar.current ? accent.gradient : Color.secondary.opacity(0.35).gradient)
+                                .cornerRadius(period == .month ? 1 : 5)
                                 .accessibilityLabel(Text("\(bar.date.formatted(date: .abbreviated, time: .omitted)), \(L(bar.current ? "insights.current" : "insights.previous"))"))
                                 .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
                         }
                     }
                     if let average = trend.current.average {
-                        RuleMark(y: .value(L("insights.daily.average"), average)).foregroundStyle(accent)
+                        RuleMark(xStart: .value(L("chart.date"), boundary),
+                                 xEnd: .value(L("chart.date"), Double(chartBars.count) - 0.5),
+                                 y: .value(L("insights.daily.average"), average)).foregroundStyle(accent)
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     }
                     if let average = trend.previous.average {
-                        RuleMark(y: .value(L("insights.previous"), average)).foregroundStyle(Color.secondary)
+                        RuleMark(xStart: .value(L("chart.date"), -0.5),
+                                 xEnd: .value(L("chart.date"), boundary),
+                                 y: .value(L("insights.previous"), average)).foregroundStyle(Color.secondary)
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     }
                 }
-                .chartXScale(domain: -0.5...max(0.5, Double(bars(trend).count) - 0.5))
-                .chartXAxis(.hidden).chartYAxis(.hidden).frame(height: 155)
-                .overlay { if trend.current.average == nil && trend.previous.average == nil { Text("chart.no.data").font(.caption).foregroundStyle(.secondary) } }
+                .chartXScale(domain: -0.5...max(0.5, Double(chartBars.count) - 0.5), range: .plotDimension(padding: 0))
+                .chartForegroundStyleScale(domain: ["previous", "current"], range: [Color.secondary.opacity(0.35), accent])
+                .chartLegend(.hidden)
+                .chartXAxis {
+                    AxisMarks(values: axisPositions(chartBars)) { value in
+                        if let index = value.as(Int.self), chartBars.indices.contains(index) {
+                            AxisValueLabel(anchor: axisLabelAnchor(chartBars[index]), collisionResolution: .disabled) {
+                                Text(axisLabel(chartBars[index])).font(.caption2)
+                                    .foregroundStyle(chartBars[index].current ? accent : Color.secondary)
+                            }
+                        }
+                    }
+                }
+                .chartYAxis(.hidden).frame(height: 175)
+                .accessibilityIdentifier("insights.trend.chart")
+                .chartInspection("insights.trend.chart", resetKey: "\(metric.rawValue)-\(period.rawValue)") { proxy in
+                    chartBars.compactMap { bar in
+                        return ChartInspectionPoint(proxy: proxy, x: bar.position, y: bar.value,
+                            title: bar.date.formatted(date: .abbreviated, time: .omitted) + " · " + L(bar.current ? "insights.current" : "insights.previous"),
+                            value: metric.text(bar.value, unit: model.preferences.unit), color: bar.current ? accent : .secondary)
+                    }
+                }
+                .overlay { if chartBars.allSatisfy({ $0.value == nil }) { Text("chart.no.data").font(.caption).foregroundStyle(.secondary) } }
                 HStack {
                     trendLegend(title: "insights.previous", value: trend.previous.average, color: .secondary)
                     Spacer()
                     trendLegend(title: "insights.current", value: trend.current.average, color: accent)
                 }
-                Text("insights.trend.note").font(.caption).foregroundStyle(.secondary)
-                Text(String(format: L("insights.trend.coverage"), trend.current.observedDays, trend.previous.observedDays))
-                    .font(.caption2).foregroundStyle(.secondary)
             }
         }
-        .onChange(of: model.purchases.isPremium) { _, premium in if !premium && period == .year { period = .week } }
+        .onChange(of: model.purchases.isPremium) { _, premium in if !premium && period == .year { period = .sevenDays } }
     }
 
     private func trendLegend(title: String, value: Double?, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Label(L(title), systemImage: "circle.fill").font(.caption2).foregroundStyle(color)
             Text(metric.text(value, unit: model.preferences.unit)).font(.caption.weight(.semibold))
-        }
-    }
-}
-
-private struct WeekdayProfileCard: View {
-    var days: [ActivityDay]
-    @Environment(AppModel.self) private var model
-    var metric: ActivityMetric
-    @Environment(\.colorScheme) private var scheme
-    private var accent: Color { model.effectiveTheme.tint(for: scheme) }
-    private func weekdayName(_ weekday: Int, short: Bool = false) -> String {
-        let formatter = DateFormatter()
-        return short ? formatter.veryShortWeekdaySymbols[weekday - 1] : formatter.weekdaySymbols[weekday - 1]
-    }
-
-    var body: some View {
-        let weekdays = ActivityStatistics.weekdays(days: days, metric: metric)
-        let best = weekdays.filter { $0.summary.average != nil }.max { ($0.summary.average ?? 0) < ($1.summary.average ?? 0) }
-        let average = MetricSummary(days: days.filter { $0.date < Calendar.current.startOfDay(for: .now) }, metric: metric).average
-        WalkunoCard {
-            VStack(alignment: .leading, spacing: 20) {
-                InsightHeader(title: "insights.weekday", metric: metric)
-                HStack(alignment: .top, spacing: 12) {
-                    InsightValue(title: "insights.daily.average", value: metric.text(average, unit: model.preferences.unit))
-                    InsightValue(title: "insights.best.weekday", value: best.map { weekdayName($0.weekday).capitalized } ?? "—", color: accent)
-                }
-                Chart {
-                    ForEach(weekdays) { day in
-                        if let value = day.summary.average {
-                            BarMark(x: .value(L("chart.date"), String(day.weekday)), y: .value(L(metric.titleKey), value))
-                                .foregroundStyle(accent.opacity(day.weekday == best?.weekday ? 1 : 0.45).gradient).cornerRadius(12)
-                                .accessibilityLabel(Text(weekdayName(day.weekday)))
-                                .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
-                        }
-                    }
-                    if let average {
-                        RuleMark(y: .value(L("insights.daily.average"), average)).foregroundStyle(Color.secondary)
-                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                    }
-                }
-                .chartXScale(domain: weekdays.map { String($0.weekday) })
-                .chartXAxis {
-                    AxisMarks { value in
-                        AxisValueLabel { if let text = value.as(String.self), let weekday = Int(text) { Text(weekdayName(weekday, short: true)) } }
-                    }
-                }
-                .chartYAxis(.hidden).frame(height: 175)
-                if let best {
-                    Text(String(format: L("insights.weekday.summary"), weekdayName(best.weekday), metric.text(best.summary.average, unit: model.preferences.unit), L(metric.titleKey).lowercased()))
-                        .font(.subheadline).foregroundStyle(.secondary)
-                } else { Text("chart.no.data").font(.subheadline).foregroundStyle(.secondary) }
-                Text("insights.weekday.note").font(.caption2).foregroundStyle(.secondary)
-                InsightDetails(days: days.filter { $0.date < Calendar.current.startOfDay(for: .now) })
-            }
         }
     }
 }
@@ -353,11 +395,11 @@ private struct ActivityRecordCard: View {
                         Image(systemName: "trophy.fill").font(.title).foregroundStyle(accent).accessibilityHidden(true)
                     }
                     Text(recordLabel(record)).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                    recordChart(record)
-                    Text(String(format: L("insights.record.coverage"), record.summary(for: metric).observedDays))
-                        .font(.caption).foregroundStyle(.secondary)
-                    if record.interval.end > .now { Text("insights.in.progress").font(.caption2).foregroundStyle(.secondary) }
-                    InsightDetails(days: record.days, identifier: "insights.record.details")
+                    if effectivePeriod == .day {
+                        RecordHourlyChart(date: record.id, metric: metric)
+                    } else {
+                        recordChart(record)
+                    }
                 } else { Text("chart.no.data").font(.subheadline).foregroundStyle(.secondary) }
             }
         }
@@ -389,6 +431,11 @@ private struct ActivityRecordCard: View {
             if let average {
                 RuleMark(y: .value(L("insights.average"), average)).foregroundStyle(Color.secondary)
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    .annotation(position: .top, alignment: .trailing, spacing: 4) {
+                        RecordAverageLabel(value: metric.text(average, unit: model.preferences.unit))
+                    }
+                    .accessibilityLabel(Text("insights.average"))
+                    .accessibilityValue(Text(metric.text(average, unit: model.preferences.unit)))
             }
         }
         .chartXScale(domain: record.interval.start...record.interval.end.addingTimeInterval(-1))
@@ -396,7 +443,102 @@ private struct ActivityRecordCard: View {
             AxisMarks(values: .stride(by: effectivePeriod == .year ? .month : .day, count: effectivePeriod == .month ? 5 : 1)) {
                 AxisValueLabel(format: effectivePeriod == .year ? .dateTime.month(.narrow) : .dateTime.day())
             }
-        }.chartYAxis(.hidden).frame(height: effectivePeriod == .day ? 90 : 175)
+        }.chartYAxis(.hidden).frame(height: 175)
+        .accessibilityIdentifier("insights.record.chart")
+        .chartInspection("insights.record.chart", resetKey: "\(metric.rawValue)-\(effectivePeriod.rawValue)") { proxy in
+            ChartInspectionPoint.buckets(in: record.interval, by: effectivePeriod == .year ? .month : .day).compactMap { interval in
+                let bucket = buckets.first { $0.id == interval.start }
+                let amount = bucket?.summary(for: metric).total
+                let middle = interval.start.addingTimeInterval(interval.duration / 2)
+                return ChartInspectionPoint(proxy: proxy, x: middle, y: amount,
+                    title: effectivePeriod == .year
+                        ? interval.start.formatted(.dateTime.month(.wide).year()).uppercased(with: .current)
+                        : interval.start.formatted(.dateTime.day().month(.abbreviated).year()),
+                    value: metric.text(amount, unit: model.preferences.unit), color: accent)
+            }
+        }
+    }
+}
+
+private struct RecordHourlyChart: View {
+    var date: Date
+    var metric: ActivityMetric
+    @Environment(AppModel.self) private var model
+    @Environment(\.colorScheme) private var scheme
+    @State private var hours: [HourActivity] = []
+    @State private var loading = true
+    @State private var failed = false
+    @State private var loadedRequest: Request?
+
+    private struct Request: Hashable {
+        var date: Date
+        var metric: ActivityMetric
+        var updatedAt: Date?
+    }
+    private var request: Request { .init(date: date, metric: metric, updatedAt: model.lastUpdated) }
+    private var visibleHours: [HourActivity] { loadedRequest == request ? hours : [] }
+
+    var body: some View {
+        let interval = ActivityPeriod.day.interval(containing: date)
+        let values = visibleHours.compactMap { metric.value(in: $0) }
+        let average = values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
+        VStack(alignment: .leading, spacing: 8) {
+            Chart {
+                ForEach(visibleHours) { hour in
+                    if let value = metric.value(in: hour) {
+                        BarMark(x: .value(L("chart.hour"), hour.date, unit: .hour),
+                                y: .value(L(metric.titleKey), value))
+                            .foregroundStyle(model.effectiveTheme.tint(for: scheme).gradient).cornerRadius(3)
+                            .accessibilityLabel(Text(hour.date.formatted(.dateTime.hour().minute())))
+                            .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
+                    }
+                }
+                if let average {
+                    RuleMark(y: .value(L("insights.average"), average)).foregroundStyle(Color.secondary)
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                        .annotation(position: .top, alignment: .trailing, spacing: 4) {
+                            RecordAverageLabel(value: metric.text(average, unit: model.preferences.unit))
+                        }
+                        .accessibilityLabel(Text("insights.average"))
+                        .accessibilityValue(Text(metric.text(average, unit: model.preferences.unit)))
+                }
+            }
+            .chartXScale(domain: interval.start...interval.end)
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .hour, count: 3)) {
+                    AxisValueLabel(format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
+                }
+            }
+            .chartYAxis(.hidden)
+            .frame(height: 175)
+            .overlay { if loading { ProgressView() } }
+            .accessibilityLabel(Text("chart.hourly"))
+            .accessibilityIdentifier("insights.record.hourly")
+            .chartInspection("insights.record.hourly", resetKey: "\(metric.rawValue)-\(date.timeIntervalSinceReferenceDate)") { proxy in
+                ChartInspectionPoint.buckets(in: interval, by: .hour).compactMap { bucket in
+                    let hour = visibleHours.first { $0.date == bucket.start }
+                    let amount = hour.flatMap { metric.value(in: $0) }
+                    return ChartInspectionPoint(proxy: proxy, x: bucket.start.addingTimeInterval(bucket.duration / 2), y: amount,
+                        title: bucket.start.formatted(.dateTime.hour().minute()),
+                        value: metric.text(amount, unit: model.preferences.unit), color: model.effectiveTheme.tint(for: scheme))
+                }
+            }
+            if failed {
+                Text("health.refresh.error").font(.caption).foregroundStyle(.secondary)
+            } else if !loading && values.isEmpty {
+                Text("chart.no.data").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .task(id: request) {
+            let currentRequest = request
+            loading = true; failed = false; hours = []; loadedRequest = nil
+            do {
+                let result = try await model.hourly(on: date, metric: metric)
+                try Task.checkCancellation()
+                hours = result; loadedRequest = currentRequest; loading = false
+            } catch is CancellationError { }
+            catch { if !Task.isCancelled { failed = true; loading = false } }
+        }
     }
 }
 
@@ -413,7 +555,6 @@ private struct YearHistoryCard: View {
         let values = years.compactMap { value($0) }
         let maximum = max(values.max() ?? 1, 1)
         let best = years.filter { value($0) != nil }.max { (value($0) ?? 0) < (value($1) ?? 0) }?.id
-        let overall = MetricSummary(days: days, metric: metric)
         WalkunoCard {
             VStack(alignment: .leading, spacing: 20) {
                 InsightHeader(title: "insights.all.years", metric: metric)
@@ -421,7 +562,9 @@ private struct YearHistoryCard: View {
                     Text("insights.totals").tag(false)
                     Text("insights.averages").tag(true)
                 }.pickerStyle(.segmented).accessibilityIdentifier("insights.history.mode")
-                InsightValue(title: averages ? "insights.daily.average" : "insights.total", value: metric.text(averages ? overall.average : overall.total, unit: model.preferences.unit))
+                if !averages {
+                    InsightValue(title: "insights.total", value: metric.text(MetricSummary(days: days, metric: metric).total, unit: model.preferences.unit))
+                }
                 if values.isEmpty { Text("chart.no.data").font(.subheadline).foregroundStyle(.secondary) }
                 ForEach(Array(years)) { year in
                     VStack(alignment: .leading, spacing: 7) {
@@ -440,7 +583,6 @@ private struct YearHistoryCard: View {
                         }.frame(height: 18).accessibilityHidden(true)
                     }.accessibilityElement(children: .combine)
                 }
-                Text(model.purchases.isPremium ? "insights.years.note" : "insights.years.free.note").font(.caption).foregroundStyle(.secondary)
             }
         }
     }

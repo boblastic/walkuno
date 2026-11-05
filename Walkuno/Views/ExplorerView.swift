@@ -7,7 +7,8 @@ struct ExplorerView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var period: ActivityPeriod = .week
     @State private var anchor = Date.now
-    @State private var selectedDate: Date?
+    @State private var chartScrubbing = false
+    @State private var cancelledPageDrag = false
     @State private var showPremium = false
     @State private var detailDate: Date?
     @State private var pageWindow: ExplorerPageWindow?
@@ -54,7 +55,9 @@ struct ExplorerView: View {
             // Keep gesture coordinates fixed while the cards move and scroll underneath.
             .contentShape(Rectangle())
             .simultaneousGesture(pageDrag)
+            .scrollDisabled(chartScrubbing)
             .accessibilityIdentifier("explorer.scroll")
+            .environment(\.chartScrubbing, $chartScrubbing)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -70,7 +73,7 @@ struct ExplorerView: View {
         .task(id: hoursRequest) { await prepareHours() }
         .onChange(of: model.purchases.isPremium) { _, premium in
             if !premium && (period == .year || interval.end <= earliestFree) {
-                period = .week; anchor = .now; selectedDate = nil
+                period = .week; anchor = .now
             }
         }
         .sheet(item: Binding(get: { detailDate.map { SelectedDay(date: $0) } }, set: { detailDate = $0?.date })) { selection in
@@ -84,7 +87,7 @@ struct ExplorerView: View {
                 guard !isSliding else { return }
                 if value == .year && !model.purchases.isPremium { showPremium = true; return }
                 guard period != value else { return }
-                period = value; selectedDate = nil; pageOffset = 0
+                period = value; pageOffset = 0
             })) {
                 ForEach(ActivityPeriod.allCases) { value in Text(L("period.\(value.rawValue)")).tag(value) }
             }
@@ -124,16 +127,6 @@ struct ExplorerView: View {
                             if let steps = day.steps {
                                 BarMark(x: .value(L("chart.date"), day.date, unit: period == .year ? .month : .day), y: .value(L("today.steps"), steps))
                                     .foregroundStyle(model.effectiveTheme.tint(for: scheme).gradient).cornerRadius(5)
-                                    .opacity(selectedDate == nil || Calendar.current.isDate(day.date, inSameDayAs: selectedDate!) ? 1 : 0.45)
-                            }
-                        }
-                        .chartOverlay { proxy in
-                            GeometryReader { geometry in
-                                Color.clear.contentShape(Rectangle())
-                                    .onTapGesture { location in
-                                        guard let frame = proxy.plotFrame else { return }
-                                        selectedDate = proxy.value(atX: location.x - geometry[frame].minX, as: Date.self)
-                                    }
                             }
                         }
                         .chartXScale(domain: page.interval.start...page.interval.end.addingTimeInterval(-1))
@@ -144,11 +137,23 @@ struct ExplorerView: View {
                         }
                         .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { _ in AxisGridLine().foregroundStyle(.primary.opacity(0.06)); AxisValueLabel() } }
                         .frame(height: 180)
+                        .accessibilityIdentifier("explorer.chart")
                         .accessibilityLabel(Text("statistics.chart.accessibility \(stepsText(page.summary.total)) \(page.summary.observedDays)"))
-                        if let selectedDate, let day = page.chartDays.min(by: { abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate)) }) {
-                            Text("\(day.date.formatted(date: .abbreviated, time: .omitted)) · \(stepsText(day.steps)) \(L("today.steps"))")
-                                .font(.caption.weight(.semibold)).foregroundStyle(model.effectiveTheme.tint(for: scheme))
+                        .chartInspection("explorer.chart") { proxy in
+                            let inspectedDays = period == .year
+                                ? page.calendarMonths.map { ActivityDay(date: $0.date, steps: $0.summary.total) }
+                                : ActivityMath.days(in: page.interval, available: page.chartDays,
+                                                    now: page.interval.end.addingTimeInterval(-1), calendar: calendar)
+                            return inspectedDays.compactMap { day in
+                                let component: Calendar.Component = period == .year ? .month : .day
+                                let bucket = calendar.dateInterval(of: component, for: day.date)
+                                let middle = bucket.map { $0.start.addingTimeInterval($0.duration / 2) } ?? day.date
+                                return ChartInspectionPoint(proxy: proxy, x: middle, y: day.steps.map(Double.init),
+                                    title: day.date.formatted(period == .year ? .dateTime.month(.wide).year() : .dateTime.day().month(.abbreviated).year()),
+                                    value: day.steps.map { stepsText($0) + " " + L("today.steps") } ?? L("chart.no.data"), color: model.effectiveTheme.tint(for: scheme))
+                            }
                         }
+                        .id(page.id)
                     }
                 }
                 HStack(spacing: 12) {
@@ -209,12 +214,15 @@ struct ExplorerView: View {
         DragGesture(minimumDistance: 18)
             .onChanged { value in
                 guard !isSliding else { return }
+                if chartScrubbing { cancelledPageDrag = true; pageOffset = 0; return }
+                guard !cancelledPageDrag else { return }
                 guard abs(value.translation.width) > abs(value.translation.height) * 1.3, !reduceMotion else { return }
                 let hasNeighbor = value.translation.width > 0 ? pageWindow?.previous != nil : pageWindow?.next != nil
                 pageOffset = min(pageWidth, max(-pageWidth, value.translation.width * (hasNeighbor ? 1 : 0.15)))
             }
             .onEnded { value in
-                guard !isSliding else { return }
+                defer { cancelledPageDrag = false }
+                guard !isSliding, !chartScrubbing, !cancelledPageDrag else { settlePage(); return }
                 let travel = value.translation.width
                 let predicted = value.predictedEndTranslation.width
                 guard abs(travel) > abs(value.translation.height) * 1.3,
@@ -250,7 +258,7 @@ struct ExplorerView: View {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
-            anchor = date; selectedDate = nil; pageOffset = 0
+            anchor = date; pageOffset = 0
             preparePages(reusing: true)
         }
     }
@@ -364,7 +372,7 @@ struct ExplorerView: View {
             ForEach(page.calendarMonths) { month in
                 let progress = month.progress ?? 0
                 Button {
-                    anchor = month.date; period = .month; selectedDate = nil; pageOffset = 0
+                    anchor = month.date; period = .month; pageOffset = 0
                 } label: {
                     Text(month.date.formatted(dateStyle.month(.abbreviated)))
                         .font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
@@ -422,7 +430,15 @@ private struct ExplorerHourlyChart: View {
             }
         }
         .accessibilityLabel(Text("chart.hourly"))
+        .id(date)
         .accessibilityIdentifier("explorer.day.hourly")
+        .chartInspection("explorer.day.hourly") { proxy in
+            activity.hours.compactMap { hour in
+                ChartInspectionPoint(proxy: proxy, x: hour.date.addingTimeInterval(1800), y: hour.steps.map(Double.init),
+                    title: hour.date.formatted(.dateTime.hour().minute()),
+                    value: hour.steps.map { stepsText($0) + " " + L("today.steps") } ?? L("chart.no.data"), color: accent)
+            }
+        }
     }
 }
 

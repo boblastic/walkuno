@@ -81,11 +81,12 @@ private struct AppHeader: View {
 
             Text(L(model.purchases.isPremium ? "subscription.pro" : "subscription.free"))
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(model.purchases.isPremium ? WalkunoStyle.ink : Color.primary)
+                .foregroundStyle(model.purchases.isPremium ? ink : Color.secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(model.purchases.isPremium ? model.effectiveTheme.accent : Color.primary.opacity(0.06), in: Capsule())
-                .overlay(Capsule().strokeBorder(Color.primary.opacity(model.purchases.isPremium ? 0 : 0.12)))
+                .overlay {
+                    Capsule().strokeBorder(model.purchases.isPremium ? ink.opacity(0.45) : Color.primary.opacity(0.2), lineWidth: 1)
+                }
                 .accessibilityIdentifier("app.subscription")
         }
         .fixedSize(horizontal: true, vertical: false)

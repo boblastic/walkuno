@@ -275,3 +275,161 @@ Les **81 tests Foundation réussissent** sur les sources préparées. La compila
 Walkuno est mis à jour sur l’iPhone physique sans désinstallation et lancé sans argument de démonstration. Les métadonnées de l’appareil confirment le passage du build 3 au build 4 et le nouvel emplacement du bundle. Aucun contenu des préférences ni aucune donnée Santé personnelle n’est lu pour cette vérification. Aucune installation directe sur la Watch n’est effectuée pendant cette opération.
 
 Preuves : `/tmp/walkuno-release-4-build.log`, `/tmp/walkuno-release-4-tests.log`, `/tmp/walkuno-release-4-install.json`, `/tmp/walkuno-release-4-launch.json`, `/tmp/walkuno-release-iphone-before.json` et `/tmp/walkuno-release-4-iphone-after.json`.
+
+## 5 novembre 2026 — Aventures intermédiaires et collection permanente
+
+- Collection portée à 24 traversées : ajout du Nil (6 650 km), du tour de l’Australie (14 500 km), du Transsibérien aller-retour (18 600 km), de la Grande Muraille (21 200 km), du Sentier Transcanadien (30 000 km), du quart du chemin vers la Lune (96 100 km) et de la moitié (192 200 km). Références et arrondis dans `Trophees.md`.
+- Suppression du tour de piste et des commandes de déploiement/réduction. Toutes les aventures restent affichées ; la première non terminée conserve la mention « Prochaine aventure ».
+- 83 tests Foundation réussis ; validation des 367 textes dans les sept langues réussie ; analyse syntaxique Swift de la vue Succès et du parcours UI réussie ; `git diff --check` sans erreur.
+- Test UI adapté pour parcourir les nouveaux jalons sans ouvrir la collection, mais non exécuté : CoreSimulator inaccessible dans cet environnement. Compilation complète tentée, bloquée par `sandbox-exec: sandbox_apply: Operation not permitted` lors du lancement des macros Swift de la cible Watch. Le rendu et la compilation complète restent à confirmer dans Xcode.
+
+Journaux : `/tmp/walkuno-journeys-tests.log` et `/tmp/walkuno-journeys-build.log`. Aucun déploiement sur appareil.
+
+### Ajustement — Retrait des deux jalons lunaires
+
+À la demande de Damien, suppression du quart du chemin et de la moitié du chemin vers la Lune. Le catalogue contient désormais 22 traversées, toujours affichées. Les traductions, le catalogue documenté et les tests ont été adaptés. Les 12 tests `AchievementTests` réussissent, ainsi que la validation des 365 textes dans les sept langues. Journal : `/tmp/walkuno-journeys-removal-tests.log`.
+
+### Simplification des statistiques et repères des tendances — 5 novembre 2026
+
+- « Votre semaine type » : suppression du détail dépliable et de la note sur l’historique accessible.
+- Tendances : choix 7 jours/mois/année, écart aligné à droite du titre, suppression de la grande moyenne répétée.
+- Graphiques : séries précédente grise et actuelle dans le thème, côte à côte par position calendaire ; initiales des jours et des mois, jours du mois espacés avec dernier jour visible. Périodes calendaires précédentes complètes, mesures actuelles jusqu’à aujourd’hui et emplacements futurs vides. Les moyennes comparatives restent calculées sur les journées terminées comparables.
+- `swift test --disable-sandbox --scratch-path /tmp/walkuno-core-tests` avec caches de modules sous `/tmp` : **87 tests réussis**, dont quatre nouveaux tests couvrant les mois de longueurs différentes, février bissextile, les valeurs absentes/futures, les douze mois et les changements d’heure/année.
+- Compilation générique iOS Simulator de Walkuno et de ses cibles embarquées : **BUILD SUCCEEDED**, avec `CODE_SIGNING_ALLOWED=NO` et `OTHER_SWIFT_FLAGS='$(inherited) -disable-sandbox'` pour permettre les macros Swift dans cet environnement.
+- Parcours UI adapté aux trois périodes et captures mois/année ajoutées. Exécution UI et contrôle visuel non effectués : service CoreSimulator inaccessible dans cette session.
+
+
+## Reprise du compteur au changement de granularité — 5 novembre 2026
+
+Le sélecteur Jour / Semaine / Mois / Année rejoue le compteur depuis zéro et le remplissage du cercle, y compris au retour au jour. Le réglage existant continue de commander la reprise lors de la navigation entre les dates. La réduction des animations iOS reste prioritaire. Les explications du réglage sont adaptées dans les sept langues.
+
+- Compilation Debug générique iOS Simulator des quatre cibles réussie.
+- Test UI `testHomeNavigationWithPeriodAnimationsEnabledAndDisabled` réussi sur iOS 26.3 : navigation dans les quatre périodes, avec le réglage activé puis désactivé, aucun échec. Ce parcours valide la navigation et les totaux accessibles, sans assertion sur les images intermédiaires de l’animation.
+- Validation des 365 textes dans les sept langues et `git diff --check` réussis.
+
+Preuves : `/tmp/walkuno-period-replay-build.log`, `/tmp/walkuno-period-replay-ui.log` et `/tmp/walkuno-period-replay-ui.xcresult`. Aucune installation physique effectuée.
+
+## Libellés du graphique d’accueil — 5 novembre 2026
+
+L’axe utilise des repères alignés avec les dates, des traits verticaux sans décalage et une marge de 10 points aux deux extrémités pour préserver les libellés centrés.
+
+- Compilation Debug des cibles iPhone, widgets et Watch réussie pour simulateur.
+- Test UI `testHomeTrendKeepsCompactHeaderAcrossCalendarPeriods` réussi sur iOS 26.3, sans échec.
+- Captures contrôlées visuellement : J de jeudi, D de dimanche, dernier jour de novembre (30) et D de décembre visibles et centrés sous leurs traits ; vue annuelle allemande également contrôlée.
+- `git diff --check` réussi.
+
+Preuves : `/tmp/walkuno-axis-labels-ui.log`, `/tmp/walkuno-axis-labels-ui.xcresult` et `/tmp/walkuno-axis-labels-captures/`. Aucune installation physique effectuée.
+
+### Installation du correctif des libellés sur iPhone — 5 novembre 2026
+
+Walkuno 1.0.0 (5) est compilé avec signature de développement, vérifié avec `codesign --verify --deep --strict`, puis installé sur l’iPhone connecté « iBoblastic » sans désinstallation. Le lancement sans argument de démonstration réussit et le processus Walkuno est confirmé sur l’appareil. Le rendu corrigé a été contrôlé sur simulateur ; aucun contrôle visuel supplémentaire sur l’iPhone physique n’a été effectué pendant cette installation.
+
+Preuves : `/tmp/walkuno-axis-labels-iphone-install.log` et `/tmp/walkuno-axis-labels-iphone-processes.json`.
+
+
+## Inspection des graphiques et préparation du build 5 — 5 novembre 2026
+
+Ajout des bulles date/heure et valeur sur les graphiques des statistiques (comparaison du jour, tendances, records horaires et agrégés, historique annuel) et sur Explorer (jour/semaine/mois/année et détail d’une journée). Les deux valeurs de la comparaison quotidienne sont affichées ensemble ; les séries des tendances peuvent être inspectées séparément. Les bulles suivent la métrique, l’unité et la palette. Explorer distingue toucher, appui maintenu avec glissement et balayage rapide de période.
+
+- Les **87 tests Foundation** réussissent : `/tmp/walkuno-inspection-core.log`.
+- Les **365 textes dans les sept langues**, ainsi que les traductions compilées des quatre bundles, sont validés. `git diff --check` réussit.
+- Compilation Debug générique pour appareil iOS réussie avec les quatre cibles embarquées, sans signature dans ce contrôle : `/tmp/walkuno-inspection-build.log`.
+- Le parcours UI existant `testExplorerPinsGlassControlsAndSwipesEveryPeriod` réussit sous iOS 27 : panneau fixe, navigation rapide dans les quatre périodes et défilement vertical.
+- Contrôle visuel sur simulateur de la comparaison quotidienne : heure, valeurs actuelle/habituelle, repère vertical et bulle au-dessus du point.
+
+Le numéro de build est porté à **5** dans le générateur et les quatre cibles.
+
+Le nouveau test UI `testExplorerChartScrubbingKeepsPeriodAndShowsValues` réussit sous iOS 27 : bulle au toucher, valeur/date modifiée par glissement maintenu, période conservée pour semaine/mois/année/jour. Les dates sans mesure, y compris futures, possèdent leur propre emplacement et affichent l’absence de donnée au lieu de reprendre la dernière barre renseignée.
+
+Les deux nouveaux parcours UI réussissent ensemble sur les sources finales : `testExplorerChartScrubbingKeepsPeriodAndShowsValues` et `testStatisticsChartsShowValuesOnTapAndDrag` (comparaison du jour, tendances, record annuel, puis record quotidien horaire). La compilation effectuée par Xcode pour ce parcours est réussie. Résultat conservé sous `/tmp/walkuno-inspection-final-ui.xcresult`.
+
+L’installation physique du build 5 reste à terminer : le Mac s’est verrouillé avant le choix de la destination iPhone dans Xcode. La voie CLI ne peut pas accéder aux services de l’appareil dans cet environnement ; la tentative de signature CLI ne trouve pas les profils de développement. Aucun succès d’installation ni de signature du build 5 sur appareil n’est revendiqué.
+
+## Lisibilité des statistiques et bulles temporaires — 5 novembre 2026
+
+- Les deux valeurs de « Mon activité du jour » figurent à droite de leur légende. « Habituellement » affiche le total moyen d’une journée historique complète ; le message d’avance/retard conserve la comparaison à la même heure.
+- Tendances : période précédente entière en gris, suivie de la période actuelle en vert, pour les sept jours, les mois et les années. Chaque moyenne en pointillés reste dans sa propre période ; les créneaux absents ou futurs sont conservés. Les repères mensuels évitent le chevauchement entre le dernier jour précédent et le premier jour actuel.
+- Les bulles des graphiques Statistiques et Explorer disparaissent une seconde après le relâchement. Un nouvel appui annule la fermeture en attente. Le mois du record annuel est en majuscules ; le record quotidien n’a plus de détail dépliable.
+- **87 tests Foundation réussis**, dont les assertions distinguant total habituel de fin de journée, référence à heure égale et mesure absente. Validation des **365 textes dans les sept langues** et `git diff --check` réussie.
+- Compilation Debug générique iOS des quatre cibles réussie sur les sources finales, sans signature. Journaux : `/tmp/walkuno-statistics-refine-core.log` et `/tmp/walkuno-statistics-refine-build-final.log`.
+- Le parcours UI Explorer passe sous iOS 27 avec lecture immédiate des bulles et vérification de leur disparition. Les assertions de comparaison quotidienne et de tendances passent également, y compris la sélection précédente à gauche, actuelle à droite, et le maintien de la bulle pendant un appui de plus d’une seconde. Résultat : `/tmp/walkuno-statistics-refine-final-ui.xcresult`.
+- La recette UI complète des records/historique reste inachevée : le geste de défilement du test n’atteint pas les cartes du bas. La page reçoit ensuite une zone de toucher couvrant aussi ses marges et les gestes de test sont ancrés à la fenêtre. Une copie temporaire est compilée pour préserver les modifications simultanées du compteur d’accueil ; les relancements iOS 27 puis iOS 26 restent bloqués avant l’exécution et sont interrompus. Aucun succès du parcours complet ni de la capitalisation du record au toucher n’est revendiqué. Journaux : `/tmp/walkuno-statistics-review-complete-ui.log` et `/tmp/walkuno-statistics-review-ios26-ui.log`.
+- Les captures de la carte quotidienne et des sept jours sont contrôlées visuellement. Les captures des tendances mensuelles et annuelles sont partielles ; le contrôle visuel complet reste à effectuer. Aucun déploiement sur appareil physique.
+- Dernier contrôle du projet partagé, après les modifications simultanées et l’ajout de la zone de défilement : **BUILD SUCCEEDED** pour les quatre cibles iOS/Watch et extensions, sans signature. Journal : `/tmp/walkuno-statistics-refine-build-current.log`. Le délai d’appui maintenu partagé est désormais de 0,4 seconde et les parcours UI utilisent un appui de 0,6 seconde.
+
+## Cinq styles du compteur — 5 novembre 2026
+
+- Compteur d’accueil et galerie de réglages natifs : Anneau, Horizon, Chemin, Paliers et Typographique, dessinés avec les deux teintes de chacune des neuf palettes. L’ancien identifiant `minimal` conserve le choix Typographique après mise à jour.
+- Compilation de l’app, de la Watch, des extensions et du runner UI réussie. Validation des 381 textes dans les sept langues et dans les quatre bundles compilés.
+- **91 tests de logique réussis**, dont la sauvegarde des cinq choix et les nouveaux contrôles des paliers, données invalides, objectifs atteints et tours supplémentaires à 125 %, 200 %, 225 % et 300 %.
+- **Cinq scénarios UI ciblés validés** sur iPhone 17 Pro / iOS 26.3 : sélection des cinq dessins, navigation par balayage et totaux annuels ; parcours des neuf palettes ; prévisualisation Premium sans écraser le choix actif ; mémorisation après relancement réel sans connexion Santé ; compteur visible et accessible à la taille de texte maximale. Le mode démonstration ne sauvegarde volontairement aucune préférence.
+- Captures natives examinées pour les cinq dessins, les grands totaux annuels et plusieurs palettes. L’espacement du nombre dans Horizon a été resserré au centre pour dégager les graduations ; la galerie remonte automatiquement vers l’aperçu après sélection, en respectant la réduction des animations.
+
+Preuves : `/tmp/walkuno-counters-core.log`, `/tmp/walkuno-counters-build.log`, `/tmp/walkuno-counters-polish.xcresult` (sélection et périodes), `/tmp/walkuno-counters-persistence.xcresult` (sauvegarde), `/tmp/walkuno-counters-accessibility-verified.xcresult` (grands caractères), `/tmp/walkuno-counters-final-ui.xcresult` (scénarios palettes et aperçu gratuit réussis ; son premier scénario de balayage avait une attente insuffisante, corrigée et validée dans `polish`). Captures finales : `/tmp/walkuno-counters-polish-captures/`. Les alertes de changement d’icône du simulateur non signé sont indépendantes du compteur et ont été fermées pendant le parcours des palettes.
+
+## Étoiles des cinq compteurs — 5 novembre 2026
+
+- Un même dessin SwiftUI Canvas ajoute aux cinq styles des étoiles à dégradé nacré, facettes, cœur blanc et halos dans les deux couleurs de la palette. Les étoiles principales et satellites restent visibles au repos ; la traînée supplémentaire suit uniquement l’interpolation existante, sans minuterie ni animation continue. La réduction des animations conserve le dessin statique.
+- Les étoiles suivent les tours supplémentaires. Les débuts sans pas restent discrets ; les surfaces décoratives ne capturent aucun toucher et sont masquées à VoiceOver. L’anneau et Horizon réservent davantage de place autour des étoiles ; Paliers suit une ligne continue au-dessus des barres et garde ses extrémités à l’intérieur du compteur.
+- Deux parcours UI existants réussis sur iPhone 17 Pro / iOS 26.3.1 : galerie et sélection des cinq styles, balayages et totaux annuels, puis compteur avec taille de texte d’accessibilité maximale. Les captures des cinq compteurs d’accueil ont été examinées. Résultat : `/tmp/walkuno-starlight-gallery.xcresult`, captures : `/tmp/walkuno-starlight-captures/`.
+- Contrôle natif supplémentaire avec les vues SwiftUI réelles : les cinq styles à 0 %, 100 %, 125 % et 200 %, puis une image de la traînée à mi-animation. Le dernier ajustement des extrémités de Paliers est inclus dans ces rendus : `/tmp/walkuno-starlight-edges.png` et `/tmp/walkuno-starlight-motion.png`. Aperçu violet : `/tmp/walkuno-starlight-native-grid.png`.
+- Compilation finale des quatre cibles pour simulateur avec signature locale réussie : `/tmp/walkuno-starlight-final-build.log`. Validation des 381 textes dans les sept langues et `git diff --check` réussis. Aucun changement de calcul des pas ou d’objectif, aucune installation sur appareil physique.
+
+### Installation sur iPhone et Apple Watch — 5 novembre 2026
+
+À la demande de l’utilisateur, les sources finales avec les étoiles sont compilées pour appareils physiques, avec signature de développement et profils embarqués. La vérification `codesign --verify --deep --strict` réussit pour les deux applications. Walkuno 1.0.0 (5) est mis à jour sans désinstallation sur l’iPhone « iBoblastic » et l’Apple Watch de Damien. Le lancement sans arguments de démonstration réussit sur les deux appareils ; les processus des deux applications et de leurs extensions sont ensuite confirmés dans les nouveaux emplacements d’installation.
+
+Preuves : `/tmp/walkuno-starlight-device-install.log`, `/tmp/walkuno-starlight-iphone-processes.json` et `/tmp/walkuno-starlight-watch-processes.json`. Aucun contrôle visuel supplémentaire du rendu sur appareil physique n’a été effectué pendant cette installation.
+
+## Traînée éphémère et départ sans clignotement — 5 novembre 2026
+
+Les étoiles naissent à des positions successives du tracé, dérivent et tournent avec des durées de vie individuelles de 0,4 à 0,8 seconde. Les dernières se dissipent après la fin du remplissage ; aucune étoile ne reste au repos. Une horloge de rendu limitée au remplissage et à cette dissipation fournit la même progression au nombre, au tracé et à l’historique des particules. La réduction des animations affiche directement le résultat sans particules.
+
+Quand le remplissage des périodes est activé, les compteurs voisins commencent à zéro pendant le swipe. Le compteur actif possède un état initial propre à chaque reprise ; revenir d’un autre onglet conserve la reprise déjà terminée. Cela élimine les deux causes du flash du total avant le départ à zéro.
+
+- Les 96 tests Foundation réussissent, dont cinq nouveaux cas sur la progression, la dissipation finale, les positions de naissance lors des tours supplémentaires et les corrections de valeur. Journal : `/tmp/walkuno-fairy-core.log`.
+- Les rendus natifs des cinq styles pendant le remplissage, pendant la dissipation et au repos ont été examinés : `/tmp/walkuno-fairy-native.png`.
+- Les deux parcours UI finaux réussissent : sélection des cinq styles et navigation dans les quatre périodes avec remplissage activé puis désactivé. Résultat : `/tmp/walkuno-fairy-final-ui.xcresult` (deux tests, aucun échec).
+- La vidéo du simulateur est examinée à intervalles de 0,1 seconde autour des swipes : la page entrante affiche zéro pendant le glissement, puis sa valeur augmente progressivement. Preuves : `/tmp/walkuno-fairy-swipes.mov`, `/tmp/walkuno-fairy-day-frames.png` et `/tmp/walkuno-fairy-period-frames.png`. Le rendu temporel confirme également la présence de la traînée pendant le remplissage.
+- Compilation signée finale des quatre cibles réussie, signatures des applications vérifiées, validation des traductions et `git diff --check` réussis : `/tmp/walkuno-fairy-final-device-build.log`.
+- Mise à jour physique sans désinstallation réussie sur l’iPhone iBoblastic et l’Apple Watch de Damien, puis lancement des deux applications sans démonstration. Le transfert Watch a nécessité une reconnexion après deux expirations du tunnel réseau. Journaux : `/tmp/walkuno-fairy-iphone-install.log`, `/tmp/walkuno-fairy-iphone-launch.log`, `/tmp/walkuno-fairy-iphone-processes.json`, `/tmp/walkuno-fairy-watch-final-install.log` et `/tmp/walkuno-fairy-watch-launch.log`. Le rendu animé a été vérifié sur simulateur ; aucun contrôle visuel supplémentaire sur les appareils physiques n’a été effectué.
+
+## Statistiques compactes — 5 novembre 2026
+
+- En-tête « Mon activité du jour » sur la même rangée que les valeurs Aujourd’hui / Habituellement, avec légendes réduites et repères plein/pointillés conservés.
+- Suppression des descriptions sous les graphiques, des notes de couverture et des détails dépliables des records. Les légendes des tendances et les valeurs principales sont conservées. La série actuelle utilise désormais la palette sélectionnée ; la couleur des baisses reste distincte.
+- Compilation Debug générique iOS Simulator réussie. Parcours UI `testStatisticsInsightsMetricsRecordsAndYearHistory` réussi sur iOS 27 : mesures, trois périodes de tendances, records, historique en totaux/moyennes et menu fixe. L’aide de défilement du test ignore désormais les cadres vides des éléments hors écran pour éviter une inversion du geste.
+- Captures de démonstration contrôlées ; `git diff --check` réussi. Aucun déploiement physique.
+
+Preuves : `/tmp/walkuno-statistics-compact-build.log`, `/tmp/walkuno-statistics-compact-verified.log` et `/tmp/walkuno-statistics-compact-verified.xcresult`.
+
+## Trois effets alternatifs du compteur — 5 novembre 2026
+
+- Ajout de Feu vivant (flammes déformées, cœur chaud et braises), Aurore boréale (trois voiles irisés avec ondulation et liserés lumineux) et Onde liquide (sillage lisse, perle nacrée, gouttelettes et ondelettes). Étoiles reste disponible et demeure le choix des installations existantes. Chaque effet utilise le même historique de progression, y compris les dépassements d’objectif, puis disparaît entièrement après le remplissage.
+- La galerie Réglages → Style du compteur propose les quatre effets indépendamment du dessin, avec choix mémorisé et bouton « Revoir l’animation ». La préférence absente ou inconnue revient aux étoiles en conservant les autres réglages. Les libellés sont traduits dans les sept langues.
+- 97 tests Foundation réussis, dont la sauvegarde des quatre choix et la migration des anciennes préférences : `/tmp/walkuno-effects-core.log`. Validation des 391 textes et `git diff --check` réussis.
+- Deux parcours UI réussis : sélection/relecture des quatre effets et choix des cinq dessins avec navigation par jour et année. Résultat : `/tmp/walkuno-effects-ui.xcresult` ; captures : `/tmp/walkuno-effects-captures/`. Les captures des effets et de leur disparition ont été examinées dans l’interface iPhone.
+- Les derniers ajustements visuels (flammes ascendantes, sillage liquide lissé) ont été compilés et contrôlés avec les vues SwiftUI réelles sur les cinq dessins : `/tmp/walkuno-effects-native-final.png`. L’aperçu animé natif compare les trois effets et leur dissipation : `/tmp/walkuno-effects-preview.gif`.
+- Compilation finale des quatre cibles pour simulateur réussie : `/tmp/walkuno-effects-final-build.log`. Aucun déploiement physique effectué pour cette évolution.
+
+## Widgets iPhone : quatre familles et trois tailles — 5 novembre 2026
+
+- Compteurs, Graphiques, Tendances et Tableau de bord proposent chacun petit/moyen/grand. Les identifiants des deux widgets existants sont conservés. L’écran verrouillé reçoit les compteurs, graphiques, tendances et synthèses rectangulaires ; deux rectangles remplissent les quatre emplacements autorisés par iOS.
+- Courbes/barres hebdomadaires, rythme horaire aujourd’hui/veille de l’accueil, 24 heures glissantes et suivi cumulatif. Tendances configurables : cinq mesures, 7 jours/mois/année, courbe/barres/comparaison/calendrier mensuel. L’année suit les droits Pro, les autres périodes l’historique accessible. Moyennes sur jours observés ; créneaux futurs et données manquantes distincts du zéro.
+- Palette, kilomètres/miles, objectif, dessin du compteur et visibilité de l’énergie partagés avec l’extension. Les effets animés ne sont pas rejoués dans les snapshots statiques. La lecture prioritaire couvre désormais 31 jours, ou les deux années de tendances avec Pro, pour maintenir ces résumés lors des livraisons en arrière-plan.
+- 101 tests Foundation réussis : `/tmp/walkuno-widgets-tests-final.log`. Vérifications ajoutées : objectifs datés du calendrier, absence/zéro/futur, moyenne annuelle pondérée, totaux et moyennes mensuels distincts, février bissextile, anciens caches et taille bornée avec 5 000 jours synthétiques.
+- Validation des 408 textes dans les sept langues et quatre cibles réussie. Compilation Debug des quatre cibles pour iOS/watchOS Simulator réussie : `/tmp/walkuno-widgets-simulator-final.log`. `git diff --check` réussi.
+- 53 rendus natifs avec un harnais temporaire ImageRenderer sur iOS Simulator : 12 formats sur dimensions standard et petit iPhone, huit variantes circulaires, sept rectangles, quatre graphiques de tendance, cinq compteurs, thème violet/miles/énergie masquée et quatre états sans données. Le harnais remplace uniquement la clé d’environnement de famille pour reproduire les dimensions hors du processus WidgetKit. Les captures ne valident pas la composition finale du système, les modes teintés ni la protection sous verrouillage matériel.
+- Revue ciblée de confidentialité consignée dans `Documentation/Audit-securite.md`. Aucun déploiement physique ni publication.
+
+## Livraison locale de Walkuno 1.0.0 (6) — 5 novembre 2026
+
+La version de développement Debug 1.0.0 (6) réunit les nouveaux widgets iPhone, les cinq styles et quatre effets du compteur, l’inspection des graphiques, les améliorations des tendances et les trophées présents dans l’espace de travail. Le numéro de build est mis à jour dans les quatre cibles et le générateur.
+
+La compilation signée pour appareils iPhone/Watch et leurs extensions réussit. Vérification stricte de la signature complète ; les quatre profils portent l’App Group attendu et la protection complète. Les 408 textes et les autorisations Santé sont vérifiés dans les sept langues des quatre bundles compilés. La dernière validation métier compte 101 tests Foundation réussis.
+
+Installation par mise à jour sur l’iPhone physique : les métadonnées confirment le passage du build 5 au build 6. L’application est lancée sans argument de démonstration. Aucune désinstallation ni lecture du contenu des préférences ou de Santé n’est effectuée. Le compagnon Watch est embarqué ; aucune installation directe sur la montre n’est demandée pendant cette livraison. La recette des widgets sur écran verrouillé matériel reste à effectuer.
+
+L’ensemble cohérent des sources, ressources, tests et documents est préparé sur `main` pour le dépôt GitHub `boblastic/walkuno`. Aucun binaire signé, profil de provisioning ni journal d’appareil n’est inclus dans Git.
+
+Preuves locales : `/tmp/walkuno-release-6-build.log`, `/tmp/walkuno-release-6-install.json`, `/tmp/walkuno-release-6-launch.json`, `/tmp/walkuno-release-6-iphone-before.json`, `/tmp/walkuno-release-6-iphone-after.json`, `/tmp/walkuno-widgets-tests-final.log`. Aperçu : `Documentation/Captures/Widgets-iPhone.png`.

@@ -138,23 +138,23 @@ struct AchievementTests {
     }
 
     @Test func distancesRepeatAndNextCycleStartsAtExactBoundary() {
-        let track = DistanceTrophy.catalog[0]
-        let progress = track.progress(totalMeters: 1_050)
+        let trophy = DistanceTrophy.catalog.first { $0.id == "goldenGate" }!
+        let progress = trophy.progress(totalMeters: 6_842.5)
         #expect(progress.completed == 2)
-        #expect(progress.cycleMeters == 250)
-        #expect(progress.fraction == 0.625)
-        let exact = track.progress(totalMeters: 1_200)
+        #expect(progress.cycleMeters == 1_368.5)
+        #expect(progress.fraction == 0.5)
+        let exact = trophy.progress(totalMeters: 8_211)
         #expect(exact.completed == 3)
         #expect(exact.cycleMeters == 0)
         #expect(exact.fraction == 0)
-        #expect(track.progress(totalMeters: nil).cycleMeters == nil)
-        #expect(track.progress(totalMeters: .infinity).cycleMeters == nil)
-        #expect(track.progress(totalMeters: .nan).cycleMeters == nil)
+        #expect(trophy.progress(totalMeters: nil).cycleMeters == nil)
+        #expect(trophy.progress(totalMeters: .infinity).cycleMeters == nil)
+        #expect(trophy.progress(totalMeters: .nan).cycleMeters == nil)
     }
 
     @Test func catalogIsOrderedAndSupportsLongTermTotals() {
         let catalog = DistanceTrophy.catalog
-        #expect(catalog.count == 18)
+        #expect(catalog.count == 22)
         #expect(Set(catalog.map(\.id)).count == catalog.count)
         #expect(catalog.map(\.meters) == catalog.map(\.meters).sorted())
         let earth = catalog.first { $0.id == "earth" }!

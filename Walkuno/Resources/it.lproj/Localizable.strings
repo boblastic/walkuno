@@ -105,7 +105,7 @@
 "settings.mode" = "Aspetto";
 "settings.counter" = "Stile del contatore";
 "settings.period.animations" = "Anima i cambi di periodo";
-"settings.period.animations.description" = "Ripeti il riempimento dell’anello e il conteggio quando cambi giorno, settimana, mese o anno. Se disattivato, il contatore mostra subito il valore finale.";
+"settings.period.animations.description" = "Ripeti il riempimento del contatore e il conteggio quando navighi tra le date. Il passaggio tra Giorno, Settimana, Mese e Anno riproduce sempre l’animazione.";
 "settings.data" = "Salute e privacy";
 "settings.purchases" = "Acquisti";
 "settings.version %@" = "Versione %@";
@@ -115,7 +115,7 @@
 "appearance.light" = "Chiaro";
 "appearance.system" = "Sistema";
 "counter.ring" = "Anello";
-"counter.minimal" = "Essenziale · Premium";
+"counter.minimal" = "Tipografico";
 "theme.mint" = "Ampia falcata";
 "theme.coral" = "Corallo";
 "theme.glacier" = "Ghiacciaio";
@@ -138,7 +138,7 @@
 "privacy.headline" = "I tuoi passi sono tuoi.";
 "privacy.body" = "Walkuno, pubblicata da Orbelio, funziona senza account o server di tracciamento. Legge solo i passi, la distanza percorsa camminando e correndo, l’energia attiva, il tempo di esercizio e i piani saliti che autorizzi in Apple Salute. Non scrive mai misurazioni in Salute e non invia dati sanitari a Orbelio, servizi di analisi o reti pubblicitarie. Non ci sono pubblicità né strumenti di tracciamento.";
 "privacy.permissions" = "Apple gestisce le autorizzazioni. Modificale in Salute → il tuo profilo → App e servizi → Walkuno. L’assenza di misurazioni non permette a Walkuno di sapere se hai negato l’accesso.";
-"privacy.widgets" = "La cronologia completa rimane in Salute. I grafici vengono calcolati in memoria. Una cache locale di massimo sette giorni alimenta i widget, è esclusa dai backup ed è protetta quando il dispositivo è bloccato. Le misurazioni dei widget sono contrassegnate come sensibili. La comunicazione tra iPhone e Watch trasmette obiettivi e preferenze di visualizzazione, mai misurazioni sanitarie.";
+"privacy.widgets" = "La cronologia completa rimane in Salute. I grafici vengono calcolati in memoria. Una cache locale limitata contiene sette totali giornalieri recenti, profili orari, riepiloghi quotidiani del mese attuale e precedente e, con Pro, aggregati mensili di due anni. È esclusa dai backup e protetta quando il dispositivo è bloccato. Le misurazioni dei widget sono sensibili. iPhone–Watch trasmette obiettivi e preferenze, mai misurazioni sanitarie.";
 "privacy.purchases" = "Apple elabora gli acquisti. Walkuno verifica i diritti di accesso con StoreKit e non riceve mai i tuoi dati di pagamento. Preferenze e obiettivi sono salvati localmente. Walkuno non sincronizza dati sanitari su iCloud.";
 "privacy.reset" = "Le Impostazioni permettono di cancellare i dati locali. Questo non modifica Apple Salute, non annulla abbonamenti e non revoca autorizzazioni gestite da Apple. Walkuno è un’app per il benessere senza funzioni di diagnosi medica.";
 "privacy.editor" = "Orbelio · Informativa nell’app del 4 novembre 2026 · Versione 1.0";
@@ -170,7 +170,7 @@
 "premium.settings.subtitle" = "Tutta la tua cronologia. Tutti i tuoi colori.";
 "premium.feature.history" = "Cronologia completa, vista annuale e calendario";
 "premium.feature.themes" = "9 vivaci tavolozze di colori";
-"premium.feature.counter" = "Contatore essenziale e temi per widget";
+"premium.feature.counter" = "4 stili di contatore aggiuntivi e temi dei widget";
 "premium.feature.records" = "Record settimanali e mensili";
 "premium.history.cta" = "Scopri la cronologia completa con Premium";
 "premium.annual.condition" = "Abbonamento annuale con rinnovo automatico";
@@ -215,7 +215,8 @@
 "metric.floors" = "Piani saliti";
 "insights.metric" = "Misura";
 "insights.details" = "Mostra dettagli";
-"insights.day" = "La mia giornata";
+"insights.day" = "La mia attività di oggi";
+"insights.day.goal %@" = "Obiettivo: %@ passi";
 "insights.today" = "Oggi";
 "insights.usual" = "Di solito";
 "insights.day.unavailable" = "Il confronto apparirà quando saranno disponibili misurazioni orarie alla stessa ora nei giorni recenti.";
@@ -336,10 +337,7 @@
 "trophies.distance.progress" = "%@ / %@";
 "trophies.journey.next" = "PROSSIMA AVVENTURA";
 "trophies.journey.again" = "Prossima traversata";
-"trophies.collection.all" = "Vedi tutti i %ld viaggi";
-"trophies.collection.less" = "Mostra meno";
 "trophies.journeys.scope" = "Equivalenze simboliche con distanze di riferimento arrotondate. Conta solo la distanza di camminata/corsa disponibile in Apple Salute, senza stime dai passi. × indica le traversate completate; la barra segue la prossima.";
-"journey.track" = "Un giro di pista";
 "journey.goldenGate" = "Attraversare il Golden Gate";
 "journey.centralPark" = "Il giro di Central Park";
 "journey.halfMarathon" = "Una mezza maratona";
@@ -357,6 +355,11 @@
 "journey.earth" = "Il giro della Terra";
 "journey.moon" = "Fino alla Luna";
 "journey.sun" = "Verso il Sole";
+"journey.nile" = "Seguire il Nilo";
+"journey.australia" = "Il giro dell’Australia";
+"journey.transSiberian" = "La Transiberiana andata e ritorno";
+"journey.greatWall" = "La Grande Muraglia Cinese";
+"journey.transCanada" = "Il Sentiero Transcanadese";
 
 "widget.chart.hourly" = "Passi all’ora";
 "widget.chart.goalTracking" = "Monitoraggio obiettivo";
@@ -368,3 +371,65 @@
 "widget.goal.short" = "Obiettivo";
 
 "calendar.legend.months" = "Più intenso è il colore, più vicino è l’obiettivo mensile. Un punto indica un mese senza dati accessibili.";
+
+"counter.horizon" = "Orizzonte";
+
+"counter.path" = "Sentiero";
+
+"counter.milestones" = "Tappe";
+
+"counter.ring.description" = "L’anello luminoso, semplice ed essenziale.";
+
+"counter.horizon.description" = "Un arco aperto, una vista più ampia.";
+
+"counter.path.description" = "Un sentiero che segue i tuoi passi.";
+
+"counter.milestones.description" = "Dieci tappe verso il tuo obiettivo.";
+
+"counter.minimal.description" = "Numeri grandi. Tutto a colpo d’occhio.";
+
+"counter.preview" = "Anteprima";
+
+"counter.selected" = "Contatore selezionato";
+
+"counter.unlock" = "Scegli questo stile con Premium";
+
+"counter.palette.note" = "Ogni contatore segue la tua palette di colori.";
+
+"counter.complete" = "Obiettivo raggiunto";
+
+"counter.remaining %@" = "Ancora %@ passi";
+
+"counter.extra %@" = "%@ passi oltre l’obiettivo";
+
+"counter.next %@" = "Prossima tappa: %@";
+
+/* Counter animation effects */
+"counter.effect.title" = "Effetto animazione";
+"counter.effect.replay" = "Rivedi animazione";
+"counter.effect.stars" = "Stelle";
+"counter.effect.stars.description" = "Polvere di fata e scintille perlate.";
+"counter.effect.fire" = "Fuoco vivo";
+"counter.effect.fire.description" = "Fiamme danzanti e braci dorate.";
+"counter.effect.aurora" = "Aurora boreale";
+"counter.effect.aurora.description" = "Veli iridescenti e luce eterea.";
+"counter.effect.liquid" = "Onda liquida";
+"counter.effect.liquid.description" = "Perle luminose e riflessi fluidi.";
+
+"widget.chart.dailyRhythm" = "Ritmo della giornata";
+"widget.metric" = "Misura";
+"widget.graph" = "Grafico";
+"widget.graph.curve" = "Curva";
+"widget.graph.bars" = "Barre";
+"widget.graph.comparison" = "Confronta periodi";
+"widget.graph.calendar" = "Calendario mensile di attività";
+"widget.average" = "Media";
+"widget.dailyAverage" = "Media giornaliera · giorni con dati";
+"widget.total" = "Totale";
+"widget.best" = "Migliore";
+"widget.current" = "Attuale";
+"widget.previous" = "Precedente";
+"widget.trends.name" = "Walkuno · Tendenze";
+"widget.trends.description" = "Scegli misura, 7 giorni, mese o anno e curva, barre, confronto o calendario mensile. L’anno richiede Pro; gli altri periodi usano la cronologia disponibile.";
+"widget.dashboard.name" = "Walkuno · Riepilogo";
+"widget.dashboard.description" = "Passi, obiettivo, distanza e media settimanale. I formati maggiori aggiungono esercizio, energia o piani, ritmo giornaliero e monitoraggio obiettivo.";
