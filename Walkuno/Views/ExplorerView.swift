@@ -26,11 +26,11 @@ struct ExplorerView: View {
     private var interval: DateInterval { period.interval(containing: anchor, calendar: calendar) }
     private var earliestFree: Date { calendar.date(byAdding: .day, value: -30, to: calendar.startOfDay(for: .now))! }
     private var earliest: Date? { model.purchases.isPremium ? nil : earliestFree }
-    private var dateStyle: Date.FormatStyle { .init(capitalizationContext: .beginningOfSentence) }
+    private var dateStyle: Date.FormatStyle { .init(capitalizationContext: .beginningOfSentence).locale(AppLocalization.locale) }
     private var periodTitle: String {
         if period == .week {
             let last = calendar.date(byAdding: .day, value: -1, to: interval.end)!
-            return interval.start.formatted(.dateTime.day().month(.abbreviated)) + " – " + last.formatted(.dateTime.day().month(.abbreviated))
+            return interval.start.formatted(.dateTime.locale(AppLocalization.locale).day().month(.abbreviated)) + " – " + last.formatted(.dateTime.locale(AppLocalization.locale).day().month(.abbreviated))
         }
         return anchor.formatted(period == .year ? dateStyle.year() : period == .day ? dateStyle.day().month(.wide) : dateStyle.month(.wide).year())
     }
@@ -132,7 +132,7 @@ struct ExplorerView: View {
                         .chartXScale(domain: page.interval.start...page.interval.end.addingTimeInterval(-1))
                         .chartXAxis {
                             AxisMarks(values: .stride(by: period == .year ? .month : .day, count: period == .week ? 1 : period == .month ? 5 : 2)) { _ in
-                                AxisValueLabel(format: period == .year ? dateStyle.month(.abbreviated) : .dateTime.day())
+                                AxisValueLabel(format: period == .year ? dateStyle.month(.abbreviated) : .dateTime.locale(AppLocalization.locale).day())
                             }
                         }
                         .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { _ in AxisGridLine().foregroundStyle(.primary.opacity(0.06)); AxisValueLabel() } }
@@ -149,7 +149,7 @@ struct ExplorerView: View {
                                 let bucket = calendar.dateInterval(of: component, for: day.date)
                                 let middle = bucket.map { $0.start.addingTimeInterval($0.duration / 2) } ?? day.date
                                 return ChartInspectionPoint(proxy: proxy, x: middle, y: day.steps.map(Double.init),
-                                    title: day.date.formatted(period == .year ? .dateTime.month(.wide).year() : .dateTime.day().month(.abbreviated).year()),
+                                    title: day.date.formatted(period == .year ? .dateTime.locale(AppLocalization.locale).month(.wide).year() : .dateTime.locale(AppLocalization.locale).day().month(.abbreviated).year()),
                                     value: day.steps.map { stepsText($0) + " " + L("today.steps") } ?? L("chart.no.data"), color: model.effectiveTheme.tint(for: scheme))
                             }
                         }
@@ -166,7 +166,7 @@ struct ExplorerView: View {
                         LabeledContent("metric.distance", value: distanceText(page.summary.meters, unit: model.preferences.unit))
                         LabeledContent("statistics.best") {
                             if let best = page.summary.best {
-                                Text("\(best.date.formatted(.dateTime.day().month(.abbreviated))) · \(stepsText(best.steps)) \(L("today.steps"))")
+                                Text("\(best.date.formatted(.dateTime.locale(AppLocalization.locale).day().month(.abbreviated))) · \(stepsText(best.steps)) \(L("today.steps"))")
                                     .lineLimit(1).minimumScaleFactor(0.7)
                             } else { Text("—") }
                         }
@@ -345,9 +345,9 @@ struct ExplorerView: View {
                             } label: {
                                 VStack(spacing: 6) {
                                     if period == .week {
-                                        Text(day.date.formatted(.dateTime.weekday(.abbreviated))).font(.caption2.weight(.semibold))
+                                        Text(day.date.formatted(.dateTime.locale(AppLocalization.locale).weekday(.abbreviated))).font(.caption2.weight(.semibold))
                                     }
-                                    Text(day.date.formatted(.dateTime.day())).font(.caption.weight(.medium))
+                                    Text(day.date.formatted(.dateTime.locale(AppLocalization.locale).day())).font(.caption.weight(.medium))
                                 }
                                     .frame(maxWidth: .infinity, minHeight: period == .week ? 60 : 40)
                                     .foregroundStyle(!locked && day.steps != nil && progress > 0.55 ? WalkunoStyle.ink : scheme == .dark ? .white : .primary)
@@ -358,7 +358,7 @@ struct ExplorerView: View {
                             }.buttonStyle(.plain)
                                 .disabled(day.date > Date.now)
                                 .accessibilityIdentifier("explorer.calendar.day.\(Calendar.current.component(.day, from: day.date))")
-                                .accessibilityLabel(Text("\(day.date.formatted(date: .complete, time: .omitted)), \(locked ? L("premium.title") : day.steps.map { $0.formatted() + " " + L("today.steps") } ?? L("chart.no.data"))"))
+                                .accessibilityLabel(Text("\(day.date.appFormatted(date: .complete, time: .omitted)), \(locked ? L("premium.title") : day.steps.map { $0.formatted() + " " + L("today.steps") } ?? L("chart.no.data"))"))
                         }
                     }
                 }
@@ -412,7 +412,7 @@ private struct ExplorerHourlyChart: View {
                          xEnd: .value(L("chart.hour"), hour.date.addingTimeInterval(2_700)), y: .value(L("today.steps"), 0))
                     .foregroundStyle(Color.secondary.opacity(0.4))
                     .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, dash: [1, 3]))
-                    .accessibilityLabel(Text(hour.date.formatted(.dateTime.hour())))
+                    .accessibilityLabel(Text(hour.date.formatted(.dateTime.locale(AppLocalization.locale).hour())))
                     .accessibilityValue(Text(hour.steps == nil ? L("chart.no.data") : "0 " + L("today.steps")))
             }
         }
@@ -420,7 +420,7 @@ private struct ExplorerHourlyChart: View {
         .chartYScale(domain: 0...maximum)
         .chartXAxis {
             AxisMarks(values: .stride(by: .hour, count: 6)) { _ in
-                AxisValueLabel(format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
+                AxisValueLabel(format: .dateTime.locale(AppLocalization.locale).hour(.defaultDigits(amPM: .omitted)))
             }
         }
         .chartYAxis {
@@ -435,7 +435,7 @@ private struct ExplorerHourlyChart: View {
         .chartInspection("explorer.day.hourly") { proxy in
             activity.hours.compactMap { hour in
                 ChartInspectionPoint(proxy: proxy, x: hour.date.addingTimeInterval(1800), y: hour.steps.map(Double.init),
-                    title: hour.date.formatted(.dateTime.hour().minute()),
+                    title: hour.date.formatted(.dateTime.locale(AppLocalization.locale).hour().minute()),
                     value: hour.steps.map { stepsText($0) + " " + L("today.steps") } ?? L("chart.no.data"), color: accent)
             }
         }
@@ -449,7 +449,7 @@ struct DayDetailView: View {
     var body: some View {
         ScrollView { DayDetailContent(date: date).padding(24) }
             .background(WalkunoStyle.background(scheme))
-            .navigationTitle(date.formatted(.dateTime.day().month(.wide)))
+            .navigationTitle(date.formatted(.dateTime.locale(AppLocalization.locale).day().month(.wide)))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("common.done") { dismiss() } } }
     }
@@ -497,11 +497,11 @@ struct DayDetailContent: View {
             LabeledContent("metric.exercise", value: ActivityMetric.exerciseTime.text(day?.exerciseMinutes, unit: model.preferences.unit))
             LabeledContent("metric.floors", value: ActivityMetric.floors.text(day?.floors, unit: model.preferences.unit))
             if let peak = hours.filter({ $0.steps != nil }).max(by: { ($0.steps ?? 0) < ($1.steps ?? 0) }) {
-                LabeledContent("statistics.peak", value: peak.date.formatted(.dateTime.hour()))
+                LabeledContent("statistics.peak", value: peak.date.formatted(.dateTime.locale(AppLocalization.locale).hour()))
             }
             DisclosureGroup("chart.values") {
                 ForEach(hours) { hour in
-                    LabeledContent(hour.date.formatted(.dateTime.hour()), value: stepsText(hour.steps)).font(.subheadline).padding(.vertical, 4)
+                    LabeledContent(hour.date.formatted(.dateTime.locale(AppLocalization.locale).hour()), value: stepsText(hour.steps)).font(.subheadline).padding(.vertical, 4)
                 }
             }.padding(.top)
         }

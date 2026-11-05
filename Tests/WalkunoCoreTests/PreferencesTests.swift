@@ -3,6 +3,38 @@ import Testing
 @testable import WalkunoCore
 
 struct PreferencesTests {
+    @Test func appLanguageFollowsPreferredLanguagesAndFallsBackToEnglish() {
+        #expect(AppLanguage.system.resolvedCode(preferredLanguages: ["fr-FR"]) == "fr")
+        #expect(AppLanguage.system.resolvedCode(preferredLanguages: ["pt-BR"]) == "pt")
+        #expect(AppLanguage.system.resolvedCode(preferredLanguages: ["nl-NL", "de-DE", "fr-FR"]) == "de")
+        #expect(AppLanguage.system.resolvedCode(preferredLanguages: ["zh-Hans", "ko-KR"]) == "en")
+        #expect(AppLanguage.system.resolvedCode(preferredLanguages: []) == "en")
+        for language in AppLanguage.allCases where language != .system {
+            #expect(language.resolvedCode(preferredLanguages: ["fr-FR"]) == language.rawValue)
+        }
+    }
+
+    @Test func appLanguageChoiceSurvivesSaving() throws {
+        for language in AppLanguage.allCases {
+            var preferences = Preferences()
+            preferences.language = language
+            preferences.unit = .miles
+            preferences.goals.set(9_500)
+            #expect(try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(preferences)) == preferences)
+        }
+    }
+
+    @Test func legacyAndUnknownLanguagesUseThePhoneWithoutResettingPreferences() throws {
+        var preferences = Preferences()
+        preferences.theme = .violet
+        preferences.goals.set(12_000)
+        var legacy = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(preferences)) as? [String: Any])
+        legacy.removeValue(forKey: "language")
+        #expect(try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy)) == preferences)
+        legacy["language"] = "future-language"
+        #expect(try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy)) == preferences)
+    }
+
     @Test func counterChoicesPreservePreferencesAcrossSaving() throws {
         for style in CounterStyle.allCases {
             var original = Preferences()
@@ -52,7 +84,7 @@ struct PreferencesTests {
 
         let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy))
         #expect(restored == original)
-        #expect(!restored.animatePeriodChanges)
+        #expect(restored.animatePeriodChanges)
     }
 
     @Test func periodAnimationChoiceSurvivesSaving() throws {
@@ -80,7 +112,7 @@ struct PreferencesTests {
 
         let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy))
         #expect(restored == original)
-        #expect(restored.glassTransparency == 0.6)
+        #expect(restored.glassTransparency == 0.7)
     }
 
     @Test func transparencySurvivesSavingAndIsBoundedWhenLoaded() throws {

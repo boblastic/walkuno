@@ -41,7 +41,7 @@ public struct GoalHistory: Codable, Equatable, Sendable {
 }
 
 public enum WalkunoTheme: String, CaseIterable, Codable, Identifiable, Sendable {
-    // Wallkuno keeps the original "mint" identifier in preferences, Watch messages and widget snapshots.
+    // Walkuno keeps the original "mint" identifier in preferences, Watch messages and widget snapshots.
     case mint, coral, glacier, sunshine, lime, rose, violet, indigo, turquoise
     public var id: String { rawValue }
 }
@@ -53,6 +53,34 @@ public enum DistanceUnit: String, CaseIterable, Codable, Sendable {
 }
 
 public enum Appearance: String, CaseIterable, Codable, Sendable { case dark, light, system }
+
+public enum AppLanguage: String, CaseIterable, Codable, Identifiable, Sendable {
+    case system, english = "en", french = "fr", german = "de", spanish = "es", italian = "it", portuguese = "pt", japanese = "ja"
+    public var id: String { rawValue }
+
+    public var nativeName: String {
+        switch self {
+        case .system: ""
+        case .english: "English"
+        case .french: "Français"
+        case .german: "Deutsch"
+        case .spanish: "Español"
+        case .italian: "Italiano"
+        case .portuguese: "Português"
+        case .japanese: "日本語"
+        }
+    }
+
+    public func resolvedCode(preferredLanguages: [String] = Locale.preferredLanguages) -> String {
+        guard self == .system else { return rawValue }
+        for identifier in preferredLanguages {
+            let code = Locale(identifier: identifier).language.languageCode?.identifier ?? identifier
+            if let language = Self(rawValue: code), language != .system { return code }
+        }
+        return Self.english.rawValue
+    }
+}
+
 public enum CounterStyle: String, CaseIterable, Codable, Identifiable, Sendable {
     // Keep "minimal" on disk so existing choices become the typographic design.
     case ring, horizon, path, milestones, minimal
@@ -69,19 +97,20 @@ public struct Preferences: Codable, Equatable, Sendable {
     public var goals = GoalHistory()
     public var theme: WalkunoTheme = .mint
     public var unit: DistanceUnit = .kilometers
+    public var language: AppLanguage = .system
     // Retained for compatibility with saved preferences; the app always uses dark mode.
     public var appearance: Appearance = .dark
     public var counterStyle: CounterStyle = .horizon
     public var counterEffect: CounterEffect = .stars
-    public var animatePeriodChanges = false
+    public var animatePeriodChanges = true
     public var showEnergy = true
     public var onboardingComplete = false
     public var healthRequested = false
-    public var glassTransparency = 0.6
+    public var glassTransparency = 0.7
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case goals, theme, unit, appearance, counterStyle, counterEffect, animatePeriodChanges, showEnergy, onboardingComplete, healthRequested, glassTransparency
+        case goals, theme, unit, language, appearance, counterStyle, counterEffect, animatePeriodChanges, showEnergy, onboardingComplete, healthRequested, glassTransparency
     }
 
     public init(from decoder: Decoder) throws {
@@ -89,15 +118,16 @@ public struct Preferences: Codable, Equatable, Sendable {
         goals = try values.decode(GoalHistory.self, forKey: .goals)
         theme = try values.decode(WalkunoTheme.self, forKey: .theme)
         unit = try values.decode(DistanceUnit.self, forKey: .unit)
+        language = (try values.decodeIfPresent(String.self, forKey: .language)).flatMap(AppLanguage.init(rawValue:)) ?? .system
         appearance = try values.decode(Appearance.self, forKey: .appearance)
         counterStyle = try values.decode(CounterStyle.self, forKey: .counterStyle)
         counterEffect = (try values.decodeIfPresent(String.self, forKey: .counterEffect)).flatMap(CounterEffect.init(rawValue:)) ?? .stars
-        animatePeriodChanges = try values.decodeIfPresent(Bool.self, forKey: .animatePeriodChanges) ?? false
+        animatePeriodChanges = try values.decodeIfPresent(Bool.self, forKey: .animatePeriodChanges) ?? true
         showEnergy = try values.decode(Bool.self, forKey: .showEnergy)
         onboardingComplete = try values.decode(Bool.self, forKey: .onboardingComplete)
         healthRequested = try values.decode(Bool.self, forKey: .healthRequested)
         // Existing installations keep their goals and preferences when the glass setting is added.
-        glassTransparency = min(max(try values.decodeIfPresent(Double.self, forKey: .glassTransparency) ?? 0.6, 0), 1)
+        glassTransparency = min(max(try values.decodeIfPresent(Double.self, forKey: .glassTransparency) ?? 0.7, 0), 1)
     }
 }
 

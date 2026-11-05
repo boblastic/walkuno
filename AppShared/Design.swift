@@ -1,4 +1,5 @@
 import SwiftUI
+import Observation
 
 extension WalkunoTheme {
     var accent: Color {
@@ -52,7 +53,7 @@ extension WalkunoTheme {
 }
 
 enum WalkunoStyle {
-    // Wallkuno, in the same sRGB space as the app icon.
+    // Walkuno, in the same sRGB space as the app icon.
     static let ink = Color(.sRGB, red: 10/255, green: 36/255, blue: 44/255)
     static let electric = Color(.sRGB, red: 163/255, green: 1, blue: 112/255)
     static let strideTeal = Color(.sRGB, red: 49/255, green: 185/255, blue: 159/255)
@@ -191,7 +192,50 @@ struct BrandMark: View {
     }
 }
 
-func L(_ key: String) -> String { NSLocalizedString(key, comment: "") }
+/// SwiftUI uses the locale environment; programmatic strings use the same bundle.
+enum AppLocalization {
+    @Observable fileprivate final class Selection: @unchecked Sendable {
+        let lock = NSRecursiveLock()
+        var language: AppLanguage = .system
+    }
+    private static let selection = Selection()
+    private static let bundles: [String: Bundle] = Dictionary(uniqueKeysWithValues:
+        AppLanguage.allCases.filter { $0 != .system }.compactMap { language in
+            guard let path = Bundle.main.path(forResource: language.rawValue, ofType: "lproj"),
+                  let bundle = Bundle(path: path) else { return nil }
+            return (language.rawValue, bundle)
+        })
+
+    static func configure(_ language: AppLanguage) {
+        selection.lock.lock()
+        defer { selection.lock.unlock() }
+        selection.language = language
+    }
+
+    static var languageCode: String {
+        selection.lock.lock()
+        let language = selection.language
+        selection.lock.unlock()
+        return language.resolvedCode()
+    }
+
+    static var locale: Locale {
+        let code = languageCode
+        // Keep the phone's regional conventions while changing the text language.
+        let region = Locale.current.region?.identifier
+        return Locale(identifier: region.map { code + "_" + $0 } ?? code)
+    }
+
+    static var bundle: Bundle { bundles[languageCode] ?? bundles["en"] ?? .main }
+}
+
+func L(_ key: String) -> String { AppLocalization.bundle.localizedString(forKey: key, value: nil, table: nil) }
+
+extension Date {
+    func appFormatted(date: Date.FormatStyle.DateStyle, time: Date.FormatStyle.TimeStyle) -> String {
+        formatted(Date.FormatStyle(date: date, time: time).locale(AppLocalization.locale))
+    }
+}
 
 func stepsText(_ value: Int?) -> String {
     value.map { $0.formatted(.number) } ?? "—"

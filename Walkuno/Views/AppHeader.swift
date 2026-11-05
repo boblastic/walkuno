@@ -3,8 +3,8 @@ import SwiftUI
 /// The same fixed header sits above every app screen, including presented details.
 private struct AppHeaderModifier: ViewModifier {
     @Environment(\.colorScheme) private var scheme
-    var accountIsCurrent: Bool
-    @State private var showAccount = false
+    var settingsIsCurrent: Bool
+    @State private var showSettings = false
 
     func body(content: Content) -> some View {
         ZStack {
@@ -13,28 +13,28 @@ private struct AppHeaderModifier: ViewModifier {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Reserve the header's height during layout and let content scroll behind its glass.
         .safeAreaInset(edge: .top, spacing: 0) {
-            AppHeader(accountIsCurrent: accountIsCurrent) { showAccount = true }
+            AppHeader(settingsIsCurrent: settingsIsCurrent) { showSettings = true }
                 .padding(.horizontal, 16)
                 .padding(.top, 6)
                 .padding(.bottom, 10)
         }
         .background(WalkunoStyle.background(scheme).ignoresSafeArea())
-        .sheet(isPresented: $showAccount) { AccountView() }
+        .sheet(isPresented: $showSettings) { SettingsSheet() }
     }
 }
 
 extension View {
     /// Apply to screen content inside a NavigationStack, below its system navigation controls.
-    func appHeader(accountIsCurrent: Bool = false) -> some View {
-        modifier(AppHeaderModifier(accountIsCurrent: accountIsCurrent))
+    func appHeader(settingsIsCurrent: Bool = false) -> some View {
+        modifier(AppHeaderModifier(settingsIsCurrent: settingsIsCurrent))
     }
 }
 
 private struct AppHeader: View {
     @Environment(AppModel.self) private var model
     @Environment(\.colorScheme) private var scheme
-    var accountIsCurrent: Bool
-    var onAccount: () -> Void
+    var settingsIsCurrent: Bool
+    var onSettings: () -> Void
 
     private var ink: Color { model.effectiveTheme.tint(for: scheme) }
 
@@ -45,8 +45,8 @@ private struct AppHeader: View {
                 identity(showName: false)
             }
             Spacer(minLength: 0)
-            Button(action: onAccount) {
-                Image(systemName: "person.crop.circle")
+            Button(action: onSettings) {
+                Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 25, weight: .medium))
                     .frame(width: 44, height: 44)
                     .background(ink.opacity(0.08), in: Circle())
@@ -54,9 +54,9 @@ private struct AppHeader: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(ink)
-            .accessibilityLabel(Text("account.title"))
-            .accessibilityIdentifier("app.account")
-            .disabled(accountIsCurrent)
+            .accessibilityLabel(Text("tab.settings"))
+            .accessibilityIdentifier("app.settings")
+            .disabled(settingsIsCurrent)
         }
         .padding(.leading, 16)
         .padding(.trailing, 8)

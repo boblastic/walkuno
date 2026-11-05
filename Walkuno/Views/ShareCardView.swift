@@ -79,7 +79,7 @@ struct ShareCardView: View {
             }
             .navigationTitle("share.title").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("common.done") { dismiss() } } }
-            .task(id: "\(includeDistance)-\(scope.rawValue)-\(model.effectiveTheme.rawValue)") { render() }
+            .task(id: "\(includeDistance)-\(scope.rawValue)-\(model.effectiveTheme.rawValue)-\(model.preferences.language.rawValue)") { render() }
             .appHeader()
         }
         .onChange(of: model.purchases.isPremium) { _, premium in
@@ -88,7 +88,7 @@ struct ShareCardView: View {
     }
 
     @MainActor private func render() {
-        let renderer = ImageRenderer(content: artwork.frame(width: 360).environment(\.colorScheme, .dark))
+        let renderer = ImageRenderer(content: artwork.frame(width: 360).environment(\.colorScheme, .dark).environment(\.locale, AppLocalization.locale))
         renderer.scale = 3
         if let result = renderer.uiImage { image = Image(uiImage: result) }
     }
@@ -117,7 +117,7 @@ struct ActivityShareArtwork: View {
                     Text("today.steps").font(.subheadline).foregroundStyle(.secondary)
                 }.padding(24)
             }.frame(height: 238).padding(.horizontal, 14)
-            Text(yearOnly ? date.formatted(.dateTime.year()) : date.formatted(date: .long, time: .omitted)).font(.subheadline)
+            Text(yearOnly ? date.formatted(.dateTime.locale(AppLocalization.locale).year()) : date.appFormatted(date: .long, time: .omitted)).font(.subheadline)
                 .accessibilityIdentifier("share.date")
             if let distance { Text(distance).font(.headline).foregroundStyle(theme.accent) }
             Text("brand.tagline").font(.caption).foregroundStyle(.secondary)

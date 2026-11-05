@@ -40,7 +40,7 @@ final class ThemeAppIcon {
                     continue
                 }
                 if requested != desired { continue }
-                self.error = String(localized: "icon.update.error")
+                self.error = L("icon.update.error")
                 return
             }
         }
@@ -82,6 +82,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     var body: some View {
         content.tint(model.effectiveTheme.tint(for: scheme))
+            .environment(\.locale, AppLocalization.locale)
             .task(id: "\(model.purchases.hasLoadedEntitlements)-\(model.effectiveTheme.rawValue)") {
                 if model.purchases.hasLoadedEntitlements {
                     await appIcon.synchronize(with: model.effectiveTheme)
@@ -111,7 +112,7 @@ struct RootView: View {
                     .tabItem { Label("tab.explorer", systemImage: "calendar") }.tag(2)
                 NavigationStack { AchievementsView().appHeader() }
                     .tabItem { Label("tab.achievements", systemImage: "rosette") }.tag(3)
-                NavigationStack { SettingsView().toolbar(.hidden, for: .navigationBar).appHeader() }
+                NavigationStack { SettingsView().toolbar(.hidden, for: .navigationBar).appHeader(settingsIsCurrent: true) }
                     .tabItem { Label("tab.settings", systemImage: "slider.horizontal.3") }.tag(4)
             }
             .onOpenURL { url in

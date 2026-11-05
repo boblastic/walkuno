@@ -272,9 +272,9 @@ private struct TrendsCard: View {
 
     private func axisLabel(_ bar: TrendBar) -> String {
         switch period {
-        case .sevenDays, .week: return bar.date.formatted(.dateTime.weekday(.narrow))
-        case .month: return bar.date.formatted(.dateTime.day())
-        case .year: return bar.date.formatted(.dateTime.month(.narrow))
+        case .sevenDays, .week: return bar.date.formatted(.dateTime.locale(AppLocalization.locale).weekday(.narrow))
+        case .month: return bar.date.formatted(.dateTime.locale(AppLocalization.locale).day())
+        case .year: return bar.date.formatted(.dateTime.locale(AppLocalization.locale).month(.narrow))
         }
     }
 
@@ -311,7 +311,7 @@ private struct TrendsCard: View {
                                     width: period == .month ? .fixed(2) : .automatic)
                                 .foregroundStyle(bar.current ? accent.gradient : Color.secondary.opacity(0.35).gradient)
                                 .cornerRadius(period == .month ? 1 : 5)
-                                .accessibilityLabel(Text("\(bar.date.formatted(date: .abbreviated, time: .omitted)), \(L(bar.current ? "insights.current" : "insights.previous"))"))
+                                .accessibilityLabel(Text("\(bar.date.appFormatted(date: .abbreviated, time: .omitted)), \(L(bar.current ? "insights.current" : "insights.previous"))"))
                                 .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
                         }
                     }
@@ -346,7 +346,7 @@ private struct TrendsCard: View {
                 .chartInspection("insights.trend.chart", resetKey: "\(metric.rawValue)-\(period.rawValue)") { proxy in
                     chartBars.compactMap { bar in
                         return ChartInspectionPoint(proxy: proxy, x: bar.position, y: bar.value,
-                            title: bar.date.formatted(date: .abbreviated, time: .omitted) + " · " + L(bar.current ? "insights.current" : "insights.previous"),
+                            title: bar.date.appFormatted(date: .abbreviated, time: .omitted) + " · " + L(bar.current ? "insights.current" : "insights.previous"),
                             value: metric.text(bar.value, unit: model.preferences.unit), color: bar.current ? accent : .secondary)
                     }
                 }
@@ -407,10 +407,10 @@ private struct ActivityRecordCard: View {
 
     private func recordLabel(_ record: ActivityBucket) -> String {
         switch effectivePeriod {
-        case .day: record.id.formatted(Date.FormatStyle(date: .complete, time: .omitted, capitalizationContext: .beginningOfSentence))
-        case .week: record.id.formatted(.dateTime.day().month(.abbreviated).year()) + " – " + record.interval.end.addingTimeInterval(-1).formatted(.dateTime.day().month(.abbreviated).year())
-        case .month: record.id.formatted(Date.FormatStyle(capitalizationContext: .beginningOfSentence).month(.wide).year())
-        case .year: record.id.formatted(.dateTime.year())
+        case .day: record.id.formatted(Date.FormatStyle(date: .complete, time: .omitted, capitalizationContext: .beginningOfSentence).locale(AppLocalization.locale))
+        case .week: record.id.formatted(.dateTime.locale(AppLocalization.locale).day().month(.abbreviated).year()) + " – " + record.interval.end.addingTimeInterval(-1).formatted(.dateTime.locale(AppLocalization.locale).day().month(.abbreviated).year())
+        case .month: record.id.formatted(Date.FormatStyle(capitalizationContext: .beginningOfSentence).locale(AppLocalization.locale).month(.wide).year())
+        case .year: record.id.formatted(.dateTime.locale(AppLocalization.locale).year())
         }
     }
 
@@ -424,7 +424,7 @@ private struct ActivityRecordCard: View {
                 if let value = bucket.summary(for: metric).total {
                     BarMark(x: .value(L("chart.date"), bucket.id, unit: effectivePeriod == .year ? .month : .day), y: .value(L(metric.titleKey), value))
                         .foregroundStyle(accent.gradient).cornerRadius(7)
-                        .accessibilityLabel(Text(bucket.id.formatted(date: .abbreviated, time: .omitted)))
+                        .accessibilityLabel(Text(bucket.id.appFormatted(date: .abbreviated, time: .omitted)))
                         .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
                 }
             }
@@ -441,7 +441,7 @@ private struct ActivityRecordCard: View {
         .chartXScale(domain: record.interval.start...record.interval.end.addingTimeInterval(-1))
         .chartXAxis {
             AxisMarks(values: .stride(by: effectivePeriod == .year ? .month : .day, count: effectivePeriod == .month ? 5 : 1)) {
-                AxisValueLabel(format: effectivePeriod == .year ? .dateTime.month(.narrow) : .dateTime.day())
+                AxisValueLabel(format: effectivePeriod == .year ? .dateTime.locale(AppLocalization.locale).month(.narrow) : .dateTime.locale(AppLocalization.locale).day())
             }
         }.chartYAxis(.hidden).frame(height: 175)
         .accessibilityIdentifier("insights.record.chart")
@@ -452,8 +452,8 @@ private struct ActivityRecordCard: View {
                 let middle = interval.start.addingTimeInterval(interval.duration / 2)
                 return ChartInspectionPoint(proxy: proxy, x: middle, y: amount,
                     title: effectivePeriod == .year
-                        ? interval.start.formatted(.dateTime.month(.wide).year()).uppercased(with: .current)
-                        : interval.start.formatted(.dateTime.day().month(.abbreviated).year()),
+                        ? interval.start.formatted(.dateTime.locale(AppLocalization.locale).month(.wide).year()).uppercased(with: .current)
+                        : interval.start.formatted(.dateTime.locale(AppLocalization.locale).day().month(.abbreviated).year()),
                     value: metric.text(amount, unit: model.preferences.unit), color: accent)
             }
         }
@@ -489,7 +489,7 @@ private struct RecordHourlyChart: View {
                         BarMark(x: .value(L("chart.hour"), hour.date, unit: .hour),
                                 y: .value(L(metric.titleKey), value))
                             .foregroundStyle(model.effectiveTheme.tint(for: scheme).gradient).cornerRadius(3)
-                            .accessibilityLabel(Text(hour.date.formatted(.dateTime.hour().minute())))
+                            .accessibilityLabel(Text(hour.date.formatted(.dateTime.locale(AppLocalization.locale).hour().minute())))
                             .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
                     }
                 }
@@ -506,7 +506,7 @@ private struct RecordHourlyChart: View {
             .chartXScale(domain: interval.start...interval.end)
             .chartXAxis {
                 AxisMarks(values: .stride(by: .hour, count: 3)) {
-                    AxisValueLabel(format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
+                    AxisValueLabel(format: .dateTime.locale(AppLocalization.locale).hour(.defaultDigits(amPM: .omitted)))
                 }
             }
             .chartYAxis(.hidden)
@@ -519,7 +519,7 @@ private struct RecordHourlyChart: View {
                     let hour = visibleHours.first { $0.date == bucket.start }
                     let amount = hour.flatMap { metric.value(in: $0) }
                     return ChartInspectionPoint(proxy: proxy, x: bucket.start.addingTimeInterval(bucket.duration / 2), y: amount,
-                        title: bucket.start.formatted(.dateTime.hour().minute()),
+                        title: bucket.start.formatted(.dateTime.locale(AppLocalization.locale).hour().minute()),
                         value: metric.text(amount, unit: model.preferences.unit), color: model.effectiveTheme.tint(for: scheme))
                 }
             }
@@ -569,7 +569,7 @@ private struct YearHistoryCard: View {
                 ForEach(Array(years)) { year in
                     VStack(alignment: .leading, spacing: 7) {
                         HStack(alignment: .firstTextBaseline) {
-                            Text(year.id.formatted(.dateTime.year())).font(.subheadline.weight(.semibold))
+                            Text(year.id.formatted(.dateTime.locale(AppLocalization.locale).year())).font(.subheadline.weight(.semibold))
                             if year.id == best { Image(systemName: "trophy.fill").font(.caption).foregroundStyle(accent).accessibilityLabel(Text("insights.best.year")) }
                             if year.interval.end > .now { Text("insights.partial").font(.caption2).foregroundStyle(.secondary) }
                             Spacer(minLength: 4)

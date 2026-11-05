@@ -74,7 +74,7 @@ struct AchievementsView: View {
                         .minimumScaleFactor(0.7).lineLimit(1)
                 }
             }
-            Text(day.map { $0.date.formatted(date: .abbreviated, time: .omitted) } ?? L("chart.no.data"))
+            Text(day.map { $0.date.appFormatted(date: .abbreviated, time: .omitted) } ?? L("chart.no.data"))
                 .font(.caption2).foregroundStyle(.secondary)
         }.frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine).accessibilityIdentifier("trophies.record.\(metric.rawValue)")
@@ -102,7 +102,7 @@ struct AchievementsView: View {
                         count: period.count, progress: period.progress,
                         detail: String(format: L("trophies.days.progress"), period.achievedDays, period.requiredDays),
                         context: L("trophies.current.\(period.id)"), accent: accent, minimumHeight: goalCardHeight,
-                        note: period.canComplete ? L("trophies.perfect.possible") : String(format: L("trophies.perfect.restart"), period.nextStart.formatted(date: .abbreviated, time: .omitted))
+                        note: period.canComplete ? L("trophies.perfect.possible") : String(format: L("trophies.perfect.restart"), period.nextStart.appFormatted(date: .abbreviated, time: .omitted))
                     ).accessibilityIdentifier("trophies.perfect.\(period.id)")
                 }
             }
@@ -128,7 +128,7 @@ struct AchievementsView: View {
                         VStack(alignment: .leading, spacing: 9) {
                             Text(String(format: L("trophies.streak.title"), streak.target)).font(.headline)
                             if let date = streak.firstReached {
-                                Label(String(format: L("trophies.earned"), date.formatted(date: .abbreviated, time: .omitted)), systemImage: "checkmark.seal.fill")
+                                Label(String(format: L("trophies.earned"), date.appFormatted(date: .abbreviated, time: .omitted)), systemImage: "checkmark.seal.fill")
                                     .font(.caption).foregroundStyle(accent)
                             } else {
                                 Text(String(format: L("trophies.days.progress"), min(streak.current, streak.target), streak.target))

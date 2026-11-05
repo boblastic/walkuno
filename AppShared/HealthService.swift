@@ -218,5 +218,5 @@ final class HealthService {
 
 enum HealthFailure: LocalizedError {
     case unavailable
-    var errorDescription: String? { String(localized: "health.unavailable") }
+    var errorDescription: String? { L("health.unavailable") }
 }

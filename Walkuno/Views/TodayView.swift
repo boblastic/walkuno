@@ -45,21 +45,21 @@ struct TodayView: View {
         if period == .day {
             if calendar.isDateInToday(anchor) { return L("tab.today") }
             if calendar.isDateInYesterday(anchor) { return L("today.yesterday") }
-            return formattedDate(anchor, .dateTime.day().month(.abbreviated))
+            return formattedDate(anchor, .dateTime.locale(AppLocalization.locale).day().month(.abbreviated))
         }
         if period == .week {
             if activity.interval.contains(.now) { return L("today.this.week") }
             return L("period.week")
         }
-        if period == .year { return anchor.formatted(.dateTime.year()) }
-        return formattedDate(anchor, .dateTime.month(.wide))
+        if period == .year { return anchor.formatted(.dateTime.locale(AppLocalization.locale).year()) }
+        return formattedDate(anchor, .dateTime.locale(AppLocalization.locale).month(.wide))
     }
     private var dateRange: String {
-        if period == .day { return formattedDate(anchor, .dateTime.weekday(.wide).day().month(.wide).year()) }
-        if period == .month { return formattedDate(anchor, .dateTime.month(.wide).year()) }
-        if period == .year { return anchor.formatted(.dateTime.year()) }
+        if period == .day { return formattedDate(anchor, .dateTime.locale(AppLocalization.locale).weekday(.wide).day().month(.wide).year()) }
+        if period == .month { return formattedDate(anchor, .dateTime.locale(AppLocalization.locale).month(.wide).year()) }
+        if period == .year { return anchor.formatted(.dateTime.locale(AppLocalization.locale).year()) }
         let last = calendar.date(byAdding: .day, value: -1, to: activity.interval.end)!
-        return formattedDate(activity.interval.start, .dateTime.day().month(.abbreviated)) + " – " + formattedDate(last, .dateTime.day().month(.abbreviated).year())
+        return formattedDate(activity.interval.start, .dateTime.locale(AppLocalization.locale).day().month(.abbreviated)) + " – " + formattedDate(last, .dateTime.locale(AppLocalization.locale).day().month(.abbreviated).year())
     }
     private func formattedDate(_ date: Date, _ format: Date.FormatStyle) -> String {
         var format = format
@@ -163,7 +163,7 @@ struct TodayView: View {
                         .disabled(activity.summary.total == nil)
                 }.buttonStyle(.bordered).controlSize(.large).font(.subheadline)
                 if let updated = model.lastUpdated {
-                    Text("today.updated \(updated.formatted(date: .omitted, time: .shortened))")
+                    Text("today.updated \(updated.appFormatted(date: .omitted, time: .shortened))")
                         .font(.caption2).foregroundStyle(.secondary).frame(maxWidth: .infinity)
                     if model.usingCache { Text("today.cached").font(.caption2).foregroundStyle(.secondary).frame(maxWidth: .infinity) }
                 }
@@ -294,7 +294,7 @@ struct TodayView: View {
                 if loadingHours { ProgressView() }
                 else if hoursError { Text("health.refresh.error").font(.caption).foregroundStyle(.secondary) }
                 else if let peak = hours.filter({ $0.steps != nil }).max(by: { ($0.steps ?? 0) < ($1.steps ?? 0) }) {
-                    Text("today.peak \(peak.date.formatted(.dateTime.hour()))").font(.caption).foregroundStyle(.secondary)
+                    Text("today.peak \(peak.date.formatted(.dateTime.locale(AppLocalization.locale).hour()))").font(.caption).foregroundStyle(.secondary)
                 } else { Text("chart.no.data").font(.caption).foregroundStyle(.secondary) }
                 if !loadingHours && (previousHoursError || !previousHours.contains(where: { $0.steps != nil })) {
                     Text("today.rhythm.previous.unavailable").font(.caption2).foregroundStyle(.secondary)
@@ -559,7 +559,7 @@ private struct TodayTrendChart: View {
                                 .buttonStyle(.plain)
                                 .frame(width: max(0, right - left), height: geometry.size.height)
                                 .position(x: plot.minX + (left + right) / 2, y: geometry.size.height / 2)
-                                .accessibilityLabel(Text(day.date.formatted(.dateTime.weekday(.wide).day().month(.wide))))
+                                .accessibilityLabel(Text(day.date.formatted(.dateTime.locale(AppLocalization.locale).weekday(.wide).day().month(.wide))))
                                 .accessibilityValue(Text(stepsText(day.steps)) + Text(" ") + Text("today.steps"))
                                 .accessibilityHint(Text("today.chart.select.hint"))
                                 .accessibilityAddTraits(selectedDate.map { Calendar.current.isDate(day.date, inSameDayAs: $0) } == true ? .isSelected : [])
@@ -578,9 +578,9 @@ private struct TodayTrendChart: View {
 
     private func tickLabel(_ date: Date) -> String {
         switch period {
-        case .day, .week: date.formatted(.dateTime.weekday(.narrow))
-        case .month: date.formatted(.dateTime.day())
-        case .year: date.formatted(.dateTime.month(.narrow))
+        case .day, .week: date.formatted(.dateTime.locale(AppLocalization.locale).weekday(.narrow))
+        case .month: date.formatted(.dateTime.locale(AppLocalization.locale).day())
+        case .year: date.formatted(.dateTime.locale(AppLocalization.locale).month(.narrow))
         }
     }
 }
@@ -734,7 +734,7 @@ struct HourlyChart: View {
                     .foregroundStyle(accent.gradient).cornerRadius(3)
             }
         }
-        .chartXAxis { AxisMarks(values: .stride(by: .hour, count: 6)) { _ in AxisValueLabel(format: .dateTime.hour(.defaultDigits(amPM: .omitted))); AxisTick() } }
+        .chartXAxis { AxisMarks(values: .stride(by: .hour, count: 6)) { _ in AxisValueLabel(format: .dateTime.locale(AppLocalization.locale).hour(.defaultDigits(amPM: .omitted))); AxisTick() } }
         .chartYAxis(.hidden)
         .accessibilityLabel(Text("chart.hourly"))
     }

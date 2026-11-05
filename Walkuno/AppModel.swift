@@ -5,7 +5,11 @@ import WidgetKit
 @MainActor @Observable
 final class AppModel {
     static let shared = AppModel()
-    var preferences = LocalStore.preferences()
+    var preferences = LocalStore.preferences() {
+        didSet {
+            if preferences.language != oldValue.language { AppLocalization.configure(preferences.language) }
+        }
+    }
     private(set) var days: [ActivityDay] = []
     private(set) var hours: [HourActivity] = []
     private(set) var isLoading = false
@@ -26,6 +30,7 @@ final class AppModel {
     @ObservationIgnored private var recentRefreshStart: Date?
 
     init() {
+        AppLocalization.configure(preferences.language)
         if let snapshot = LocalStore.snapshot(), snapshot.isCurrent() {
             // Restore only the bounded daily cache, so a settings edit before Health
             // responds cannot replace an existing month with just seven days.
@@ -94,7 +99,7 @@ final class AppModel {
             persist()
             observe()
             await refresh()
-        } catch { errorMessage = String(localized: "health.connection.error") }
+        } catch { errorMessage = L("health.connection.error") }
     }
 
     private func observe() {
@@ -148,7 +153,7 @@ final class AppModel {
             catch is CancellationError { return false }
             catch {
                 guard token == generation else { return false }
-                hours = []; errorMessage = String(localized: "health.refresh.error")
+                hours = []; errorMessage = L("health.refresh.error")
             }
             return true
         } catch is CancellationError {
@@ -157,7 +162,7 @@ final class AppModel {
             guard token == generation else { return false }
             // Never show yesterday's cached counter as today's measurement.
             if let snapshot = loadedSnapshot, !snapshot.isCurrent() { days = []; hours = []; usingCache = false }
-            errorMessage = String(localized: "health.refresh.error")
+            errorMessage = L("health.refresh.error")
             return false
         }
     }
@@ -179,7 +184,7 @@ final class AppModel {
                 hasLoadedWidgetHistory = true
                 writeSnapshot()
             } catch is CancellationError { }
-            catch { if token == generation { errorMessage = String(localized: "health.history.error") } }
+            catch { if token == generation { errorMessage = L("health.history.error") } }
         }
     }
 
@@ -259,7 +264,7 @@ final class AppModel {
             try LocalStore.save(snapshot)
             loadedSnapshot = snapshot
             WidgetCenter.shared.reloadAllTimelines()
-        } catch { errorMessage = String(localized: "cache.error") }
+        } catch { errorMessage = L("cache.error") }
     }
 
     func resetLocalData() async {
@@ -279,7 +284,7 @@ final class AppModel {
             preferences = .init()
             celebration = false
             WidgetCenter.shared.reloadAllTimelines()
-        } catch { errorMessage = String(localized: "reset.error") }
+        } catch { errorMessage = L("reset.error") }
     }
 
     #if DEBUG

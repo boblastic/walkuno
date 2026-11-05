@@ -42,7 +42,7 @@ final class PurchaseStore {
         await refreshEntitlements()
         do {
             products = try await Product.products(for: Self.productIDs).sorted { $0.price < $1.price }
-        } catch { message = String(localized: "purchase.unavailable") }
+        } catch { message = L("purchase.unavailable") }
     }
 
     func refreshEntitlements() async {
@@ -65,15 +65,15 @@ final class PurchaseStore {
             switch try await product.purchase() {
             case .success(let result):
                 guard case .verified(let transaction) = result else {
-                    message = String(localized: "purchase.unverified"); return
+                    message = L("purchase.unverified"); return
                 }
                 await refreshEntitlements()
                 await transaction.finish()
-            case .pending: message = String(localized: "purchase.pending")
+            case .pending: message = L("purchase.pending")
             case .userCancelled: break
             @unknown default: break
             }
-        } catch { message = String(localized: "purchase.failed") }
+        } catch { message = L("purchase.failed") }
     }
 
     func restore() async {
@@ -82,7 +82,7 @@ final class PurchaseStore {
         do {
             try await AppStore.sync()
             await refreshEntitlements()
-            message = String(localized: hasPremiumEntitlement ? "purchase.restored" : "purchase.nothing")
-        } catch { message = String(localized: "purchase.failed") }
+            message = L(hasPremiumEntitlement ? "purchase.restored" : "purchase.nothing")
+        } catch { message = L("purchase.failed") }
     }
 }

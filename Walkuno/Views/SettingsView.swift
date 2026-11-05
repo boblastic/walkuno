@@ -7,11 +7,16 @@ struct SettingsView: View {
     @State private var showGoal = false
     @State private var showPremium = false
     @State private var showPrivacy = false
+    @State private var showTerms = false
     @State private var confirmReset = false
     @State private var showSubscriptions = false
     var body: some View {
         @Bindable var model = model
         Form {
+            Section {
+                Label("account.local", systemImage: "figure.walk.circle.fill").font(.headline)
+                Text("account.local.note").font(.subheadline).foregroundStyle(.secondary)
+            }
             Section {
                 Button { showPremium = true } label: {
                     HStack(spacing: 14) {
@@ -33,9 +38,20 @@ struct SettingsView: View {
                 }
                 Toggle("settings.energy", isOn: $model.preferences.showEnergy)
             }
+            Section {
+                Picker("settings.language", selection: $model.preferences.language) {
+                    Text("settings.language.system").tag(AppLanguage.system)
+                    ForEach(AppLanguage.allCases.filter { $0 != .system }) { language in
+                        Text(verbatim: language.nativeName).tag(language)
+                    }
+                }
+                .accessibilityIdentifier("settings.language")
+            } footer: {
+                Text("settings.language.note")
+            }
             Section("settings.appearance") {
                 NavigationLink {
-                    ThemePaletteView().appHeader()
+                    ThemePaletteView().appHeader(settingsIsCurrent: true)
                 } label: {
                     HStack(spacing: 10) {
                         Circle().fill(model.effectiveTheme.accent).frame(width: 22, height: 22)
@@ -47,7 +63,7 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("settings.palette")
                 NavigationLink {
-                    CounterStylePickerView().appHeader()
+                    CounterStylePickerView().appHeader(settingsIsCurrent: true)
                 } label: {
                     LabeledContent("settings.counter", value: L(model.effectiveCounter.titleKey))
                 }
@@ -60,7 +76,6 @@ struct SettingsView: View {
             Section("settings.data") {
                 Button("health.connect") { Task { await model.connectHealth() } }
                 Text("health.permissions.path").font(.caption).foregroundStyle(.secondary)
-                Button("privacy.title") { showPrivacy = true }
                 Button("reset.title", role: .destructive) { confirmReset = true }
             }
             Section("settings.purchases") {
@@ -72,6 +87,12 @@ struct SettingsView: View {
                 Text("brand.tagline").font(.caption).foregroundStyle(.secondary)
                 Text("settings.version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")").font(.caption2).foregroundStyle(.secondary)
             }
+            Section {
+                Button("privacy.title") { showPrivacy = true }
+                    .accessibilityIdentifier("settings.privacy")
+                Button("terms.title") { showTerms = true }
+                    .accessibilityIdentifier("settings.terms")
+            }
         }
         .scrollContentBackground(.hidden)
         .background(WalkunoStyle.background(scheme))
@@ -80,11 +101,15 @@ struct SettingsView: View {
             // The glass slider previews continuously and saves when the interaction ends.
             var previous = oldPreferences
             previous.glassTransparency = newPreferences.glassTransparency
-            if previous != newPreferences, newPreferences.onboardingComplete { model.persist() }
+            if previous != newPreferences {
+                if newPreferences.onboardingComplete { model.persist() }
+                else if previous.language != newPreferences.language { model.persist(sync: false) }
+            }
         }
         .sheet(isPresented: $showGoal) { GoalEditor() }
         .sheet(isPresented: $showPremium) { PremiumView() }
         .sheet(isPresented: $showPrivacy) { PrivacyView() }
+        .sheet(isPresented: $showTerms) { TermsView() }
         .manageSubscriptionsSheet(isPresented: $showSubscriptions)
         .confirmationDialog("reset.title", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("reset.confirm", role: .destructive) { Task { await model.resetLocalData() } }
@@ -232,13 +257,52 @@ struct PrivacyView: View {
                     Text("privacy.widgets").font(.body)
                     Text("privacy.purchases").font(.body)
                     Text("privacy.reset").font(.body)
+                    Text("privacy.sharing").font(.body)
+                    Text("privacy.storage").font(.body)
                     Text("privacy.editor").font(.caption).foregroundStyle(.secondary)
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(24)
+                    .textSelection(.enabled)
             }
             .background(WalkunoStyle.background(scheme))
             .navigationTitle("privacy.title").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("common.done") { dismiss() } } }
             .appHeader()
+        }
+    }
+}
+
+struct TermsView: View {
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.dismiss) private var dismiss
+    private let sections = ["use", "health", "purchases", "brand", "sharing", "availability", "rights"]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    Image(systemName: "doc.text").font(.largeTitle).foregroundStyle(.tint)
+                        .accessibilityHidden(true)
+                    Text("terms.intro").font(.body)
+                    ForEach(sections, id: \.self) { section in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(L("terms.\(section).title")).font(.headline)
+                                .accessibilityAddTraits(.isHeader)
+                                .accessibilityIdentifier("terms.section.\(section)")
+                            Text(L("terms.\(section).body")).font(.body)
+                        }
+                    }
+                    Link("terms.apple", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+                        .accessibilityIdentifier("terms.apple")
+                    Text("terms.editor").font(.caption).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading).padding(24)
+                .textSelection(.enabled)
+            }
+            .accessibilityIdentifier("terms.content")
+            .background(WalkunoStyle.background(scheme))
+            .navigationTitle("terms.title").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("common.done") { dismiss() } } }
+            .appHeader(settingsIsCurrent: true)
         }
     }
 }
