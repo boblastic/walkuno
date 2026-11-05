@@ -41,7 +41,7 @@ public struct GoalHistory: Codable, Equatable, Sendable {
 }
 
 public enum WalkunoTheme: String, CaseIterable, Codable, Identifiable, Sendable {
-    // Grande foulée keeps the original "mint" identifier in preferences, Watch messages and widget snapshots.
+    // Wallkuno keeps the original "mint" identifier in preferences, Watch messages and widget snapshots.
     case mint, coral, glacier, sunshine, lime, rose, violet, indigo, turquoise
     public var id: String { rawValue }
 }
@@ -57,6 +57,7 @@ public enum CounterStyle: String, CaseIterable, Codable, Identifiable, Sendable 
     // Keep "minimal" on disk so existing choices become the typographic design.
     case ring, horizon, path, milestones, minimal
     public var id: String { rawValue }
+    public var requiresPremium: Bool { self != .ring && self != .horizon }
 }
 
 public enum CounterEffect: String, CaseIterable, Codable, Identifiable, Sendable {
@@ -70,7 +71,7 @@ public struct Preferences: Codable, Equatable, Sendable {
     public var unit: DistanceUnit = .kilometers
     // Retained for compatibility with saved preferences; the app always uses dark mode.
     public var appearance: Appearance = .dark
-    public var counterStyle: CounterStyle = .ring
+    public var counterStyle: CounterStyle = .horizon
     public var counterEffect: CounterEffect = .stars
     public var animatePeriodChanges = false
     public var showEnergy = true

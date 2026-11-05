@@ -116,7 +116,7 @@
 "appearance.system" = "Sistema";
 "counter.ring" = "Anel";
 "counter.minimal" = "Tipográfico";
-"theme.mint" = "Passada larga";
+"theme.mint" = "Wallkuno";
 "theme.coral" = "Coral";
 "theme.glacier" = "Glaciar";
 "theme.sunshine" = "Sol";
@@ -129,7 +129,7 @@
 "theme.palette.description" = "Escolhe uma cor para os teus anéis, gráficos e widgets.";
 "theme.selected" = "Cor selecionada";
 "theme.available" = "Disponível";
-"theme.premium.note" = "A paleta Passada larga está incluída. Há mais oito cores disponíveis com Premium.";
+"theme.premium.note" = "A paleta Wallkuno está incluída. Há mais oito cores disponíveis com Premium.";
 "reset.title" = "Apagar dados locais";
 "reset.confirm" = "Apagar e recomeçar";
 "reset.body" = "Apaga preferências, objetivos e caches neste dispositivo. Os dados da Saúde da Apple, as compras e as definições no outro dispositivo são mantidos. O Walkuno só voltará a ler a Saúde depois de voltares a estabelecer a ligação de forma explícita.";

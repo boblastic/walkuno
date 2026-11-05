@@ -3,28 +3,6 @@ import SwiftUI
 import AppIntents
 import Charts
 
-// Original identifiers remain valid for installed small widgets.
-enum WidgetDisplayStyle: String, AppEnum {
-    case ring, numbers, distance, distanceAndSteps, comparison, floors, weekly, weeklyLine
-    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "widget.style")
-    static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
-        .ring: "widget.style.ring", .numbers: "widget.style.numbers", .distance: "widget.style.distance",
-        .distanceAndSteps: "widget.style.distanceAndSteps", .comparison: "widget.style.comparison",
-        .floors: "widget.style.floors", .weekly: "widget.style.weekly", .weeklyLine: "widget.style.weeklyLine"
-    ]
-    var title: String { L("widget.style.\(rawValue)") }
-    var symbol: String {
-        switch self {
-        case .distance, .distanceAndSteps: "figure.walk"
-        case .comparison: "arrow.up.right"
-        case .floors: "stairs"
-        case .weekly, .weeklyLine: "calendar"
-        default: "shoeprints.fill"
-        }
-    }
-    var showsGoalRing: Bool { self == .ring || self == .distanceAndSteps || self == .comparison }
-}
-
 enum WidgetChartStyle: String, AppEnum {
     case hourly, goalTracking, weekly, weeklyLine, dailyRhythm
     static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "widget.style")
@@ -41,12 +19,6 @@ enum WidgetChartStyle: String, AppEnum {
     }
 }
 
-struct WalkunoWidgetIntent: WidgetConfigurationIntent {
-    static let title: LocalizedStringResource = "widget.configuration"
-    static let description = IntentDescription("widget.configuration.description")
-    @Parameter(title: "widget.style", default: .ring) var style: WidgetDisplayStyle
-}
-
 struct WalkunoChartIntent: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "widget.charts.configuration"
     static let description = IntentDescription("widget.charts.description")
@@ -56,7 +28,6 @@ struct WalkunoChartIntent: WidgetConfigurationIntent {
 struct WalkunoEntry: TimelineEntry {
     var date: Date
     var snapshot: WidgetSnapshot?
-    var style: WidgetDisplayStyle
 }
 
 struct WalkunoChartEntry: TimelineEntry {
@@ -78,23 +49,17 @@ private enum WidgetCache {
     }
 }
 
-struct WalkunoProvider: AppIntentTimelineProvider {
-    func recommendations() -> [AppIntentRecommendation<WalkunoWidgetIntent>] {
-        WidgetDisplayStyle.allCases.filter { $0 != .numbers }.map { style in
-            let intent = WalkunoWidgetIntent()
-            intent.style = style
-            return .init(intent: intent, description: style.title)
-        }
+// Keep the widget kind stable while taking display settings from the app.
+struct WalkunoProvider: TimelineProvider {
+    func placeholder(in context: Context) -> WalkunoEntry { .init(date: .now, snapshot: .preview()) }
+    func getSnapshot(in context: Context, completion: @escaping (WalkunoEntry) -> Void) {
+        completion(.init(date: .now, snapshot: WidgetCache.snapshot(isPreview: context.isPreview)))
     }
-    func placeholder(in context: Context) -> WalkunoEntry { .init(date: .now, snapshot: .preview(), style: .ring) }
-    func snapshot(for configuration: WalkunoWidgetIntent, in context: Context) async -> WalkunoEntry {
-        .init(date: .now, snapshot: WidgetCache.snapshot(isPreview: context.isPreview), style: configuration.style)
-    }
-    func timeline(for configuration: WalkunoWidgetIntent, in context: Context) async -> Timeline<WalkunoEntry> {
+    func getTimeline(in context: Context, completion: @escaping (Timeline<WalkunoEntry>) -> Void) {
         let now = Date.now, midnight = WidgetCache.midnight(after: .now)
-        return Timeline(entries: [.init(date: now, snapshot: WidgetCache.current(), style: configuration.style),
-                                  .init(date: midnight, snapshot: nil, style: configuration.style)],
-                        policy: .after(min(now.addingTimeInterval(30 * 60), midnight)))
+        completion(.init(entries: [.init(date: now, snapshot: WidgetCache.current()),
+                                   .init(date: midnight, snapshot: nil)],
+                         policy: .after(min(now.addingTimeInterval(30 * 60), midnight))))
     }
 }
 
@@ -126,41 +91,15 @@ struct WalkunoWidgetView: View {
     private var progress: Double { ActivityMath.progress(steps: steps, goal: entry.snapshot?.goal ?? 8000) }
     private var unit: DistanceUnit { entry.snapshot?.unit ?? .kilometers }
     private var week: [ActivityDay] { entry.snapshot?.recentWeek() ?? [] }
-    private var weeklySteps: Int? { ActivitySummary(days: week, goals: .init()).total }
-    private var fullValue: String {
-        switch entry.style {
-        case .distance: return entry.snapshot?.today.meters.map { unit.convert(meters: $0).formatted(.number.precision(.fractionLength(1))) } ?? "—"
-        case .floors: return stepsText(entry.snapshot?.today.floors.map { Int($0.rounded()) })
-        case .comparison: return widgetChangeText(entry.snapshot?.change(for: .steps))
-        case .weekly, .weeklyLine: return stepsText(weeklySteps)
-        default: return stepsText(steps)
-        }
-    }
-    private var compactValue: String {
-        switch entry.style {
-        case .ring, .numbers, .distanceAndSteps: WidgetNumbers.steps(steps)
-        case .weekly, .weeklyLine: WidgetNumbers.steps(weeklySteps)
-        case .floors: WidgetNumbers.steps(entry.snapshot?.today.floors.map { Int($0.rounded()) })
-        case .comparison: WidgetNumbers.percentageChange(entry.snapshot?.change(for: .steps))
-        default: fullValue
-        }
-    }
-    private var valueUnit: String {
-        switch entry.style {
-        case .distance: unit.symbol
-        case .floors: L("metric.floors")
-        case .comparison: L("widget.vsYesterday")
-        default: L("today.steps")
-        }
-    }
+    private var fullValue: String { stepsText(steps) }
+    private var compactValue: String { WidgetNumbers.steps(steps) }
     var body: some View {
         Group {
             switch family {
             case .accessoryCircular: circular
             case .accessoryRectangular: lockRectangle
             case .accessoryInline:
-                Label("\(compactValue) \(valueUnit)\(entry.style == .distanceAndSteps ? " · " + distanceText(entry.snapshot?.today.meters, unit: unit) : "")",
-                      systemImage: entry.style.symbol)
+                Label("\(compactValue) \(L("today.steps"))", systemImage: "shoeprints.fill")
             default:
                 #if os(iOS)
                 home
@@ -177,37 +116,20 @@ struct WalkunoWidgetView: View {
     }
     private var circular: some View {
         ZStack {
-            if entry.style.showsGoalRing {
-                ProgressRing(progress: progress, accent: theme.accent, secondaryAccent: theme.secondaryAccent, lineWidth: 5).padding(4)
-            }
+            ProgressRing(progress: progress, accent: theme.accent, secondaryAccent: theme.secondaryAccent, lineWidth: 5).padding(4)
             VStack(spacing: 0) {
                 Text(compactValue)
-                    .font(.system(size: entry.style.showsGoalRing ? 13 : 20, weight: .bold, design: .rounded))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
                     .lineLimit(1).minimumScaleFactor(0.45)
-                if entry.style == .distanceAndSteps {
-                    Text(distanceText(entry.snapshot?.today.meters, unit: unit)).font(.system(size: 8)).lineLimit(1).minimumScaleFactor(0.6)
-                } else if entry.style == .weekly || entry.style == .weeklyLine {
-                    Text("widget.sevenDays.short").font(.system(size: 8))
-                    Group {
-                        if entry.style == .weeklyLine {
-                            WidgetWeekCurve(days: week, today: entry.date, accent: theme.accent, compact: true, showsDays: false)
-                        } else {
-                            WidgetWeekBars(days: week, today: entry.date, accent: theme.accent, showsDays: false)
-                        }
-                    }.frame(height: 12)
-                } else {
-                    Text(valueUnit).font(.system(size: 8)).lineLimit(1).minimumScaleFactor(0.6)
-                }
-            }.padding(.horizontal, entry.style.showsGoalRing ? 9 : 3)
+                Text("today.steps").font(.system(size: 8)).lineLimit(1).minimumScaleFactor(0.6)
+            }.padding(.horizontal, 9)
         }.widgetAccentable()
     }
     private var accessibilitySummary: String {
-        var parts = [entry.style.title, "\(fullValue) \(valueUnit)"]
-        if entry.style.showsGoalRing {
-            parts.append(distanceText(entry.snapshot?.today.meters, unit: unit))
-            parts.append(steps == nil ? "—" : progress.formatted(.percent.precision(.fractionLength(0))))
-            parts.append("\(L("widget.goal")) \(stepsText(steps)) / \((entry.snapshot?.goal ?? 8000).formatted())")
-        }
+        var parts = [L("widget.name"), "\(fullValue) \(L("today.steps"))",
+                     distanceText(entry.snapshot?.today.meters, unit: unit),
+                     steps == nil ? "—" : progress.formatted(.percent.precision(.fractionLength(0))),
+                     "\(L("widget.goal")) \(stepsText(steps)) / \((entry.snapshot?.goal ?? 8000).formatted())"]
         #if os(iOS)
         if family == .systemLarge {
             parts.append("\(L("widget.average")) \(stepsText(ActivitySummary(days: week, goals: .init()).average))")
@@ -219,14 +141,13 @@ struct WalkunoWidgetView: View {
             parts.append(L("widget.chart.goal.accessibility"))
         }
         #endif
-        if entry.style == .comparison { parts.append(L("widget.sameTime")) }
         return parts.joined(separator: ". ")
     }
     private var lockRectangle: some View {
         HStack(spacing: 8) {
             circular.frame(width: 54, height: 54)
             VStack(alignment: .leading, spacing: 3) {
-                Text(entry.style.title).font(.caption2.bold())
+                Text("today.steps").font(.caption2.bold())
                 Text(distanceText(entry.snapshot?.today.meters, unit: unit)).font(.caption2)
                 Text("\(L("widget.goal.short")) · \(entry.snapshot?.goal.formatted() ?? "—")")
                     .font(.system(size: 9)).foregroundStyle(.secondary)
@@ -234,44 +155,18 @@ struct WalkunoWidgetView: View {
         }
     }
     #if os(iOS)
-    private var homeUsesCounter: Bool { entry.style.showsGoalRing || entry.style == .numbers }
     private var home: some View {
         GeometryReader { geometry in
-            homeContent(counterSize: min(geometry.size.width, max(0, geometry.size.height - 16)))
-        }
-    }
-    private func homeContent(counterSize: CGFloat) -> some View {
-        let small = family == .systemSmall
-        return VStack(alignment: .leading, spacing: small ? 2 : 8) {
-            WidgetHeader(theme: theme, title: small ? nil : homeUsesCounter ? L("period.week") : entry.style.title)
-            if homeUsesCounter {
+            let small = family == .systemSmall
+            let counterSize = min(geometry.size.width, max(0, geometry.size.height - 16))
+            VStack(alignment: .leading, spacing: small ? 2 : 8) {
+                WidgetHeader(theme: theme, title: small ? nil : L("period.week"))
                 if small {
                     WidgetCounter(snapshot: entry.snapshot).frame(width: counterSize, height: counterSize)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     WidgetLargeOverview(snapshot: entry.snapshot, date: entry.date)
                 }
-            } else {
-                HStack(alignment: .firstTextBaseline, spacing: 5) {
-                    Text(small ? compactValue : fullValue)
-                        .font(.system(size: small ? 34 : 40, weight: .bold, design: .rounded))
-                    Text(valueUnit).font(.caption2).foregroundStyle(.secondary)
-                }.lineLimit(1).minimumScaleFactor(0.45)
-                if entry.style == .weekly || entry.style == .weeklyLine {
-                    Group {
-                        if entry.style == .weekly { WidgetWeekBars(days: week, today: entry.date, accent: theme.accent) }
-                        else { WidgetWeekCurve(days: week, today: entry.date, accent: theme.accent, compact: small) }
-                    }.frame(maxHeight: small ? 65 : .infinity)
-                } else {
-                    Text(distanceText(entry.snapshot?.today.meters, unit: unit))
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                if !small {
-                    WidgetSummaryRow(snapshot: entry.snapshot)
-                    Text("widget.chart.goalTracking").font(.caption.bold()).foregroundStyle(theme.accent)
-                    WidgetGoalChart(snapshot: entry.snapshot, accent: theme.accent, compact: false)
-                }
-                WidgetUpdatedLabel(date: entry.snapshot?.updatedAt)
             }
         }
     }
@@ -303,7 +198,7 @@ struct WalkunoChartWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 2 : small ? 4 : 6) {
-            if !compact { WidgetHeader(theme: theme, title: small ? nil : entry.style.title) }
+            if !compact { WidgetHeader(theme: theme, title: small ? nil : large && isWeek ? L("today.this.week") : entry.style.title) }
             HStack(alignment: .firstTextBaseline, spacing: 5) {
                 Text(small || compact ? WidgetNumbers.steps(entry.snapshot?.today.steps) : stepsText(entry.snapshot?.today.steps))
                     .font(.system(size: compact ? 16 : small ? 25 : 30, weight: .bold, design: .rounded))
@@ -320,7 +215,7 @@ struct WalkunoChartWidgetView: View {
                 }
             }.lineLimit(1).minimumScaleFactor(0.6)
             chart
-            if large && entry.style == .weeklyLine {
+            if large && isWeek {
                 WidgetWeekReferences(days: week, goal: entry.snapshot?.goal, accent: theme.accent, horizontal: true)
             } else if isWeek {
                 Text("\(L("widget.average")) · \(small || compact ? WidgetNumbers.steps(average) : stepsText(average))")
@@ -334,11 +229,14 @@ struct WalkunoChartWidgetView: View {
             }
             if large {
                 WidgetSummaryRow(snapshot: entry.snapshot)
-                Text(isWeek ? "widget.chart.dailyRhythm" : "widget.style.weeklyLine")
+                Text(isWeek ? "widget.chart.dailyRhythm" : "today.this.week")
                     .font(.caption.bold()).foregroundStyle(theme.accent)
+                if !isWeek {
+                    WidgetWeekReferences(days: week, goal: entry.snapshot?.goal, accent: theme.accent, horizontal: true)
+                }
                 Group {
                     if isWeek { WidgetDailyRhythm(snapshot: entry.snapshot, compact: true) }
-                    else { WidgetWeekCurve(days: week, today: entry.date, accent: theme.accent, compact: true) }
+                    else { WidgetWeekCurve(days: week, today: entry.date, accent: theme.accent, compact: true, goal: entry.snapshot?.goal) }
                 }.frame(height: 65)
             }
             if !compact { WidgetUpdatedLabel(date: entry.snapshot?.updatedAt) }
@@ -650,7 +548,7 @@ extension WidgetSnapshot {
 struct WalkunoActivityWidget: Widget {
     let kind = "WalkunoActivity"
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: WalkunoWidgetIntent.self, provider: WalkunoProvider()) { WalkunoWidgetView(entry: $0) }
+        StaticConfiguration(kind: kind, provider: WalkunoProvider()) { WalkunoWidgetView(entry: $0) }
             .configurationDisplayName("widget.name").description("widget.description")
             #if os(iOS)
             .supportedFamilies([.systemSmall, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline])
@@ -767,12 +665,19 @@ private struct WidgetWeekReferences: View {
     private var objective: some View { reference("widget.goal.short", value: goal, color: .secondary, dash: [5, 3]) }
     private var mean: some View { reference("widget.average", value: average, color: accent.opacity(0.6), dash: [2, 3]) }
     private func reference(_ title: String, value: Int?, color: Color, dash: [CGFloat]) -> some View {
-        HStack(spacing: compact ? 3 : 4) {
-            Path { path in path.move(to: .init(x: 0, y: 3)); path.addLine(to: .init(x: compact ? 9 : 14, y: 3)) }
-                .stroke(color, style: StrokeStyle(lineWidth: 1, dash: dash)).frame(width: compact ? 9 : 14, height: 6)
-            Text(L(title)).foregroundStyle(.secondary)
-            Spacer(minLength: 0)
-            Text(stepsText(value)).bold().monospacedDigit()
+        Group {
+            if horizontal && compact {
+                (Text(L(title)).foregroundColor(.secondary) + Text(" \(stepsText(value))").bold())
+                    .monospacedDigit().frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(spacing: compact ? 3 : 4) {
+                    Path { path in path.move(to: .init(x: 0, y: 3)); path.addLine(to: .init(x: compact ? 9 : 14, y: 3)) }
+                        .stroke(color, style: StrokeStyle(lineWidth: 1, dash: dash)).frame(width: compact ? 9 : 14, height: 6)
+                    Text(L(title)).foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                    Text(stepsText(value)).bold().monospacedDigit()
+                }
+            }
         }.font(.system(size: compact ? 8 : 9)).lineLimit(1).minimumScaleFactor(0.65)
             .accessibilityElement(children: .combine)
     }
@@ -812,7 +717,7 @@ private struct WidgetCounter: View {
     var snapshot: WidgetSnapshot?
     private var theme: WalkunoTheme { snapshot?.theme ?? .mint }
     private var progress: Double { ActivityMath.progress(steps: snapshot?.today.steps, goal: snapshot?.goal ?? 8000) }
-    private var style: CounterStyle { snapshot?.display?.counter ?? .ring }
+    private var style: CounterStyle { snapshot?.display?.counter ?? .horizon }
     private var hasBase: Bool { style == .path || style == .milestones || style == .minimal }
     private var overflow: Color {
         CounterProgress(steps: Double(snapshot?.today.steps ?? 0), goal: snapshot?.goal ?? 8000)
@@ -993,7 +898,7 @@ struct WalkunoDashboardView: View {
                     Text(distanceText(entry.snapshot?.today.meters, unit: entry.snapshot?.unit ?? .kilometers))
                         .font(.system(size: 9, weight: .semibold)).foregroundStyle(theme.accent)
                 }.lineLimit(1).minimumScaleFactor(0.5)
-                WidgetWeekReferences(days: week, goal: entry.snapshot?.goal, accent: theme.accent, compact: true)
+                WidgetWeekReferences(days: week, goal: entry.snapshot?.goal, accent: theme.accent, horizontal: true, compact: true)
                 WidgetWeekCurve(days: week, today: entry.date, accent: theme.accent, compact: true, goal: entry.snapshot?.goal)
             } else {
                 if large {
@@ -1017,22 +922,10 @@ struct WalkunoDashboardView: View {
 struct WalkunoDashboardWidget: Widget {
     let kind = "WalkunoDashboard"
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: WalkunoDashboardProvider()) { WalkunoDashboardView(entry: $0) }
+        StaticConfiguration(kind: kind, provider: WalkunoProvider()) { WalkunoDashboardView(entry: $0) }
             .configurationDisplayName("widget.dashboard.name").description("widget.dashboard.description")
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
     }
 }
 
-struct WalkunoDashboardProvider: TimelineProvider {
-    func placeholder(in context: Context) -> WalkunoEntry { .init(date: .now, snapshot: .preview(), style: .ring) }
-    func getSnapshot(in context: Context, completion: @escaping (WalkunoEntry) -> Void) {
-        completion(.init(date: .now, snapshot: WidgetCache.snapshot(isPreview: context.isPreview), style: .ring))
-    }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<WalkunoEntry>) -> Void) {
-        let now = Date.now, midnight = WidgetCache.midnight(after: .now)
-        completion(.init(entries: [.init(date: now, snapshot: WidgetCache.current(), style: .ring),
-                                   .init(date: midnight, snapshot: nil, style: .ring)],
-                         policy: .after(min(now.addingTimeInterval(1800), midnight))))
-    }
-}
 #endif

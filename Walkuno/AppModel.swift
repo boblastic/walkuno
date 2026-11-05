@@ -66,7 +66,9 @@ final class AppModel {
     }
     var progress: Double { ActivityMath.progress(steps: today.steps, goal: goal) }
     var effectiveTheme: WalkunoTheme { purchases.isPremium ? preferences.theme : .mint }
-    var effectiveCounter: CounterStyle { purchases.isPremium ? preferences.counterStyle : .ring }
+    var effectiveCounter: CounterStyle {
+        preferences.counterStyle.requiresPremium && !purchases.isPremium ? .horizon : preferences.counterStyle
+    }
 
     func start() async {
         prepareForHealthDelivery()

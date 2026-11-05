@@ -87,8 +87,8 @@ struct StatisticsInsightsView: View {
         VStack(spacing: 20) {
             DailyComparisonCard(earliest: earliest, metric: metric)
             TrendsCard(days: days, onPremium: onPremium, metric: metric)
-            ActivityRecordCard(days: days, onPremium: onPremium, metric: metric)
             YearHistoryCard(days: days, metric: metric)
+            ActivityRecordCard(days: days, onPremium: onPremium, metric: metric)
             if !model.isDemo && (model.today.exerciseMinutes == nil || model.today.floors == nil) {
                 Button("insights.health.connect") { Task { await model.connectHealth() } }
                     .font(.caption.weight(.semibold))

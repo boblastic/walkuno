@@ -268,11 +268,11 @@ struct TodayView: View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: typeSize.isAccessibilitySize ? 2 : model.preferences.showEnergy ? 5 : 4), spacing: 8) {
             TodayMetric(title: LocalizedStringKey(model.preferences.unit.symbol), value: activity.total(for: .distance).map { model.preferences.unit.convert(meters: $0).formatted(.number.precision(.fractionLength(1))) } ?? "—", symbol: "location.fill", color: accent)
             if model.preferences.showEnergy {
-                TodayMetric(title: "today.kcal", value: activity.total(for: .energy).map { Int($0).formatted() } ?? "—", symbol: "bolt.heart.fill", color: model.effectiveTheme.secondaryAccent)
+                TodayMetric(title: "today.kcal", value: activity.total(for: .energy).map { Int($0).formatted() } ?? "—", symbol: "bolt.heart.fill", color: accent)
             }
             TodayMetric(title: "today.exercise", value: exerciseText, symbol: "stopwatch", color: accent)
             TodayMetric(title: "today.floors", value: activity.total(for: .floors).map { Int($0).formatted() } ?? "—", symbol: "stairs", color: accent)
-            TodayMetric(title: "today.streak", value: stepsText(streak), symbol: "flame.fill", color: model.effectiveTheme.secondaryAccent)
+            TodayMetric(title: "today.streak", value: stepsText(streak), symbol: "flame.fill", color: accent)
         }
     }
 

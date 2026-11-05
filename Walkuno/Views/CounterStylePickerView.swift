@@ -11,7 +11,7 @@ struct CounterStylePickerView: View {
 
     private var style: CounterStyle { preview ?? model.effectiveCounter }
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
-    private var isLocked: Bool { style != .ring && !model.purchases.isPremium }
+    private var isLocked: Bool { style.requiresPremium && !model.purchases.isPremium }
 
     var body: some View {
         ScrollViewReader { reader in
@@ -129,7 +129,7 @@ struct CounterStylePickerView: View {
 
     private func select(_ candidate: CounterStyle) {
         preview = candidate
-        if candidate == .ring || model.purchases.isPremium {
+        if !candidate.requiresPremium || model.purchases.isPremium {
             model.preferences.counterStyle = candidate
             model.persist()
         }
@@ -138,7 +138,7 @@ struct CounterStylePickerView: View {
     private func option(_ candidate: CounterStyle) -> some View {
         let selected = candidate == model.effectiveCounter
         let highlighted = candidate == style
-        let locked = candidate != .ring && !model.purchases.isPremium
+        let locked = candidate.requiresPremium && !model.purchases.isPremium
         return Button { select(candidate) } label: {
             HStack(spacing: 14) {
                 Image(systemName: candidate.symbol)

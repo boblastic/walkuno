@@ -52,7 +52,7 @@ extension WalkunoTheme {
 }
 
 enum WalkunoStyle {
-    // Grande foulée, in the same sRGB space as the app icon.
+    // Wallkuno, in the same sRGB space as the app icon.
     static let ink = Color(.sRGB, red: 10/255, green: 36/255, blue: 44/255)
     static let electric = Color(.sRGB, red: 163/255, green: 1, blue: 112/255)
     static let strideTeal = Color(.sRGB, red: 49/255, green: 185/255, blue: 159/255)

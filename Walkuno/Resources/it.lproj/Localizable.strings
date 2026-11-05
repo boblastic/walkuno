@@ -116,7 +116,7 @@
 "appearance.system" = "Sistema";
 "counter.ring" = "Anello";
 "counter.minimal" = "Tipografico";
-"theme.mint" = "Ampia falcata";
+"theme.mint" = "Wallkuno";
 "theme.coral" = "Corallo";
 "theme.glacier" = "Ghiacciaio";
 "theme.sunshine" = "Sole";
@@ -129,7 +129,7 @@
 "theme.palette.description" = "Scegli un colore per anelli, grafici e widget.";
 "theme.selected" = "Colore selezionato";
 "theme.available" = "Disponibile";
-"theme.premium.note" = "La palette Ampia falcata è inclusa. Con Premium sono disponibili altri otto colori.";
+"theme.premium.note" = "La palette Wallkuno è inclusa. Con Premium sono disponibili altri otto colori.";
 "reset.title" = "Cancella i dati locali";
 "reset.confirm" = "Cancella e ricomincia";
 "reset.body" = "Cancella preferenze, obiettivi e cache su questo dispositivo. I dati di Apple Salute, gli acquisti e le impostazioni sull’altro dispositivo vengono conservati. Walkuno leggerà nuovamente Salute solo dopo una tua riconnessione esplicita.";

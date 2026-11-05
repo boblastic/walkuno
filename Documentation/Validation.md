@@ -467,3 +467,22 @@ Le build 8 de développement Debug réunit les ajustements de lisibilité et de 
 Mise à jour installée sur l’iPhone iBoblastic sans désinstallation, puis lancement sans argument de démonstration réussi. Les métadonnées de l’appareil confirment 1.0.0 (8). Le compagnon Watch reste embarqué sans installation directe sur la montre. La correction visuelle de l’écart signalé dans l’hôte WidgetKit physique reste à confirmer sur l’écran d’accueil ; les contrôles de rendu décrits plus haut portent sur le harnais natif du simulateur.
 
 Preuves : `/tmp/walkuno-release-8-build.log`, `/tmp/walkuno-release-8-install.json`, `/tmp/walkuno-release-8-launch.json`, `/tmp/walkuno-release-8-iphone-after.json`. Aperçu actualisé : `Documentation/Captures/Widgets-iPhone.png`.
+
+
+## Accueil, statistiques et simplification des widgets — 5 novembre 2026
+
+- Les cases Série et Calories de l’accueil reprennent la couleur principale des autres mesures. Le bloc des records jour/semaine/mois/année vient après « Toutes périodes confondues » dans Statistiques.
+- Horizon avec Étoiles devient le réglage initial ; Horizon et Anneau restent utilisables gratuitement. La palette par défaut, inchangée, est renommée Wallkuno dans les sept langues. Les identifiants enregistrés et les préférences existantes sont conservés.
+- Le compteur utilise une configuration WidgetKit statique et reprend les réglages effectifs de l’application. Son ancien sélecteur et ses variantes sont supprimés ; les Graphiques conservent les cinq choix de contenu utiles. Les métadonnées compilées iPhone et Watch ne déclarent plus l’ancienne intention ni l’ancien type d’options.
+- Le grand Graphiques affiche « Cette semaine », l’objectif et la moyenne, avec les repères correspondants sur la courbe hebdomadaire. Dans le petit Tableau de bord, objectif et moyenne occupent une seule ligne pour dégager la courbe. Les autres tailles conservent leur disposition.
+- Le parcours UI des valeurs initiales Horizon/Étoiles et de la prévisualisation Premium réussit. Le parcours Statistiques suit désormais l’historique puis les records, conformément à leur nouvel ordre. Le second essai valide les mesures, tendances, historique, records et menu fixe, puis échoue à l’ouverture de « Mon compte » ; le parcours complet n’est donc pas validé. Preuves : `/tmp/walkuno-release-9-ui.log` et `/tmp/walkuno-release-9-statistics-ui.xcresult`. Le premier essai échouait sur la recherche des records avec l’ancien ordre du test.
+- 103 tests Foundation réussis : `/tmp/walkuno-release-9-core.log`. Les 408 textes et permissions sont vérifiés dans les sept langues des quatre bundles signés. Compilation simulateur puis compilation signée iPhone/Watch réussies ; `git diff --check` réussi.
+- Rendus natifs contrôlés dans `/tmp/walkuno-widget-week-layout-preview/`, notamment les petits formats, un objectif à 100 000 pas et les grandes variantes de Graphiques. La planche `Documentation/Captures/Widgets-iPhone.png` reprend les rendus actuels. Ce harnais ImageRenderer ne valide pas l’hôte WidgetKit physique.
+
+## Livraison locale de Walkuno 1.0.0 (9) — 5 novembre 2026
+
+Numéro de build synchronisé dans les quatre cibles et le générateur. Compilation Debug signée réussie et signature complète vérifiée. La mise à jour est installée sur l’iPhone iBoblastic sans désinstallation, puis lancée sans argument de démonstration. Les métadonnées de l’appareil confirment la version 1.0.0 (9). Le compagnon Watch est embarqué ; aucune installation directe sur la montre n’est effectuée.
+
+Preuves : `/tmp/walkuno-release-9-build.log`, `/tmp/walkuno-release-9-install.json`, `/tmp/walkuno-release-9-launch.json`, `/tmp/walkuno-release-9-iphone-after.json`. Les comportements des widgets dans l’hôte de l’iPhone restent à confirmer à l’usage.
+
+Deux modifications concurrentes de `Walkuno/AppModel.swift` et `Walkuno/Views/TodayView.swift`, apparues après la compilation signée, restent hors du commit de livraison et intactes dans le répertoire de travail. Le build installé correspond aux changements de cette livraison ; l’essai UI Statistiques suivant utilise le workspace avec ces modifications concurrentes.

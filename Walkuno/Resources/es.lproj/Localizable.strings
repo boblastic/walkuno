@@ -116,7 +116,7 @@
 "appearance.system" = "Sistema";
 "counter.ring" = "Anillo";
 "counter.minimal" = "Tipográfico";
-"theme.mint" = "Gran zancada";
+"theme.mint" = "Wallkuno";
 "theme.coral" = "Coral";
 "theme.glacier" = "Glaciar";
 "theme.sunshine" = "Sol";
@@ -129,7 +129,7 @@
 "theme.palette.description" = "Elige un color para tus anillos, gráficos y widgets.";
 "theme.selected" = "Color seleccionado";
 "theme.available" = "Disponible";
-"theme.premium.note" = "La paleta Gran zancada está incluida. Hay ocho colores más con Premium.";
+"theme.premium.note" = "La paleta Wallkuno está incluida. Hay ocho colores más con Premium.";
 "reset.title" = "Borrar datos locales";
 "reset.confirm" = "Borrar y empezar de nuevo";
 "reset.body" = "Borra las preferencias, los objetivos y las cachés de este dispositivo. Se conservan los datos de Apple Salud, las compras y los ajustes del otro dispositivo. Walkuno solo volverá a leer Salud cuando lo conectes de nuevo de forma explícita.";

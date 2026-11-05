@@ -431,17 +431,18 @@ final class WalkunoUITests: XCTestCase {
         capture("13b-Statistiques-Tendances-Mois")
         trendPeriod(app).buttons["Année"].tap()
         capture("13c-Statistiques-Tendances-Annee")
-        let recordPeriod = app.segmentedControls["insights.record.period"]
-        reveal(recordPeriod, in: app)
-        recordPeriod.buttons["Année"].tap()
-        capture("14-Statistiques-Record")
-        XCTAssertFalse(app.buttons["insights.record.details"].exists)
         let historyMode = app.segmentedControls["insights.history.mode"]
         reveal(historyMode, in: app)
         historyMode.buttons["Totaux"].tap()
         capture("15-Statistiques-Historique-Totaux")
         historyMode.buttons["Moyennes"].tap()
         capture("16-Statistiques-Historique-Moyennes")
+        // Follow the card order: the records now come after the year history.
+        let recordPeriod = app.segmentedControls["insights.record.period"]
+        reveal(recordPeriod, in: app)
+        recordPeriod.buttons["Année"].tap()
+        capture("14-Statistiques-Record")
+        XCTAssertFalse(app.buttons["insights.record.details"].exists)
 
         XCTAssertTrue(steps.isHittable)
         XCTAssertEqual(steps.frame.minY, metricY, accuracy: 1)
@@ -1313,22 +1314,23 @@ final class WalkunoUITests: XCTestCase {
     func testFreeCounterPreviewDoesNotOverwriteTheSelectedStyle() {
         let app = launch(pro: false)
         XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
-        XCTAssertEqual(app.buttons["today.counter"].value as? String, "Anneau")
+        XCTAssertEqual(app.buttons["today.counter"].value as? String, "Horizon")
         app.tabBars.buttons["Réglages"].tap()
         reveal(app.buttons["settings.counter"], in: app)
         app.buttons["settings.counter"].tap()
-        let option = app.buttons["counter.style.horizon"]
+        XCTAssertTrue(app.buttons["counter.effect.stars"].isSelected)
+        let option = app.buttons["counter.style.path"]
         reveal(option, in: app)
         option.tap()
         XCTAssertFalse(option.isSelected)
-        XCTAssertTrue(app.buttons["counter.style.ring"].isSelected)
+        XCTAssertTrue(app.buttons["counter.style.horizon"].isSelected)
         let unlock = app.buttons["counter.unlock"]
         reveal(unlock, in: app)
         unlock.tap()
         XCTAssertTrue(app.navigationBars["Walkuno Premium"].waitForExistence(timeout: 5))
         app.buttons["Terminé"].firstMatch.tap()
         app.tabBars.buttons["Aujourd’hui"].tap()
-        XCTAssertEqual(app.buttons["today.counter"].value as? String, "Anneau")
+        XCTAssertEqual(app.buttons["today.counter"].value as? String, "Horizon")
     }
 
     func testCounterRemainsReadableWithAccessibilityText() {

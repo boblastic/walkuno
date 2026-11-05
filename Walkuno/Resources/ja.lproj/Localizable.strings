@@ -116,7 +116,7 @@
 "appearance.system" = "システム";
 "counter.ring" = "リング";
 "counter.minimal" = "タイポグラフィ";
-"theme.mint" = "大きな一歩";
+"theme.mint" = "Wallkuno";
 "theme.coral" = "コーラル";
 "theme.glacier" = "氷河";
 "theme.sunshine" = "サンシャイン";
@@ -129,7 +129,7 @@
 "theme.palette.description" = "リング、グラフ、ウィジェットの色を選びましょう。";
 "theme.selected" = "選択中の色";
 "theme.available" = "利用可能";
-"theme.premium.note" = "「大きな一歩」の配色は無料で使えます。Premiumでは、さらに8色から選べます。";
+"theme.premium.note" = "「Wallkuno」の配色は無料で使えます。Premiumでは、さらに8色から選べます。";
 "reset.title" = "ローカルデータを消去";
 "reset.confirm" = "消去してやり直す";
 "reset.body" = "このデバイスの設定、目標、キャッシュを消去します。Appleヘルスケアのデータ、購入、ほかのデバイスの設定は保持されます。Walkunoが再びヘルスケアを読み取るには、明示的に再接続する必要があります。";

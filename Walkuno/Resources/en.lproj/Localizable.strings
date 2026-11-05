@@ -116,7 +116,7 @@
 "appearance.system" = "System";
 "counter.ring" = "Ring";
 "counter.minimal" = "Typographic";
-"theme.mint" = "Long Stride";
+"theme.mint" = "Wallkuno";
 "theme.coral" = "Coral";
 "theme.glacier" = "Glacier";
 "theme.sunshine" = "Sunshine";
@@ -129,7 +129,7 @@
 "theme.palette.description" = "Choose a color for your rings, charts and widgets.";
 "theme.selected" = "Selected color";
 "theme.available" = "Available";
-"theme.premium.note" = "The Long Stride palette is included. Eight more colors are available with Premium.";
+"theme.premium.note" = "The Wallkuno palette is included. Eight more colors are available with Premium.";
 "reset.title" = "Erase local data";
 "reset.confirm" = "Erase and start over";
 "reset.body" = "Erases preferences, goals and caches on this device. Apple Health data, purchases and settings on the other device are preserved. Walkuno will read Health again only after you explicitly reconnect.";

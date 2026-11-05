@@ -112,7 +112,7 @@ public enum WidgetNumbers {
 public struct WidgetDisplayPreferences: Codable, Equatable, Sendable {
     public var counter: CounterStyle
     public var showEnergy: Bool
-    public init(counter: CounterStyle = .ring, showEnergy: Bool = true) {
+    public init(counter: CounterStyle = .horizon, showEnergy: Bool = true) {
         self.counter = counter; self.showEnergy = showEnergy
     }
 }

@@ -116,7 +116,7 @@
 "appearance.system" = "System";
 "counter.ring" = "Ring";
 "counter.minimal" = "Typografisch";
-"theme.mint" = "Großer Schritt";
+"theme.mint" = "Wallkuno";
 "theme.coral" = "Koralle";
 "theme.glacier" = "Gletscher";
 "theme.sunshine" = "Sonnenschein";
@@ -129,7 +129,7 @@
 "theme.palette.description" = "Wähle eine Farbe für deine Ringe, Diagramme und Widgets.";
 "theme.selected" = "Ausgewählte Farbe";
 "theme.available" = "Verfügbar";
-"theme.premium.note" = "Die Farbpalette „Großer Schritt“ ist enthalten. Acht weitere Farben sind mit Premium verfügbar.";
+"theme.premium.note" = "Die Farbpalette „Wallkuno“ ist enthalten. Acht weitere Farben sind mit Premium verfügbar.";
 "reset.title" = "Lokale Daten löschen";
 "reset.confirm" = "Löschen und neu beginnen";
 "reset.body" = "Löscht Einstellungen, Ziele und Caches auf diesem Gerät. Apple-Health-Daten, Käufe und Einstellungen auf dem anderen Gerät bleiben erhalten. Walkuno liest Health erst wieder, wenn du die Verbindung ausdrücklich erneut herstellst.";

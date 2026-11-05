@@ -116,7 +116,7 @@
 "appearance.system" = "Système";
 "counter.ring" = "Anneau";
 "counter.minimal" = "Typographique";
-"theme.mint" = "Grande foulée";
+"theme.mint" = "Wallkuno";
 "theme.coral" = "Corail";
 "theme.glacier" = "Glacier";
 "theme.sunshine" = "Soleil";
@@ -129,7 +129,7 @@
 "theme.palette.description" = "Choisissez la couleur de vos compteurs, graphiques et widgets.";
 "theme.selected" = "Couleur sélectionnée";
 "theme.available" = "Disponible";
-"theme.premium.note" = "La palette Grande foulée est incluse. Les huit autres couleurs sont disponibles avec Premium.";
+"theme.premium.note" = "La palette Wallkuno est incluse. Les huit autres couleurs sont disponibles avec Premium.";
 "reset.title" = "Effacer les données locales";
 "reset.confirm" = "Effacer et recommencer";
 "reset.body" = "Supprime les préférences, objectifs et caches de cet appareil. Les données Apple Santé, les achats et les réglages de l’autre appareil sont conservés. Walkuno ne relira Santé qu’après votre prochaine connexion explicite.";
