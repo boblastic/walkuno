@@ -112,7 +112,7 @@ struct RootView: View {
                     .tabItem { Label("tab.explorer", systemImage: "calendar") }.tag(2)
                 NavigationStack { AchievementsView().appHeader() }
                     .tabItem { Label("tab.achievements", systemImage: "rosette") }.tag(3)
-                NavigationStack { SettingsView().toolbar(.hidden, for: .navigationBar).appHeader(settingsIsCurrent: true) }
+                NavigationStack { SettingsView().toolbar(.hidden, for: .navigationBar).appHeader() }
                     .tabItem { Label("tab.settings", systemImage: "slider.horizontal.3") }.tag(4)
             }
             .onOpenURL { url in

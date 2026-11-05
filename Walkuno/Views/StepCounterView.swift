@@ -25,6 +25,7 @@ struct StepCounterFace: View {
     var theme: WalkunoTheme
     var style: CounterStyle
     var effect: CounterEffect = .stars
+    var distance: String? = nil
     @ScaledMetric(relativeTo: .largeTitle) private var counterSize = 55
     @Environment(\.colorScheme) private var scheme
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -42,7 +43,7 @@ struct StepCounterFace: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let width = style == .ring ? min(geometry.size.width, typeSize.isAccessibilitySize ? 280 : 232) : min(geometry.size.width - 12, 340)
+            let width = style == .ring ? min(geometry.size.width, geometry.size.height, typeSize.isAccessibilitySize ? 320 : 300) : min(geometry.size.width - 12, 340)
             Group {
                 switch style {
                 case .ring: ring
@@ -76,6 +77,21 @@ struct StepCounterFace: View {
             .font(.caption).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.6)
     }
 
+    private func total(size: CGFloat, alignment: Alignment = .center) -> some View {
+        VStack(alignment: alignment == .leading ? .leading : .center, spacing: 0) {
+            count(size: size, alignment: alignment)
+            objective
+            if let distance {
+                Text(distance)
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(theme.secondaryTint(for: scheme))
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .padding(.top, 5)
+            }
+        }
+    }
+
     private var percentage: some View {
         HStack(spacing: 4) {
             if hasSteps, progress.ratio >= 1 { Image(systemName: "checkmark").font(.caption2.weight(.bold)) }
@@ -105,12 +121,10 @@ struct StepCounterFace: View {
                 .padding(18)
             VStack(spacing: 5) {
                 heading
-                count(size: 55)
-                objective
+                total(size: distance == nil ? 55 : 62)
                 percentage.padding(.top, 4)
             }.padding(.horizontal, 32)
         }
-        .frame(width: typeSize.isAccessibilitySize ? 280 : 232, height: typeSize.isAccessibilitySize ? 280 : 232)
     }
 
     private var horizon: some View {
@@ -146,8 +160,7 @@ struct StepCounterFace: View {
                 }
                 VStack(spacing: 4) {
                     heading
-                    count(size: 58)
-                    objective
+                    total(size: 58)
                 }
                 .frame(width: radius * 1.48)
                 .position(x: center.x, y: center.y + 2)
@@ -160,8 +173,7 @@ struct StepCounterFace: View {
     private var path: some View {
         VStack(spacing: 5) {
             heading
-            count(size: 64)
-            objective
+            total(size: 64)
             CounterRoute(progress: progress, accent: accent, secondary: secondary, overflow: overflow, trail: trail, effect: effect,
                          starAccent: theme.accent, starSecondary: theme.secondaryAccent)
                 .frame(height: typeSize.isAccessibilitySize ? 90 : 76)
@@ -175,8 +187,7 @@ struct StepCounterFace: View {
     private var milestones: some View {
         VStack(spacing: 5) {
             heading
-            count(size: 64)
-            objective
+            total(size: 64)
             GeometryReader { geometry in
                 let gap: CGFloat = 7
                 let width = max(1, (geometry.size.width - gap * 9) / 10)
@@ -225,9 +236,8 @@ struct StepCounterFace: View {
     private var typographic: some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack { heading; Spacer(minLength: 8); percentage }
-            count(size: 86, alignment: .leading)
+            total(size: 86, alignment: .leading)
                 .padding(.top, 3)
-            objective
             GeometryReader { geometry in
                 let trackWidth = max(0, geometry.size.width - 28)
                 ZStack(alignment: .leading) {
@@ -258,6 +268,94 @@ struct StepCounterFace: View {
     }
 }
 
+/// A static, legible version of the home counter for calendar cells.
+struct CompactStepCounterFace: View {
+    var progress: Double?
+    var text: String
+    var theme: WalkunoTheme
+    var style: CounterStyle
+    @Environment(\.colorScheme) private var scheme
+
+    private var value: CounterProgress { .init(steps: progress ?? 0, goal: 1) }
+    private var accent: Color { theme.tint(for: scheme) }
+    private var hasBase: Bool { style == .path || style == .milestones || style == .minimal }
+    private var overflow: Color {
+        value.overflowLap.truncatingRemainder(dividingBy: 2) == 1 ? .white.opacity(0.88) : WalkunoStyle.ink.opacity(0.85)
+    }
+    private var gradient: LinearGradient {
+        .init(colors: [theme.secondaryTint(for: scheme), accent], startPoint: .leading, endPoint: .trailing)
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let size = min(geometry.size.width, geometry.size.height)
+            let stroke = max(2.5, size * 0.065)
+            ZStack {
+                switch style {
+                case .ring:
+                    track(Circle().path(in: CGRect(x: stroke, y: stroke, width: size - 2 * stroke, height: size - 2 * stroke)),
+                          stroke: stroke)
+                        .rotationEffect(.degrees(-90))
+                case .horizon:
+                    track(CounterArc(center: CGPoint(x: size / 2, y: size / 2), radius: size / 2 - stroke)
+                        .path(in: .zero), stroke: stroke)
+                case .path:
+                    track(CounterRouteShape(inset: stroke).path(in: CGRect(x: 0, y: size * 0.65, width: size, height: size * 0.3)),
+                          stroke: stroke)
+                case .milestones:
+                    HStack(alignment: .bottom, spacing: max(1, size * 0.025)) {
+                        ForEach(0..<10) { index in
+                            let height = size * 0.3 * (0.4 + Double(index) / 15)
+                            RoundedRectangle(cornerRadius: 1.5).fill(accent.opacity(0.14))
+                                .overlay(alignment: .bottom) {
+                                    RoundedRectangle(cornerRadius: 1.5).fill(gradient)
+                                        .frame(height: height * value.segmentFill(index))
+                                }
+                                .overlay(alignment: .bottom) {
+                                    if value.ratio > 1 {
+                                        Capsule().fill(overflow).frame(width: max(1, stroke * 0.35),
+                                                                      height: height * value.segmentFill(index, overflow: true))
+                                    }
+                                }
+                                .frame(height: height)
+                        }
+                    }
+                    .padding(.horizontal, stroke).padding(.bottom, stroke)
+                    .frame(height: size, alignment: .bottom)
+                case .minimal:
+                    track(Path { path in
+                        path.move(to: CGPoint(x: stroke, y: size - stroke * 2))
+                        path.addLine(to: CGPoint(x: size - stroke, y: size - stroke * 2))
+                    }, stroke: stroke)
+                }
+                Text(text)
+                    .font(.system(size: size * (hasBase ? 0.32 : 0.29), weight: .bold, design: .rounded))
+                    .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
+                    .foregroundStyle(progress == nil ? Color.secondary : Color.primary)
+                    .frame(width: size * (hasBase ? 0.95 : 0.65))
+                    .offset(y: hasBase ? -size * 0.14 : 0)
+            }
+            .opacity(progress == nil ? 0.45 : 1)
+            .frame(width: size, height: size)
+            .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func track(_ path: Path, stroke: CGFloat) -> some View {
+        ZStack {
+            path.stroke(accent.opacity(0.14), style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+            path.trimmedPath(from: 0, to: value.fraction)
+                .stroke(gradient, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+                .opacity(value.fraction > 0 ? 1 : 0)
+            if value.ratio > 1 {
+                path.trimmedPath(from: 0, to: value.overflowFraction)
+                    .stroke(overflow, style: StrokeStyle(lineWidth: stroke * 0.35, lineCap: .round))
+            }
+        }
+    }
+}
+
 private struct CounterArc: Shape {
     var center: CGPoint
     var radius: CGFloat
@@ -278,22 +376,9 @@ private struct CounterRoute: View {
     var starAccent: Color
     var starSecondary: Color
 
-    private func route(in size: CGSize) -> Path {
-        let w = size.width, h = size.height
-        var path = Path()
-        path.move(to: CGPoint(x: 16, y: h * 0.75))
-        path.addCurve(to: CGPoint(x: w * 0.40, y: h * 0.25),
-                      control1: CGPoint(x: w * 0.23, y: h * 0.78), control2: CGPoint(x: w * 0.20, y: h * 0.12))
-        path.addCurve(to: CGPoint(x: w * 0.69, y: h * 0.66),
-                      control1: CGPoint(x: w * 0.54, y: h * 0.35), control2: CGPoint(x: w * 0.52, y: h * 0.90))
-        path.addCurve(to: CGPoint(x: w - 16, y: h * 0.24),
-                      control1: CGPoint(x: w * 0.82, y: h * 0.45), control2: CGPoint(x: w * 0.79, y: h * 0.17))
-        return path
-    }
-
     var body: some View {
         GeometryReader { geometry in
-            let path = route(in: geometry.size)
+            let path = CounterRouteShape().path(in: CGRect(origin: .zero, size: geometry.size))
             let start = CGPoint(x: 16, y: geometry.size.height * 0.75)
             ZStack {
                 path.stroke(accent.opacity(0.12), style: StrokeStyle(lineWidth: 12, lineCap: .round))
@@ -323,6 +408,23 @@ private struct CounterRoute: View {
     }
 }
 
+private struct CounterRouteShape: Shape {
+    var inset: CGFloat = 16
+
+    func path(in rect: CGRect) -> Path {
+        let w = rect.width, h = rect.height, x = rect.minX, y = rect.minY
+        var path = Path()
+        path.move(to: CGPoint(x: x + inset, y: y + h * 0.75))
+        path.addCurve(to: CGPoint(x: x + w * 0.40, y: y + h * 0.25),
+                      control1: CGPoint(x: x + w * 0.23, y: y + h * 0.78), control2: CGPoint(x: x + w * 0.20, y: y + h * 0.12))
+        path.addCurve(to: CGPoint(x: x + w * 0.69, y: y + h * 0.66),
+                      control1: CGPoint(x: x + w * 0.54, y: y + h * 0.35), control2: CGPoint(x: x + w * 0.52, y: y + h * 0.90))
+        path.addCurve(to: CGPoint(x: rect.maxX - inset, y: y + h * 0.24),
+                      control1: CGPoint(x: x + w * 0.82, y: y + h * 0.45), control2: CGPoint(x: x + w * 0.79, y: y + h * 0.17))
+        return path
+    }
+}
+
 /// Each replay gets fresh state before its first visible frame.
 struct AnimatedStepCounter: View {
     var steps: Int?
@@ -331,13 +433,14 @@ struct AnimatedStepCounter: View {
     var theme: WalkunoTheme
     var style: CounterStyle
     var effect: CounterEffect = .stars
+    var distance: String? = nil
     var replay: String
     var animateEntry: Bool
     var animateUpdates: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        CounterPlaybackView(steps: steps, goal: goal, title: title, theme: theme, style: style, effect: effect,
+        CounterPlaybackView(steps: steps, goal: goal, title: title, theme: theme, style: style, effect: effect, distance: distance,
                             animateEntry: animateEntry && !reduceMotion, animateUpdates: animateUpdates)
             .id(replay)
     }
@@ -350,6 +453,7 @@ private struct CounterPlaybackView: View {
     var theme: WalkunoTheme
     var style: CounterStyle
     var effect: CounterEffect = .stars
+    var distance: String? = nil
     var animateEntry: Bool
     var animateUpdates: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -357,10 +461,10 @@ private struct CounterPlaybackView: View {
     @State private var playback: Playback?
     @State private var hasStarted = false
 
-    init(steps: Int?, goal: Int, title: String, theme: WalkunoTheme, style: CounterStyle, effect: CounterEffect,
+    init(steps: Int?, goal: Int, title: String, theme: WalkunoTheme, style: CounterStyle, effect: CounterEffect, distance: String?,
          animateEntry: Bool, animateUpdates: Bool) {
         self.steps = steps; self.goal = goal; self.title = title
-        self.theme = theme; self.style = style; self.effect = effect
+        self.theme = theme; self.style = style; self.effect = effect; self.distance = distance
         self.animateEntry = animateEntry; self.animateUpdates = animateUpdates
         _settledSteps = State(initialValue: animateEntry ? 0 : Double(steps ?? 0))
     }
@@ -425,7 +529,7 @@ private struct CounterPlaybackView: View {
 
     private func face(value: Double, trail: CounterTrailFrame?) -> some View {
         StepCounterFace(displayedSteps: value, trail: trail, hasSteps: steps != nil,
-                        goal: goal, title: title, theme: theme, style: style, effect: effect)
+                        goal: goal, title: title, theme: theme, style: style, effect: effect, distance: distance)
     }
 
     private func finish(at value: Double) {

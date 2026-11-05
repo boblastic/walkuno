@@ -6,7 +6,7 @@ import WatchConnectivity
 final class WatchBridge: NSObject, WCSessionDelegate {
     private var session: WCSession?
     private var pending: Data?
-    var onReceive: ((GoalHistory, WalkunoTheme, DistanceUnit) -> Void)?
+    var onReceive: ((WatchSettings) -> Void)?
 
     override init() {
         super.init()
@@ -18,7 +18,7 @@ final class WatchBridge: NSObject, WCSessionDelegate {
     }
 
     func send(_ preferences: Preferences) {
-        let payload = Payload(goals: preferences.goals, theme: preferences.theme, unit: preferences.unit)
+        let payload = WatchSettings(preferences: preferences)
         guard let data = try? JSONEncoder().encode(payload) else { return }
         pending = data
         flush()
@@ -53,13 +53,7 @@ final class WatchBridge: NSObject, WCSessionDelegate {
 
     private func receive(_ context: [String: Any]) {
         guard let data = context["settings"] as? Data, data.count <= 100_000,
-              let payload = try? JSONDecoder().decode(Payload.self, from: data) else { return }
-        onReceive?(payload.goals, payload.theme, payload.unit)
-    }
-
-    private struct Payload: Codable {
-        var goals: GoalHistory
-        var theme: WalkunoTheme
-        var unit: DistanceUnit
+              let payload = try? JSONDecoder().decode(WatchSettings.self, from: data) else { return }
+        onReceive?(payload)
     }
 }

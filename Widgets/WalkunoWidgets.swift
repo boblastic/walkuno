@@ -121,7 +121,12 @@ struct WalkunoWidgetView: View {
                 Text(compactValue)
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .lineLimit(1).minimumScaleFactor(0.45)
+                #if os(watchOS)
+                Text(distanceText(entry.snapshot?.today.meters, unit: unit))
+                    .font(.system(size: 8)).lineLimit(1).minimumScaleFactor(0.6)
+                #else
                 Text("today.steps").font(.system(size: 8)).lineLimit(1).minimumScaleFactor(0.6)
+                #endif
             }.padding(.horizontal, 9)
         }.widgetAccentable()
     }

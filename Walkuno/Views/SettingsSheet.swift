@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The header shortcut presents the same settings as the tab.
+/// A modal presentation of the same settings as the tab.
 struct SettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -13,7 +13,7 @@ struct SettingsSheet: View {
                         Button("common.done") { dismiss() }
                     }
                 }
-                .appHeader(settingsIsCurrent: true)
+                .appHeader()
         }
     }
 }

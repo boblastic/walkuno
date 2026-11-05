@@ -14,13 +14,15 @@ Cette version est un point de départ natif exécutable, pas une certification d
 | --- | --- |
 | iPhone seul | Compteur et historique sans erreur Watch |
 | iPhone + Watch | Totaux cohérents avec Santé pour une même plage et les mêmes sources |
+| Accueil Watch | Compteur du jour dans chacun des cinq styles, courbe des sept jours puis rythme aujourd’hui/veille ; défilement continu à la Digital Crown, sans édition d’objectif |
+| Rythme Watch | Actualisation après réception des heures, données absentes distinctes de zéro, veille identifiée en gris, remise à jour au changement de jour |
 | Pas autorisés, distance/énergie absentes | Pas visibles ; métriques absentes affichées par un tiret |
 | Aucun accès ou aucune mesure | Explication neutre, aucune affirmation de refus |
 | Verrouillage / déverrouillage | Pas de perte de cache ; erreur d’accès temporaire compréhensible |
 | Correction d’une journée ancienne dans Santé | Prise en compte au prochain retour au premier plan |
 | Minuit, DST, voyage | Nouveau compteur et nouvelle clé de cache, pas de valeur de la veille |
 | Objectif modifié | Objectifs antérieurs inchangés |
-| Watch hors ligne puis reconnectée | Objectif fusionné et mêmes paramètres |
+| Watch hors ligne puis reconnectée | Objectif, palette, unité, style et effet récupérés depuis l’iPhone ; aucun écran d’édition sur la montre |
 | Effacement pendant une requête | Aucun retour tardif des anciennes données |
 | Widgets et complications | Valeur datée, protection au verrouillage, invalidation après minuit |
 | Complications circulaires | Distance et étages sans anneau ; pas et distance + pas abrégés dès 10 000 (`10.1K`), nombres complets avec VoiceOver, vérifier aussi 100 000 pas et les grands pourcentages |
@@ -45,7 +47,7 @@ Utiliser un jeu de données connu et comparer les **mêmes intervalles calendair
 - Ajouter des captures finales sur les tailles App Store requises, sans bandeau de démonstration et avec des données fictives clairement présentées pour la fiche.
 - Raffiner les visuels de récompenses, les variantes de cartes et les animations de célébration après tests utilisateurs. Les badges actuels sont vectoriels, sans illustrations externes.
 - Valider la stratégie freemium : historique gratuit de 31 jours, toutes les variantes de widgets incluses, autres palettes et compteur minimaliste Premium.
-- La montre présente sept jours récents. Pas de notifications, compte, collecte de fréquentation ou serveur.
+- La montre présente le compteur configuré, les sept jours récents et le rythme aujourd’hui/veille dans une seule vue défilant à la Digital Crown. Pas de notifications, compte, collecte de fréquentation ou serveur.
 - Le nombre d’étages est optionnel dans le cahier des charges et n’est pas demandé par cette version.
 - L’historique au-delà de la portée autorisée par Apple ne peut pas être reconstitué. Les records indiquent leur périmètre accessible.
 

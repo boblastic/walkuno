@@ -44,9 +44,9 @@ final class AppModel {
             widgetActivity = snapshot.activity
             hours = snapshot.activity?.todayHours ?? []
         }
-        bridge.onReceive = { [weak self] goals, _, _ in
+        bridge.onReceive = { [weak self] settings in
             guard let self, self.preferences.onboardingComplete else { return }
-            self.preferences.goals.merge(goals)
+            self.preferences.goals.merge(settings.goals)
             self.persist(sync: false)
         }
         #if DEBUG
@@ -139,7 +139,10 @@ final class AppModel {
             usingCache = false; lastUpdated = refreshTime
             errorMessage = nil
             celebration = progress >= 1
-            widgetActivity = nil; hours = []
+            // Keep the current chart visible until the replacement hourly detail arrives.
+            if let detail = widgetActivity, !calendar.isDate(detail.sampledAt, inSameDayAs: refreshTime) {
+                widgetActivity = nil; hours = []
+            }
             writeSnapshot()
             // Hourly detail must not discard successfully refreshed daily measurements.
             do {
@@ -153,7 +156,9 @@ final class AppModel {
             catch is CancellationError { return false }
             catch {
                 guard token == generation else { return false }
-                hours = []; errorMessage = L("health.refresh.error")
+                widgetActivity = nil; hours = []
+                errorMessage = L("health.refresh.error")
+                writeSnapshot()
             }
             return true
         } catch is CancellationError {
@@ -249,6 +254,7 @@ final class AppModel {
     private func sendSettings() {
         var settings = preferences
         settings.theme = effectiveTheme
+        settings.counterStyle = effectiveCounter
         bridge.send(settings)
     }
 

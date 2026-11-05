@@ -3,8 +3,6 @@ import SwiftUI
 /// The same fixed header sits above every app screen, including presented details.
 private struct AppHeaderModifier: ViewModifier {
     @Environment(\.colorScheme) private var scheme
-    var settingsIsCurrent: Bool
-    @State private var showSettings = false
 
     func body(content: Content) -> some View {
         ZStack {
@@ -13,30 +11,32 @@ private struct AppHeaderModifier: ViewModifier {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Reserve the header's height during layout and let content scroll behind its glass.
         .safeAreaInset(edge: .top, spacing: 0) {
-            AppHeader(settingsIsCurrent: settingsIsCurrent) { showSettings = true }
+            AppHeader()
                 .padding(.horizontal, 16)
                 .padding(.top, 6)
                 .padding(.bottom, 10)
         }
         .background(WalkunoStyle.background(scheme).ignoresSafeArea())
-        .sheet(isPresented: $showSettings) { SettingsSheet() }
     }
 }
 
 extension View {
     /// Apply to screen content inside a NavigationStack, below its system navigation controls.
-    func appHeader(settingsIsCurrent: Bool = false) -> some View {
-        modifier(AppHeaderModifier(settingsIsCurrent: settingsIsCurrent))
+    func appHeader() -> some View {
+        modifier(AppHeaderModifier())
     }
 }
 
 private struct AppHeader: View {
     @Environment(AppModel.self) private var model
     @Environment(\.colorScheme) private var scheme
-    var settingsIsCurrent: Bool
-    var onSettings: () -> Void
+    @State private var showsStreak = false
 
     private var ink: Color { model.effectiveTheme.tint(for: scheme) }
+    private var streak: Int? {
+        ActivityMath.currentStreak(days: model.days, goals: model.preferences.goals, endingOn: model.today.date)
+    }
+    private var streakSymbol: String { model.preferences.counterEffect == .fire ? "flame.fill" : "star.fill" }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -45,18 +45,7 @@ private struct AppHeader: View {
                 identity(showName: false)
             }
             Spacer(minLength: 0)
-            Button(action: onSettings) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 25, weight: .medium))
-                    .frame(width: 44, height: 44)
-                    .background(ink.opacity(0.08), in: Circle())
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(ink)
-            .accessibilityLabel(Text("tab.settings"))
-            .accessibilityIdentifier("app.settings")
-            .disabled(settingsIsCurrent)
+            streakBadge
         }
         .padding(.leading, 16)
         .padding(.trailing, 8)
@@ -64,6 +53,39 @@ private struct AppHeader: View {
         .background { WalkunoGlassSurface() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("app.header")
+    }
+
+    private var streakBadge: some View {
+        Button {
+            showsStreak = true
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: streakSymbol)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(model.effectiveTheme.accent.gradient)
+                    .accessibilityHidden(true)
+                Text(stepsText(streak))
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(ink)
+            }
+            .padding(.horizontal, 11)
+            .padding(.vertical, 7)
+            .background(ink.opacity(0.08), in: Capsule())
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .fixedSize()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("today.streak"))
+        .accessibilityValue(Text(stepsText(streak)))
+        .accessibilityHint(Text("streak.hint"))
+        .accessibilityIdentifier("app.streak")
+        .popover(isPresented: $showsStreak, arrowEdge: .top) {
+            StreakPopover(streak: streak, symbol: streakSymbol)
+                .presentationCompactAdaptation(.popover)
+        }
     }
 
     private func identity(showName: Bool) -> some View {
@@ -90,6 +112,117 @@ private struct AppHeader: View {
                 .accessibilityIdentifier("app.subscription")
         }
         .fixedSize(horizontal: true, vertical: false)
+    }
+}
+
+private struct StreakPopover: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.dismiss) private var dismiss
+    let streak: Int?
+    let symbol: String
+
+    private var ink: Color { model.effectiveTheme.tint(for: scheme) }
+    private var encouragement: String {
+        guard let streak else { return "streak.encouragement.unavailable" }
+        switch streak {
+        case 0: return "streak.encouragement.zero"
+        case 1: return "streak.encouragement.one"
+        case 2..<7: return "streak.encouragement.few"
+        default: return "streak.encouragement.many"
+        }
+    }
+
+    private var detail: String {
+        guard let streak else { return L("streak.detail.unavailable") }
+        switch streak {
+        case 0: return L("streak.detail.zero")
+        case 1: return L("streak.detail.one")
+        default: return String(format: L("streak.detail.many"), stepsText(streak))
+        }
+    }
+
+    var body: some View {
+        ViewThatFits(in: .vertical) {
+            content
+            ScrollView { content }
+                .scrollBounceBehavior(.basedOnSize)
+        }
+        .frame(width: 300)
+        .background(WalkunoStyle.card(scheme))
+        .accessibilityIdentifier("streak.popover")
+    }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top, spacing: 8) {
+                    Text("streak.title")
+                        .font(.system(.title3, design: .rounded, weight: .bold))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityAddTraits(.isHeader)
+                        .padding(.top, 8)
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(.caption, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .padding(8)
+                            .background(.primary.opacity(0.06), in: Circle())
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("streak.close"))
+                    .accessibilityIdentifier("streak.close")
+                }
+                Text("streak.intro")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 14) {
+                Image(systemName: symbol)
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(model.effectiveTheme.accent.gradient)
+                    .frame(width: 64, height: 64)
+                    .background(ink.opacity(0.10), in: RoundedRectangle(cornerRadius: 22))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(stepsText(streak))
+                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                        .monospacedDigit()
+                        .foregroundStyle(ink)
+                        .accessibilityIdentifier("streak.count")
+                    Text(streak == 1 || streak == 0 ? "streak.unit.one" : "streak.unit.many")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text(detail)
+                .font(.subheadline)
+                .accessibilityIdentifier("streak.detail")
+
+            if let streak, streak > 0 {
+                let goalReached = (model.today.steps ?? 0) >= model.preferences.goals.value(on: model.today.date)
+                Text(goalReached ? "streak.today.complete" : "streak.today.continue")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "sparkles").accessibilityHidden(true)
+                Text(LocalizedStringKey(encouragement))
+                    .accessibilityIdentifier("streak.encouragement")
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(ink)
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 18))
+        }
+        .padding(20)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 

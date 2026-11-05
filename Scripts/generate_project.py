@@ -57,7 +57,7 @@ specs = [
     ('WalkunoWidgets', 'fr.orbelio.walkuno.widgets', 'iphoneos', 'com.apple.product-type.app-extension',
      core + shared + ['Widgets/WalkunoWidgets.swift'], ['Config/PrivacyInfo.xcprivacy']),
     ('WalkunoWatch', 'fr.orbelio.walkuno.watchkitapp', 'watchos', 'com.apple.product-type.application',
-     core + shared + health + ['WatchApp/WalkunoWatchApp.swift'], ['WatchApp/Assets.xcassets', 'Config/PrivacyInfo.xcprivacy']),
+     core + shared + health + ['WatchApp/WalkunoWatchApp.swift', 'Walkuno/Views/StepCounterView.swift', 'Walkuno/Views/CounterStarlight.swift'], ['WatchApp/Assets.xcassets', 'Config/PrivacyInfo.xcprivacy']),
     ('WalkunoWatchWidgets', 'fr.orbelio.walkuno.watchkitapp.widgets', 'watchos', 'com.apple.product-type.app-extension',
      core + shared + ['Widgets/WalkunoWidgets.swift'], ['Config/PrivacyInfo.xcprivacy'])
 ]
@@ -80,7 +80,7 @@ for name, bundle_id, sdk, product_type, sources, resources in specs:
     settings = dict(PRODUCT_BUNDLE_IDENTIFIER=bundle_id, PRODUCT_NAME='$(TARGET_NAME)', SDKROOT=sdk,
                     INFOPLIST_FILE='Config/' + name + '-Info.plist', GENERATE_INFOPLIST_FILE='NO',
                     CODE_SIGN_ENTITLEMENTS='Config/' + name + '.entitlements', CODE_SIGN_STYLE='Automatic',
-                    CURRENT_PROJECT_VERSION='10', MARKETING_VERSION='1.0.0', SWIFT_VERSION='5.0',
+                    CURRENT_PROJECT_VERSION='11', MARKETING_VERSION='1.0.0', SWIFT_VERSION='5.0',
                     SWIFT_EMIT_LOC_STRINGS='YES', ENABLE_USER_SCRIPT_SANDBOXING='YES',
                     TARGETED_DEVICE_FAMILY='4' if watch else '1',
                     SUPPORTED_PLATFORMS='watchos watchsimulator' if watch else 'iphoneos iphonesimulator',

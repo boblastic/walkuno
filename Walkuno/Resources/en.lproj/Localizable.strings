@@ -72,7 +72,7 @@
 "statistics.next" = "Next period";
 "statistics.peak" = "Most active hour";
 "calendar.title" = "Small steps, a bigger picture";
-"calendar.legend" = "Stronger color means closer to your goal. A dot marks a day without available data.";
+"calendar.legend" = "Each counter tracks the daily goal. ✓: goal reached. —: no available data.";
 "achievements.subtitle" = "Your progress deserves a little spotlight.";
 "achievements.record" = "Your personal best";
 "achievements.badges" = "Milestones to remember";
@@ -265,6 +265,23 @@
 "today.return.current" = "Back to today";
 "today.swipe.hint" = "Swipe horizontally to change periods";
 "today.streak" = "Streak";
+"streak.hint" = "Show your current achievement streak";
+"streak.title" = "Your achievement streak";
+"streak.intro" = "Find your current achievement streak here.";
+"streak.unit.one" = "consecutive day";
+"streak.unit.many" = "consecutive days";
+"streak.detail.zero" = "Your streak is at zero. Reach your daily goal to get it started.";
+"streak.detail.one" = "You have reached your daily goal for 1 day.";
+"streak.detail.many" = "You have reached your daily goal for %@ consecutive days.";
+"streak.detail.unavailable" = "There is not enough data to calculate your streak yet.";
+"streak.today.complete" = "Today’s goal is complete: today already counts toward this streak.";
+"streak.today.continue" = "Reach your goal today to keep your streak going.";
+"streak.encouragement.zero" = "Every step counts. Your first successful day is waiting for you!";
+"streak.encouragement.one" = "One successful day is a great start. Keep that momentum!";
+"streak.encouragement.few" = "You’re finding your rhythm. Take it one day at a time!";
+"streak.encouragement.many" = "What consistency! You’re building a great habit. Well done!";
+"streak.encouragement.unavailable" = "Your next step is already a good start. Let’s keep moving together!";
+"streak.close" = "Close";
 "today.kcal" = "kcal";
 "today.exercise" = "Exercise · h";
 "today.floors" = "Floors";
@@ -371,7 +388,7 @@
 "widget.chart.goal.accessibility" = "Cumulative steps from midnight to midnight. Today is a solid line; usual activity is dashed.";
 "widget.goal.short" = "Goal";
 
-"calendar.legend.months" = "The stronger the color, the closer the monthly goal. A dot marks a month without accessible data.";
+"calendar.legend.months" = "Each counter tracks the overall monthly goal, as on the home screen. ✓: goal reached. —: no available data.";
 
 "counter.horizon" = "Horizon";
 

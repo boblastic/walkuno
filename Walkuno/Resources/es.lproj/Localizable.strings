@@ -72,7 +72,7 @@
 "statistics.next" = "Periodo siguiente";
 "statistics.peak" = "Hora más activa";
 "calendar.title" = "Pequeños pasos, una visión más amplia";
-"calendar.legend" = "Cuanto más intenso es el color, más cerca estás de tu objetivo. Un punto indica un día sin datos disponibles.";
+"calendar.legend" = "Cada contador muestra el objetivo diario. ✓: objetivo alcanzado. —: sin datos disponibles.";
 "achievements.subtitle" = "Tu progreso merece su momento.";
 "achievements.record" = "Tu récord personal";
 "achievements.badges" = "Hitos para recordar";
@@ -264,6 +264,23 @@
 "today.return.current" = "Volver a hoy";
 "today.swipe.hint" = "Desliza horizontalmente para cambiar de periodo";
 "today.streak" = "Racha";
+"streak.hint" = "Mostrar tu racha actual de logros";
+"streak.title" = "Tu racha de logros";
+"streak.intro" = "Aquí encontrarás tu racha actual de logros.";
+"streak.unit.one" = "día consecutivo";
+"streak.unit.many" = "días consecutivos";
+"streak.detail.zero" = "Tu racha está en cero. Alcanza tu objetivo diario para empezarla.";
+"streak.detail.one" = "Has alcanzado tu objetivo diario durante 1 día.";
+"streak.detail.many" = "Has alcanzado tu objetivo diario durante %@ días consecutivos.";
+"streak.detail.unavailable" = "Aún no hay datos suficientes para calcular tu racha.";
+"streak.today.complete" = "Objetivo de hoy alcanzado: hoy ya cuenta en esta racha.";
+"streak.today.continue" = "Alcanza tu objetivo hoy para continuar tu racha.";
+"streak.encouragement.zero" = "Cada paso cuenta. ¡Tu primer día de éxito te espera!";
+"streak.encouragement.one" = "Un día de éxito es un gran comienzo. ¡Sigue así!";
+"streak.encouragement.few" = "Estás encontrando tu ritmo. ¡Sigue adelante, un día a la vez!";
+"streak.encouragement.many" = "¡Qué constancia! Estás creando un gran hábito. ¡Enhorabuena!";
+"streak.encouragement.unavailable" = "Tu próximo paso ya es un buen comienzo. ¡Sigamos avanzando juntos!";
+"streak.close" = "Cerrar";
 "today.kcal" = "kcal";
 "today.exercise" = "Ejercicio · h";
 "today.floors" = "Pisos";
@@ -370,7 +387,7 @@
 "widget.chart.goal.accessibility" = "Pasos acumulados de medianoche a medianoche. Hoy con línea continua y la actividad habitual con línea discontinua.";
 "widget.goal.short" = "Objetivo";
 
-"calendar.legend.months" = "Cuanto más intenso es el color, más cerca está el objetivo mensual. Un punto indica un mes sin datos disponibles.";
+"calendar.legend.months" = "Cada contador muestra el objetivo global del mes, como en el inicio. ✓: objetivo alcanzado. —: sin datos disponibles.";
 
 "counter.horizon" = "Horizonte";
 

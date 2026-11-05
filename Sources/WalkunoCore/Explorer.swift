@@ -54,8 +54,9 @@ public struct ExplorerActivity: Identifiable, Sendable {
             let date = calendar.date(byAdding: .month, value: offset, to: interval.start)!
             let monthDays = days.filter { calendar.isDate($0.date, equalTo: date, toGranularity: .month) }
             let summary = ActivitySummary(days: monthDays, goals: goals, calendar: calendar)
-            // Use historical goals only for observed days; unavailable and future days have no score.
-            let goal = monthDays.filter { $0.steps != nil }.reduce(0) { $0 + goals.value(on: $1.date, calendar: calendar) }
+            // Match the home counter's global monthly goal, including elapsed days
+            // without measurements. A wholly unavailable or future month has no score.
+            let goal = monthDays.reduce(0) { $0 + goals.value(on: $1.date, calendar: calendar) }
             return Month(date: date, summary: summary,
                          progress: summary.total.flatMap { goal > 0 ? Double($0) / Double(goal) : nil })
         } : []

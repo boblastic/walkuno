@@ -24,6 +24,7 @@ struct TodayView: View {
     @State private var loadingHours = false
     @State private var hoursError = false
     @State private var previousHoursError = false
+    @State private var isConnectingHealth = false
 
     private var accent: Color { model.effectiveTheme.accent }
     private var ink: Color { model.effectiveTheme.tint(for: scheme) }
@@ -70,11 +71,6 @@ struct TodayView: View {
         .init(period: period, anchor: period == .day ? chartWindowAnchor ?? anchor : anchor,
               available: model.days, earliest: earliest, calendar: calendar)
     }
-    private var streak: Int? {
-        guard let last = activity.days.last else { return nil }
-        let accessible = model.days.filter { day in earliest.map { day.date >= $0 } ?? true }
-        return ActivityMath.currentStreak(days: accessible, goals: model.preferences.goals, endingOn: last.date)
-    }
     private var hours: [HourActivity] {
         if calendar.isDateInToday(anchor) { return model.hours }
         return loadedHoursDate == calendar.startOfDay(for: anchor) ? selectedHours : []
@@ -96,49 +92,54 @@ struct TodayView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                if model.isDemo { Label("demo.banner", systemImage: "sparkles").font(.caption).foregroundStyle(model.effectiveTheme.secondaryTint(for: scheme)) }
-                Picker("statistics.period", selection: Binding(get: { period }, set: { value in
-                    guard !paging.isSliding else { return }
-                    if value == .year && !model.purchases.isPremium { showPremium = true }
-                    else if value != period { replayCounterOnEntry = true; period = value }
-                })) {
-                    ForEach(ActivityPeriod.allCases) { value in
-                        Text(L("period.\(value.rawValue)")).tag(value)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .accessibilityIdentifier("today.period")
-
-                VStack(spacing: 12) {
-                    periodNavigation
-                    counter
-                    metrics
-                    TodayTrendChart(activity: chartActivity, selectedDate: period == .day ? anchor : nil,
-                                    goal: model.preferences.goals.value(on: anchor), accent: ink, period: period) { date in
-                        // Keep all seven days available while comparing dates in this window.
-                        chartWindowAnchor = chartWindowAnchor ?? anchor
-                        selectAnchor(date)
-                    }
-                }
-                .contentShape(Rectangle())
-                // A swipe must win over the counter's tap-to-detail gesture.
-                .highPriorityGesture(DragGesture(minimumDistance: 30)
-                    .onChanged { value in
-                        guard !paging.isSliding, !reduceMotion,
-                              abs(value.translation.width) > abs(value.translation.height) * 1.5 else { return }
-                        let hasNeighbor = value.translation.width > 0 ? pageWindow?.previous != nil : pageWindow?.next != nil
-                        let translation = hasNeighbor ? value.translation.width : value.translation.width * 0.15
-                        paging.offset = min(paging.width, max(-paging.width, translation))
-                    }
-                    .onEnded { value in
+                VStack(alignment: .leading, spacing: 8) {
+                    if model.isDemo { Label("demo.banner", systemImage: "sparkles").font(.caption).foregroundStyle(model.effectiveTheme.secondaryTint(for: scheme)) }
+                    Picker("statistics.period", selection: Binding(get: { period }, set: { value in
                         guard !paging.isSliding else { return }
-                        guard abs(value.translation.width) > 35,
-                              abs(value.translation.width) > abs(value.translation.height) * 1.5 else { settleCounter(); return }
-                        move(value.translation.width > 0 ? -1 : 1)
-                    })
+                        if value == .year && !model.purchases.isPremium { showPremium = true }
+                        else if value != period { replayCounterOnEntry = true; period = value }
+                    })) {
+                        ForEach(ActivityPeriod.allCases) { value in
+                            Text(L("period.\(value.rawValue)")).tag(value)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("today.period")
+
+                    VStack(spacing: 12) {
+                        VStack(spacing: typeSize.isAccessibilitySize ? 2 : -6) {
+                            periodNavigation
+                                // Keep the full navigation targets above the counter's transparent margin.
+                                .zIndex(1)
+                            counter
+                        }
+                        TodayTrendChart(activity: chartActivity, selectedDate: period == .day ? anchor : nil,
+                                        goal: model.preferences.goals.value(on: anchor), accent: ink, period: period) { date in
+                            // Keep all seven days available while comparing dates in this window.
+                            chartWindowAnchor = chartWindowAnchor ?? anchor
+                            selectAnchor(date)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    // A swipe must win over the counter's tap-to-detail gesture.
+                    .highPriorityGesture(DragGesture(minimumDistance: 30)
+                        .onChanged { value in
+                            guard !paging.isSliding, !reduceMotion,
+                                  abs(value.translation.width) > abs(value.translation.height) * 1.5 else { return }
+                            let hasNeighbor = value.translation.width > 0 ? pageWindow?.previous != nil : pageWindow?.next != nil
+                            let translation = hasNeighbor ? value.translation.width : value.translation.width * 0.15
+                            paging.offset = min(paging.width, max(-paging.width, translation))
+                        }
+                        .onEnded { value in
+                            guard !paging.isSliding else { return }
+                            guard abs(value.translation.width) > 35,
+                                  abs(value.translation.width) > abs(value.translation.height) * 1.5 else { settleCounter(); return }
+                            move(value.translation.width > 0 ? -1 : 1)
+                        })
+                }
 
                 if activity.summary.total == nil && !model.isLoading { HealthEmptyView() }
-                if model.isLoading {
+                if model.isLoading && activity.summary.total == nil {
                     HStack { ProgressView(); Text("health.refreshing").font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity)
                 }
                 if let error = model.errorMessage {
@@ -152,10 +153,27 @@ struct TodayView: View {
                         .sensoryFeedback(.success, trigger: model.celebration)
                 }
                 if period == .day { hourlyCard } else { periodSummary }
-                if activity.summary.total != nil && (activity.total(for: .exerciseTime) == nil || activity.total(for: .floors) == nil) {
-                    Button { Task { await model.connectHealth() } } label: {
+                if isConnectingHealth || (activity.summary.total != nil && (activity.total(for: .exerciseTime) == nil || activity.total(for: .floors) == nil)) {
+                    Button {
+                        isConnectingHealth = true
+                        Task {
+                            defer { isConnectingHealth = false }
+                            await model.connectHealth()
+                        }
+                    } label: {
                         Label("today.health.metrics", systemImage: "heart.text.clipboard").font(.caption)
-                    }.frame(maxWidth: .infinity).tint(ink)
+                            .padding(.horizontal, 28)
+                            .frame(maxWidth: .infinity)
+                            .overlay(alignment: .trailing) {
+                                ProgressView().controlSize(.small)
+                                    .opacity(isConnectingHealth || model.isLoading ? 1 : 0)
+                                    .accessibilityLabel(Text("health.refreshing"))
+                                    .accessibilityHidden(!isConnectingHealth && !model.isLoading)
+                            }
+                    }
+                    .tint(ink)
+                    .disabled(isConnectingHealth || model.isLoading)
+                    .accessibilityIdentifier("today.health.metrics")
                 }
                 HStack(spacing: 12) {
                     Button { showGoal = true } label: { Label("goal.edit", systemImage: "scope").frame(maxWidth: .infinity) }
@@ -167,7 +185,7 @@ struct TodayView: View {
                         .font(.caption2).foregroundStyle(.secondary).frame(maxWidth: .infinity)
                     if model.usingCache { Text("today.cached").font(.caption2).foregroundStyle(.secondary).frame(maxWidth: .infinity) }
                 }
-            }.padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 28)
+            }.padding(.horizontal, 20).padding(.top, 4).padding(.bottom, 28)
         }
         .background(WalkunoStyle.background(scheme))
         .toolbar(.hidden, for: .navigationBar)
@@ -216,7 +234,7 @@ struct TodayView: View {
         TodayCounterCarousel(
             current: AnimatedStepCounter(steps: activity.summary.total, goal: activity.goal, title: title,
                                           theme: model.effectiveTheme, style: model.effectiveCounter, effect: model.preferences.counterEffect,
-                                          replay: counterReplay,
+                                          distance: distanceText(for: activity), replay: counterReplay,
                                           animateEntry: model.preferences.animatePeriodChanges || replayCounterOnEntry,
                                           animateUpdates: model.preferences.animatePeriodChanges || (period == .day && calendar.isDateInToday(anchor)))
                 .id("\(period.rawValue)-\(activity.interval.start.timeIntervalSinceReferenceDate)")
@@ -237,7 +255,7 @@ struct TodayView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(Text(dateRange) + Text(", ") + Text("today.counter.accessibility \(stepsText(activity.summary.total)) \(activity.goal.formatted())"))
+        .accessibilityLabel(Text(dateRange) + Text(", ") + Text("today.counter.accessibility \(stepsText(activity.summary.total)) \(activity.goal.formatted())") + Text(", " + distanceText(for: activity)))
         .accessibilityValue(Text(LocalizedStringKey(model.effectiveCounter.titleKey)))
         .accessibilityHint(period == .day ? Text("today.detail.hint") : Text("today.swipe.hint"))
         .accessibilityAction { if period == .day && !paging.isSliding { showDetail = true } }
@@ -246,7 +264,7 @@ struct TodayView: View {
         .accessibilityIdentifier("today.counter")
     }
 
-    private var counterHeight: CGFloat { typeSize.isAccessibilitySize ? 320 : 232 }
+    private var counterHeight: CGFloat { typeSize.isAccessibilitySize ? 360 : 300 }
 
     private func preparedCounter(_ page: DashboardPageWindow.Page?) -> some View {
         Group {
@@ -256,7 +274,8 @@ struct TodayView: View {
                                     ? 0 : Double(page.activity.summary.total ?? 0),
                                   hasSteps: page.activity.summary.total != nil, goal: page.activity.goal,
                                   title: title(for: page.anchor, activity: page.activity), theme: model.effectiveTheme,
-                                  style: model.effectiveCounter)
+                                  style: model.effectiveCounter, effect: model.preferences.counterEffect,
+                                  distance: distanceText(for: page.activity))
                     .frame(height: counterHeight)
             } else { Color.clear.frame(height: counterHeight) }
         }
@@ -264,22 +283,11 @@ struct TodayView: View {
         .allowsHitTesting(false)
     }
 
-    private var metrics: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: typeSize.isAccessibilitySize ? 2 : model.preferences.showEnergy ? 5 : 4), spacing: 8) {
-            TodayMetric(title: LocalizedStringKey(model.preferences.unit.symbol), value: activity.total(for: .distance).map { model.preferences.unit.convert(meters: $0).formatted(.number.precision(.fractionLength(1))) } ?? "—", symbol: "location.fill", color: accent)
-            if model.preferences.showEnergy {
-                TodayMetric(title: "today.kcal", value: activity.total(for: .energy).map { Int($0).formatted() } ?? "—", symbol: "bolt.heart.fill", color: accent)
-            }
-            TodayMetric(title: "today.exercise", value: exerciseText, symbol: "stopwatch", color: accent)
-            TodayMetric(title: "today.floors", value: activity.total(for: .floors).map { Int($0).formatted() } ?? "—", symbol: "stairs", color: accent)
-            TodayMetric(title: "today.streak", value: stepsText(streak), symbol: "flame.fill", color: accent)
-        }
-    }
-
-    private var exerciseText: String {
-        guard let minutes = activity.total(for: .exerciseTime) else { return "—" }
-        let rounded = Int(minutes.rounded())
-        return "\(rounded / 60):" + String(format: "%02d", rounded % 60)
+    private func distanceText(for activity: DashboardActivity) -> String {
+        let value = activity.total(for: .distance).map {
+            model.preferences.unit.convert(meters: $0).formatted(.number.precision(.fractionLength(1)))
+        } ?? "—"
+        return "\(value) \(model.preferences.unit.symbol)"
     }
 
     private var hourlyCard: some View {
@@ -439,27 +447,6 @@ struct TodayView: View {
         }
         guard !Task.isCancelled else { return }
         loadingHours = false
-    }
-}
-
-private struct TodayMetric: View {
-    var title: LocalizedStringKey
-    var value: String
-    var symbol: String
-    var color: Color
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        VStack(spacing: 5) {
-            Image(systemName: symbol).font(.caption2.weight(.semibold)).accessibilityHidden(true)
-            Text(value).font(.system(.title3, design: .rounded, weight: .bold)).monospacedDigit()
-                .lineLimit(1).minimumScaleFactor(0.65)
-            Text(title).font(.caption2).foregroundStyle(WalkunoStyle.ink.opacity(0.88)).lineLimit(1).minimumScaleFactor(0.75)
-        }
-        .frame(maxWidth: .infinity, minHeight: 58).padding(.horizontal, 4).padding(.vertical, 5)
-        .foregroundStyle(WalkunoStyle.ink)
-        .background(color, in: RoundedRectangle(cornerRadius: 19))
-        .accessibilityElement(children: .combine)
     }
 }
 

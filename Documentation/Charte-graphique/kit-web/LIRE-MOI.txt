@@ -1,0 +1,61 @@
+WALKUNO / KIT POUR ORBELIO / 05.11.2026
+
+1. APERÇU
+Ouvrir index.html dans un navigateur. Le composant s’adapte à la largeur de
+son conteneur. Il peut aussi être consulté sans serveur ni connexion.
+Les aperçus PNG livrés montrent le composant sur ordinateur et mobile.
+
+2. INTÉGRATION
+Copier le contenu de encart.html dans la page Orbelio et charger
+walkuno-encart.css. Copier assets/ et ajuster les chemins si nécessaire.
+Remplacer href="#walkuno-details" par la véritable URL de la page Walkuno.
+Cette ancre fonctionne dans index.html ; elle n’est pas une URL publique.
+Si plusieurs encarts coexistent, donner à chacun un id de titre unique
+et adapter aria-labelledby. Choisir le niveau de titre adapté à la page.
+Le CSS est limité aux classes walkuno-* ; aucun script ni police distante.
+
+3. TYPOGRAPHIE
+L’application utilise la police système Apple, arrondie pour son nom,
+ses titres majeurs et ses compteurs. Sur le Web, ui-rounded puis les polices
+système servent de repli. Le rendu varie selon l’appareil. Aucune police
+Apple n’est fournie ni chargée comme webfont. Le PDF emploie Arial Rounded
+pour illustrer les proportions ; ce n’est pas un logotype typographique figé.
+Pour le mot Walkuno, garder la capitale W et le reste en minuscules.
+
+4. IDENTITÉ
+Le marcheur est extrait sans modification des tracés de
+Documentation/Identite/Cadence/02-Grande-foulee.svg.
+Version sombre : vert #A3FF70 et turquoise #31B99F sur encre #0A242C.
+Version claire : vert #37651C et turquoise #006758 sur #EFF6F1 ou blanc.
+Les versions encre et blanc sont monochromes, à utiliser si nécessaire.
+L’icône carrée reprend exactement l’icône iOS actuelle, sans coins prédécoupés.
+Taille minimale recommandée : symbole 24 px de haut ; icône 48 px.
+Espace libre recommandé : 1/4 de la hauteur visible du symbole.
+Ne pas déformer, incliner, recadrer, ajouter d’ombre ou de contour au symbole.
+
+5. TEXTES ET PUBLICATION
+Accroche : Chaque pas compte.
+Texte : Vos pas, vos objectifs et vos progrès, en un regard. Walkuno vous
+accompagne au quotidien sur iPhone et Apple Watch.
+Atouts : Sans compte / Sans publicité / Widgets.
+CTA : Découvrir Walkuno.
+Mention éditeur : Une application Orbelio.
+Ne pas annoncer une disponibilité App Store ou un prix sans les avoir validés.
+Le kit n’invente ni lien App Store ni badge de téléchargement.
+Certaines fonctions de l’application sont Premium ; ne pas présenter
+l’ensemble de l’offre comme entièrement gratuit.
+
+6. VISUEL
+walkuno-progression.svg est une illustration de progression, pas une capture.
+Les valeurs 6 432 / 8 000 / 80 % sont fictives. Garder la légende visible.
+Les captures du dépôt ne sont pas reprises : elles montrent une version
+antérieure de l’interface. Produire de nouvelles captures si nécessaire.
+
+7. PÉRIMÈTRE
+Charte tirée du code local consulté le 05.11.2026. Couleurs et tracés :
+AppShared/Design.swift ; Scripts/generate_icon.swift ; icône iOS actuelle.
+Texte éditorial : Documentation/AppStore.md, README.md et fonctions du projet.
+Les dimensions Web, la composition et les variantes monochromes sont des
+recommandations pour Orbelio. Le site Orbelio existant n’a pas été modifié
+ni audité. Adapter les espacements à sa grille lors de l’intégration.
+Les fontes utilisées pour produire le PDF ne sont pas redistribuées.

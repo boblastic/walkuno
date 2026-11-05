@@ -72,7 +72,7 @@
 "statistics.next" = "次の期間";
 "statistics.peak" = "最も活動的な時間";
 "calendar.title" = "小さな一歩から、全体を見渡す";
-"calendar.legend" = "色が濃いほど目標に近づいています。点はデータのない日を示します。";
+"calendar.legend" = "各カウンターは1日の目標に対する進捗を示します。✓：目標達成。—：利用できるデータなし。";
 "achievements.subtitle" = "あなたの進歩に、ちょっとした拍手を。";
 "achievements.record" = "自己ベスト";
 "achievements.badges" = "思い出に残る節目";
@@ -264,6 +264,23 @@
 "today.return.current" = "今日に戻る";
 "today.swipe.hint" = "横にスワイプして期間を切り替え";
 "today.streak" = "連続達成";
+"streak.hint" = "現在の連続達成記録を表示";
+"streak.title" = "あなたの連続達成記録";
+"streak.intro" = "現在の目標連続達成記録をここで確認できます。";
+"streak.unit.one" = "日連続";
+"streak.unit.many" = "日連続";
+"streak.detail.zero" = "現在の記録は0日です。毎日の目標を達成して、記録を始めましょう。";
+"streak.detail.one" = "1日、毎日の目標を達成しました。";
+"streak.detail.many" = "%@日連続で毎日の目標を達成しました。";
+"streak.detail.unavailable" = "連続達成記録を計算するためのデータがまだ足りません。";
+"streak.today.complete" = "今日の目標は達成済みです。今日はすでにこの記録に含まれています。";
+"streak.today.continue" = "今日も目標を達成して、記録を伸ばしましょう。";
+"streak.encouragement.zero" = "一歩一歩が大切です。最初の達成を目指しましょう！";
+"streak.encouragement.one" = "最初の1日を達成しました。素晴らしいスタートです！";
+"streak.encouragement.few" = "いいペースです。一日ずつ、続けていきましょう！";
+"streak.encouragement.many" = "素晴らしい継続力です！いい習慣が身についていますね。";
+"streak.encouragement.unavailable" = "次の一歩が、いいスタートになります。一緒に進みましょう！";
+"streak.close" = "閉じる";
 "today.kcal" = "kcal";
 "today.exercise" = "運動 · 時間";
 "today.floors" = "階数";
@@ -370,7 +387,7 @@
 "widget.chart.goal.accessibility" = "0時から24時までの累計歩数。今日は実線、普段の活動は点線です。";
 "widget.goal.short" = "目標";
 
-"calendar.legend.months" = "色が濃いほど月の目標に近づいています。点は利用できるデータがない月を示します。";
+"calendar.legend.months" = "各カウンターはホーム画面と同じ月全体の目標に対する進捗を示します。✓：目標達成。—：利用できるデータなし。";
 
 "counter.horizon" = "ホライズン";
 

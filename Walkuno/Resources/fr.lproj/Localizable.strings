@@ -72,7 +72,7 @@
 "statistics.next" = "Période suivante";
 "statistics.peak" = "Heure la plus active";
 "calendar.title" = "Les petits pas font les grands chemins";
-"calendar.legend" = "Plus la couleur est intense, plus l’objectif est proche. Un point indique une journée sans données accessibles.";
+"calendar.legend" = "Le compteur suit l’objectif du jour. ✓ : objectif atteint. — : sans données accessibles.";
 "achievements.subtitle" = "Votre progression mérite un peu de lumière.";
 "achievements.record" = "Votre record personnel";
 "achievements.badges" = "Les belles étapes";
@@ -265,6 +265,23 @@
 "today.return.current" = "Revenir à aujourd’hui";
 "today.swipe.hint" = "Balayer horizontalement pour changer de période";
 "today.streak" = "Série";
+"streak.hint" = "Afficher votre série de réussite actuelle";
+"streak.title" = "Votre série de réussite";
+"streak.intro" = "Retrouvez ici votre série de réussite actuelle.";
+"streak.unit.one" = "jour consécutif";
+"streak.unit.many" = "jours consécutifs";
+"streak.detail.zero" = "Votre série est à zéro. Atteignez votre objectif quotidien pour la démarrer.";
+"streak.detail.one" = "Vous avez atteint votre objectif quotidien pendant 1 jour.";
+"streak.detail.many" = "Vous avez atteint votre objectif quotidien pendant %@ jours consécutifs.";
+"streak.detail.unavailable" = "Vos données ne permettent pas encore de calculer votre série.";
+"streak.today.complete" = "Objectif atteint aujourd’hui : votre journée compte déjà dans cette série.";
+"streak.today.continue" = "Atteignez votre objectif aujourd’hui pour prolonger votre série.";
+"streak.encouragement.zero" = "Chaque pas compte. Votre premier jour de réussite vous attend !";
+"streak.encouragement.one" = "Un premier jour réussi, c’est un beau départ. Gardez cet élan !";
+"streak.encouragement.few" = "Vous prenez le rythme. Un jour après l’autre, continuez comme ça !";
+"streak.encouragement.many" = "Quelle régularité ! Vous construisez une belle habitude, bravo !";
+"streak.encouragement.unavailable" = "Votre prochain pas est déjà un bon début. On avance ensemble !";
+"streak.close" = "Fermer";
 "today.kcal" = "kcal";
 "today.exercise" = "Exercice · h";
 "today.floors" = "Étages";
@@ -371,7 +388,7 @@
 "widget.chart.goal.accessibility" = "Pas cumulés de minuit à 24 heures. Le jour en trait plein, les habitudes en pointillés.";
 "widget.goal.short" = "Objectif";
 
-"calendar.legend.months" = "Plus la couleur est intense, plus l’objectif du mois est proche. Un point indique un mois sans données accessibles.";
+"calendar.legend.months" = "Chaque compteur suit l’objectif global du mois, comme à l’accueil. ✓ : objectif atteint. — : sans données accessibles.";
 
 "counter.horizon" = "Horizon";
 

@@ -72,7 +72,7 @@
 "statistics.next" = "Nächster Zeitraum";
 "statistics.peak" = "Aktivste Stunde";
 "calendar.title" = "Kleine Schritte, großer Überblick";
-"calendar.legend" = "Je kräftiger die Farbe, desto näher bist du deinem Ziel. Ein Punkt markiert einen Tag ohne verfügbare Daten.";
+"calendar.legend" = "Jeder Zähler zeigt das Tagesziel. ✓: Ziel erreicht. —: keine verfügbaren Daten.";
 "achievements.subtitle" = "Dein Fortschritt verdient Aufmerksamkeit.";
 "achievements.record" = "Dein persönlicher Rekord";
 "achievements.badges" = "Meilensteine zum Erinnern";
@@ -264,6 +264,23 @@
 "today.return.current" = "Zurück zu heute";
 "today.swipe.hint" = "Horizontal wischen, um den Zeitraum zu wechseln";
 "today.streak" = "Serie";
+"streak.hint" = "Aktuelle Erfolgsserie anzeigen";
+"streak.title" = "Deine Erfolgsserie";
+"streak.intro" = "Hier findest du deine aktuelle Erfolgsserie.";
+"streak.unit.one" = "Tag in Folge";
+"streak.unit.many" = "Tage in Folge";
+"streak.detail.zero" = "Deine Serie steht bei null. Erreiche dein Tagesziel, um sie zu starten.";
+"streak.detail.one" = "Du hast dein Tagesziel an 1 Tag erreicht.";
+"streak.detail.many" = "Du hast dein Tagesziel an %@ Tagen in Folge erreicht.";
+"streak.detail.unavailable" = "Es gibt noch nicht genügend Daten, um deine Serie zu berechnen.";
+"streak.today.complete" = "Das heutige Ziel ist erreicht: Heute zählt bereits zu dieser Serie.";
+"streak.today.continue" = "Erreiche heute dein Ziel, um deine Serie fortzusetzen.";
+"streak.encouragement.zero" = "Jeder Schritt zählt. Dein erster erfolgreicher Tag wartet auf dich!";
+"streak.encouragement.one" = "Ein erfolgreicher Tag ist ein toller Anfang. Bleib dran!";
+"streak.encouragement.few" = "Du findest deinen Rhythmus. Mach weiter, einen Tag nach dem anderen!";
+"streak.encouragement.many" = "So viel Ausdauer! Du entwickelst eine tolle Gewohnheit. Weiter so!";
+"streak.encouragement.unavailable" = "Dein nächster Schritt ist schon ein guter Anfang. Gehen wir gemeinsam weiter!";
+"streak.close" = "Schließen";
 "today.kcal" = "kcal";
 "today.exercise" = "Training · h";
 "today.floors" = "Stockwerke";
@@ -370,7 +387,7 @@
 "widget.chart.goal.accessibility" = "Kumulierte Schritte von Mitternacht bis Mitternacht. Heute als durchgezogene Linie, gewohnte Aktivität gestrichelt.";
 "widget.goal.short" = "Ziel";
 
-"calendar.legend.months" = "Je kräftiger die Farbe, desto näher ist das Monatsziel. Ein Punkt kennzeichnet einen Monat ohne verfügbare Daten.";
+"calendar.legend.months" = "Jeder Zähler zeigt das gesamte Monatsziel wie auf der Startseite. ✓: Ziel erreicht. —: keine verfügbaren Daten.";
 
 "counter.horizon" = "Horizont";
 

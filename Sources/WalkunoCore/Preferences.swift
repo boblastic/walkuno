@@ -83,7 +83,7 @@ public enum AppLanguage: String, CaseIterable, Codable, Identifiable, Sendable {
 
 public enum CounterStyle: String, CaseIterable, Codable, Identifiable, Sendable {
     // Keep "minimal" on disk so existing choices become the typographic design.
-    case ring, horizon, path, milestones, minimal
+    case horizon, ring, path, milestones, minimal
     public var id: String { rawValue }
     public var requiresPremium: Bool { self != .ring && self != .horizon }
 }
@@ -128,6 +128,20 @@ public struct Preferences: Codable, Equatable, Sendable {
         healthRequested = try values.decode(Bool.self, forKey: .healthRequested)
         // Existing installations keep their goals and preferences when the glass setting is added.
         glassTransparency = min(max(try values.decodeIfPresent(Double.self, forKey: .glassTransparency) ?? 0.7, 0), 1)
+    }
+}
+
+/// Phone-owned display settings; optional fields preserve compatibility with older companions.
+public struct WatchSettings: Codable, Equatable, Sendable {
+    public var goals: GoalHistory
+    public var theme: WalkunoTheme
+    public var unit: DistanceUnit
+    public var counterStyle: CounterStyle?
+    public var counterEffect: CounterEffect?
+
+    public init(preferences: Preferences) {
+        goals = preferences.goals; theme = preferences.theme; unit = preferences.unit
+        counterStyle = preferences.counterStyle; counterEffect = preferences.counterEffect
     }
 }
 

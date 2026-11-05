@@ -335,30 +335,43 @@ struct ExplorerView: View {
                 if period == .year {
                     monthGrid(page)
                 } else {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
-                        ForEach(0..<page.calendarOffset, id: \.self) { _ in Color.clear.frame(minHeight: 40).accessibilityHidden(true) }
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 12) {
+                        ForEach(0..<page.calendarOffset, id: \.self) { _ in Color.clear.accessibilityHidden(true) }
                         ForEach(page.calendarDays) { day in
                             let locked = !model.purchases.isPremium && day.date < earliestFree
-                            let progress = ActivityMath.progress(steps: day.steps, goal: model.preferences.goals.value(on: day.date))
+                            let progress = locked ? nil : day.steps.map {
+                                ActivityMath.progress(steps: $0, goal: model.preferences.goals.value(on: day.date))
+                            }
                             Button {
                                 if locked { showPremium = true } else { detailDate = day.date }
                             } label: {
-                                VStack(spacing: 6) {
+                                VStack(spacing: 5) {
                                     if period == .week {
-                                        Text(day.date.formatted(.dateTime.locale(AppLocalization.locale).weekday(.abbreviated))).font(.caption2.weight(.semibold))
+                                        Text(day.date.formatted(.dateTime.locale(AppLocalization.locale).weekday(.abbreviated)))
+                                            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                                            .lineLimit(1).minimumScaleFactor(0.7)
                                     }
-                                    Text(day.date.formatted(.dateTime.locale(AppLocalization.locale).day())).font(.caption.weight(.medium))
+                                    CompactStepCounterFace(progress: progress, text: day.date.formatted(.dateTime.locale(AppLocalization.locale).day()),
+                                                           theme: model.effectiveTheme, style: model.effectiveCounter)
+                                        .aspectRatio(1, contentMode: .fit)
+                                    HStack(spacing: 2) {
+                                        if locked { Image(systemName: "lock.fill") }
+                                        else {
+                                            if let progress, progress >= 1 { Image(systemName: "checkmark").fontWeight(.bold) }
+                                            Text(progress.map(calendarPercentageText) ?? "—")
+                                        }
+                                    }
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded)).monospacedDigit()
+                                    .foregroundStyle(progress.map { $0 >= 1 } == true ? model.effectiveTheme.tint(for: scheme) : Color.secondary)
+                                    .lineLimit(1).minimumScaleFactor(0.6)
                                 }
-                                    .frame(maxWidth: .infinity, minHeight: period == .week ? 60 : 40)
-                                    .foregroundStyle(!locked && day.steps != nil && progress > 0.55 ? WalkunoStyle.ink : scheme == .dark ? .white : .primary)
-                                    .background(locked || day.steps == nil ? Color.primary.opacity(0.035) : accent.opacity(0.12 + min(progress, 1) * 0.6), in: RoundedRectangle(cornerRadius: 9))
-                                    .overlay(alignment: .bottom) {
-                                        if day.steps == nil { Circle().fill(.secondary).frame(width: 3, height: 3).padding(.bottom, 4) }
-                                    }
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                                .contentShape(Rectangle())
                             }.buttonStyle(.plain)
                                 .disabled(day.date > Date.now)
                                 .accessibilityIdentifier("explorer.calendar.day.\(Calendar.current.component(.day, from: day.date))")
-                                .accessibilityLabel(Text("\(day.date.appFormatted(date: .complete, time: .omitted)), \(locked ? L("premium.title") : day.steps.map { $0.formatted() + " " + L("today.steps") } ?? L("chart.no.data"))"))
+                                .accessibilityLabel(Text("\(day.date.appFormatted(date: .complete, time: .omitted)), \(locked ? L("premium.title") : day.steps.map { $0.formatted() + " " + L("today.steps") } ?? L("chart.no.data")), \(calendarProgressDescription(progress))"))
+                                .accessibilityValue(Text(LocalizedStringKey(model.effectiveCounter.titleKey)))
                         }
                     }
                 }
@@ -370,25 +383,46 @@ struct ExplorerView: View {
     private func monthGrid(_ page: ExplorerActivity) -> some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
             ForEach(page.calendarMonths) { month in
-                let progress = month.progress ?? 0
                 Button {
                     anchor = month.date; period = .month; pageOffset = 0
                 } label: {
-                    Text(month.date.formatted(dateStyle.month(.abbreviated)))
-                        .font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
-                        .frame(maxWidth: .infinity, minHeight: 48)
-                        .foregroundStyle(month.progress != nil && progress > 0.55 ? WalkunoStyle.ink : scheme == .dark ? .white : .primary)
-                        .background(month.progress == nil ? Color.primary.opacity(0.035) : accent.opacity(0.12 + min(progress, 1) * 0.6), in: RoundedRectangle(cornerRadius: 9))
-                        .overlay(alignment: .bottom) {
-                            if month.progress == nil { Circle().fill(.secondary).frame(width: 3, height: 3).padding(.bottom, 4) }
+                    VStack(spacing: 6) {
+                        Text(month.date.formatted(dateStyle.month(.abbreviated)))
+                            .font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
+                        CompactStepCounterFace(progress: month.progress,
+                                               text: month.progress.map(calendarPercentageText) ?? "—",
+                                               theme: model.effectiveTheme, style: model.effectiveCounter)
+                            .frame(height: 76)
+                        HStack(spacing: 3) {
+                            if let progress = month.progress, progress >= 1 {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(model.effectiveTheme.tint(for: scheme))
+                            }
+                            Text("\(stepsText(month.summary.total)) \(L("today.steps"))")
                         }
+                        .font(.caption2).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.6)
+                    }
+                    .padding(.vertical, 8).frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(month.date > Date.now)
                 .accessibilityIdentifier("explorer.calendar.month.\(calendar.component(.month, from: month.date))")
-                .accessibilityLabel(Text("\(month.date.formatted(dateStyle.month(.wide).year())), \(stepsText(month.summary.total)) \(L("today.steps")), \(month.progress.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? L("chart.no.data"))"))
+                .accessibilityLabel(Text("\(month.date.formatted(dateStyle.month(.wide).year())), \(stepsText(month.summary.total)) \(L("today.steps")), \(calendarProgressDescription(month.progress))"))
+                .accessibilityValue(Text(LocalizedStringKey(model.effectiveCounter.titleKey)))
             }
         }
+    }
+
+    private func calendarPercentageText(_ progress: Double) -> String {
+        // Rounding 99.96% up to 100% would contradict the achievement checkmark.
+        let displayed = progress < 1 ? floor(progress * 100) / 100 : progress
+        return displayed.formatted(.percent.precision(.fractionLength(0)))
+    }
+
+    private func calendarProgressDescription(_ progress: Double?) -> String {
+        guard let progress else { return L("chart.no.data") }
+        let percentage = calendarPercentageText(progress)
+        return progress >= 1 ? percentage + ", " + L("counter.complete") : percentage
     }
 }
 

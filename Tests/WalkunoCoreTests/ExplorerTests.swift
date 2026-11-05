@@ -132,10 +132,38 @@ struct ExplorerTests {
             .init(date: date("2026-04-01T00:00:00Z"), steps: 99_000)
         ], goals: goals, now: now, calendar: calendar)
         #expect(page.calendarMonths.count == 12)
-        #expect(page.calendarMonths[0].progress == 0.5)
-        #expect(page.calendarMonths[1].progress == 1)
+        #expect(page.calendarMonths[0].progress == 2_000.0 / 160_000)
+        #expect(page.calendarMonths[1].progress == 10_000.0 / 226_000)
         #expect(page.calendarMonths[2].progress == 0)
         #expect(page.calendarMonths.dropFirst(3).allSatisfy { $0.progress == nil && $0.summary.total == nil })
+    }
+
+    @Test func monthlyCalendarCountersMatchHomeGlobalGoalsAndPreserveOverflow() throws {
+        let now = date("2026-03-05T12:00:00Z")
+        let january = calendar.startOfDay(for: date("2026-01-01T12:00:00Z"))
+        let february = calendar.startOfDay(for: date("2026-02-01T12:00:00Z"))
+        let march = calendar.startOfDay(for: date("2026-03-01T12:00:00Z"))
+        var goals = GoalHistory()
+        goals.set(10_000, on: february, calendar: calendar)
+        let days: [ActivityDay] = [
+            .init(date: january, steps: 248_000), // One day can compensate for the rest of the month.
+            .init(date: february, steps: 420_000),
+            .init(date: march, steps: 0),
+            .init(date: date("2026-03-06T12:00:00Z"), steps: 999_000)
+        ]
+        for earliest in [nil, february] as [Date?] {
+            let page = ExplorerActivity(period: .year, anchor: now, available: days, goals: goals,
+                                        earliest: earliest, now: now, calendar: calendar)
+            for month in page.calendarMonths where month.summary.total != nil {
+                let home = DashboardActivity(period: .month, anchor: month.date, available: days, goals: goals,
+                                             earliest: earliest, now: now, calendar: calendar)
+                #expect(month.progress == home.progress)
+            }
+            #expect(page.calendarMonths[0].progress == (earliest == nil ? 1 : nil))
+            #expect(page.calendarMonths[1].progress == 1.5)
+            #expect(page.calendarMonths[2].progress == 0)
+            #expect(page.calendarMonths.dropFirst(3).allSatisfy { $0.progress == nil })
+        }
     }
 
     @Test func hourlySlotsPreserveMissingZeroAndFutureValuesAcrossDST() {

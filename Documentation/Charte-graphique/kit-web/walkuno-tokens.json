@@ -1,0 +1,22 @@
+{
+  "name": "Walkuno",
+  "version": "2026-11-05",
+  "colorSpace": "sRGB",
+  "source": "AppShared/Design.swift / WalkunoStyle",
+  "colors": {
+    "ink": "#0A242C",
+    "electric": "#A3FF70",
+    "teal": "#31B99F",
+    "light": "#EFF6F1",
+    "card": "#13353C",
+    "green": "#37651C",
+    "lightTeal": "#006758",
+    "white": "#FFFFFF"
+  },
+  "webRecommendations": {
+    "cardRadius": 26,
+    "buttonRadius": 999,
+    "spacingUnit": 8,
+    "fontStack": "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
+  }
+}

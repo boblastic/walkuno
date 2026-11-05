@@ -51,7 +51,7 @@ struct SettingsView: View {
             }
             Section("settings.appearance") {
                 NavigationLink {
-                    ThemePaletteView().appHeader(settingsIsCurrent: true)
+                    ThemePaletteView().appHeader()
                 } label: {
                     HStack(spacing: 10) {
                         Circle().fill(model.effectiveTheme.accent).frame(width: 22, height: 22)
@@ -63,7 +63,7 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("settings.palette")
                 NavigationLink {
-                    CounterStylePickerView().appHeader(settingsIsCurrent: true)
+                    CounterStylePickerView().appHeader()
                 } label: {
                     LabeledContent("settings.counter", value: L(model.effectiveCounter.titleKey))
                 }
@@ -302,7 +302,7 @@ struct TermsView: View {
             .background(WalkunoStyle.background(scheme))
             .navigationTitle("terms.title").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("common.done") { dismiss() } } }
-            .appHeader(settingsIsCurrent: true)
+            .appHeader()
         }
     }
 }

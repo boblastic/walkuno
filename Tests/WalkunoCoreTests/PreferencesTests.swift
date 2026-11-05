@@ -3,6 +3,42 @@ import Testing
 @testable import WalkunoCore
 
 struct PreferencesTests {
+    @Test func watchSettingsCarryEveryCounterStyleAndEffect() throws {
+        for style in CounterStyle.allCases {
+            for effect in CounterEffect.allCases {
+                var preferences = Preferences()
+                preferences.goals.set(12_000)
+                preferences.theme = .violet
+                preferences.unit = .miles
+                preferences.counterStyle = style
+                preferences.counterEffect = effect
+                let settings = WatchSettings(preferences: preferences)
+                let decoded = try JSONDecoder().decode(WatchSettings.self, from: JSONEncoder().encode(settings))
+                #expect(decoded == settings)
+                #expect(decoded.counterStyle == style)
+                #expect(decoded.counterEffect == effect)
+                #expect(decoded.goals.value(on: .now) == 12_000)
+                #expect(decoded.theme == .violet)
+                #expect(decoded.unit == .miles)
+            }
+        }
+    }
+
+    @Test func legacyWatchSettingsKeepGoalsWithoutRequiringACounterChoice() throws {
+        var preferences = Preferences()
+        preferences.goals.set(9_500)
+        let settings = WatchSettings(preferences: preferences)
+        var legacy = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        legacy.removeValue(forKey: "counterStyle")
+        legacy.removeValue(forKey: "counterEffect")
+        let decoded = try JSONDecoder().decode(WatchSettings.self, from: JSONSerialization.data(withJSONObject: legacy))
+        #expect(decoded.goals == preferences.goals)
+        #expect(decoded.theme == preferences.theme)
+        #expect(decoded.unit == preferences.unit)
+        #expect(decoded.counterStyle == nil)
+        #expect(decoded.counterEffect == nil)
+    }
+
     @Test func appLanguageFollowsPreferredLanguagesAndFallsBackToEnglish() {
         #expect(AppLanguage.system.resolvedCode(preferredLanguages: ["fr-FR"]) == "fr")
         #expect(AppLanguage.system.resolvedCode(preferredLanguages: ["pt-BR"]) == "pt")
