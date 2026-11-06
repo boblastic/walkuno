@@ -29,6 +29,8 @@ final class MotivationWriter {
                     try Task.checkCancellation()
                     let session = LanguageModelSession(model: model, instructions: """
                     Write one short, kind encouragement for a walking app, in locale \(key.locale).
+                    In French, always use polite "vous" forms (vouvoiement), never "tu" forms.
+                    Keep the tone warm and encouraging, without pressure.
                     Maximum 160 characters, one sentence, plain text, no heading or quotation marks.
                     Rephrase the supplied encouragement without adding facts, numbers (including spelled-out
                     quantities), targets, durations, health claims, comparisons, instructions or promises.

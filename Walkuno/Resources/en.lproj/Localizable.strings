@@ -528,6 +528,30 @@
 "goals.range %@ %@" = "Between %@ and %@.";
 "insights.clock.more %@" = "%@ ahead";
 "insights.clock.less %@" = "%@ less than usual";
-"insights.clock.summary %@ %@" = "%@ today, %@ usually over a complete day.";
+"insights.clock.summary %@ %@" = "%@ today, %@ usually at this point in the day.";
 "unit.steps" = "steps";
 "unit.floors" = "floors";
+
+/* Manual encouragement refresh. */
+"motivation.refresh" = "Refresh with Apple Intelligence";
+"motivation.refreshing" = "Refreshing…";
+"motivation.refresh.hint" = "Rephrases the advice using the activity already loaded.";
+"motivation.refresh.unavailable" = "Rephrasing is currently unavailable. The local advice remains displayed.";
+
+/* Widget gallery */
+"settings.widgets" = "Widgets";
+"widgets.gallery.examples" = "Illustrative previews · sample data";
+"widgets.gallery.exclusive" = "EXCLUSIVE TO WALKUNO PRO";
+"widgets.gallery.headline" = "Your progress.\nOne glance away.";
+"widgets.gallery.intro" = "Turn your screen into daily motivation. Your steps, your goals, your little victories: always in sight with Pro.";
+"widgets.gallery.surfaces" = "Home Screen · Lock Screen · Apple Watch";
+"widgets.gallery.counter.body" = "Keep your goal in sight all day. Enjoy your favourite counter and palette, from a discreet small widget to a larger overview of your activity.";
+"widgets.gallery.charts.body" = "Spot your most active hours, track your goal and watch your week take shape. Five views to make every step count.";
+"widgets.gallery.dashboard.body" = "Steps, distance and your weekly trend, together in one widget. Go large for floors, exercise and goal tracking too.";
+"widgets.gallery.everywhere.title" = "Motivation that moves with you";
+"widgets.gallery.everywhere.body" = "A glance at your Lock Screen, a look at your wrist: stay on track with iPhone widgets and Apple Watch complications, all included with Pro.";
+"widgets.gallery.install.title" = "Make your screen your own";
+"widgets.gallery.install.body" = "On iPhone, touch and hold the Home Screen, open the add widgets menu and search for Walkuno. For the Lock Screen, customise your wallpaper’s widgets. On Apple Watch, edit your watch face and choose a Walkuno complication.";
+"widgets.gallery.unlocked" = "All your widgets are unlocked";
+"widgets.gallery.cta" = "Unlock my widgets with Pro";
+"widgets.gallery.pro.note" = "All widgets and complications are exclusive to Walkuno Pro.";

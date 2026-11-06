@@ -1,6 +1,8 @@
-# Ton élan du jour
+# Votre élan du jour
 
 La carte de l’accueil apparaît uniquement pour aujourd’hui, après le graphique des sept derniers jours. Elle affiche les pas restant vers l’objectif, un encouragement court et, pendant la journée, un petit palier facultatif. Le lien « Pourquoi ce conseil ? » explique les mesures utilisées, leur couverture et l’origine de la formulation. Les textes existent dans les sept langues de l’application. La fonction est disponible sans Pro.
+
+En français, Walkuno utilise le vouvoiement dans toute l’interface, avec un ton chaleureux, des formulations courtes et des encouragements sans pression. Cette règle s’applique aussi aux reformulations demandées à Apple Intelligence.
 
 ## Calculs locaux
 
@@ -19,6 +21,8 @@ La carte de l’accueil apparaît uniquement pour aujourd’hui, après le graph
 Seuls un encouragement traduit et des catégories de situation, tendance et rythme sont fournis au modèle. Aucun historique brut, identifiant, valeur de mesure ou date précise n’est nécessaire au prompt. Le modèle reformule une phrase ; les chiffres et le palier restent calculés et affichés par l’app. La génération utilise une structure `@Generable`, des instructions limitant son rôle et un contrôle de longueur, chiffres, liens, balisage et caractères de contrôle. Ce contrôle de forme ne prouve pas à lui seul la pertinence sémantique d’une phrase.
 
 Une seule réponse, ou l’absence de réponse en cas d’indisponibilité, est conservée en mémoire. La clé évolue avec la journée, le fuseau, la langue, les tranches de six heures, les paliers de 500 pas, l’objectif et le contexte analysé. Les chiffres visibles restent actualisés indépendamment de cette clé. Un réveil de la carte toutes les cinq minutes permet de réévaluer le moment de la journée et la fraîcheur des données. La génération se limite au premier plan ; les résultats annulés sont ignorés. Aucune notification n’est ajoutée.
+
+Dans « Pourquoi ce conseil ? », le bouton « Actualiser avec Apple Intelligence » vide ce cache et relance la formulation à partir de l’activité déjà chargée. Un indicateur accompagne la génération et empêche les appuis répétés. Le bouton est désactivé en l’absence de pas disponibles ou lorsque l’app est inactive. Si la tentative ne produit pas de texte accepté (y compris en mode démonstration), le conseil local est affiché et un message signale l’indisponibilité. Les mesures et objectifs ne sont pas modifiés et aucune nouvelle lecture Santé n’est déclenchée.
 
 ## Vérification de sécurité — 5 novembre 2026
 
@@ -39,3 +43,9 @@ Risque à vérifier, confiance élevée sur la limite : la qualité, la langue e
 - Génération réelle sur appareil : non exécutée. Le mode démonstration désactive explicitement la génération pour rendre les tests d’interface déterministes. Le repli local est donc le chemin vérifié en interface.
 
 Preuves locales : `/tmp/walkuno-motivation-tests.log`, `/tmp/walkuno-motivation-integrated-ui.log`, `/tmp/walkuno-motivation-integrated-ui.xcresult` et `/tmp/walkuno-motivation-captures/`. Aucune installation sur appareil physique ni publication n’a été effectuée.
+
+### Actualisation manuelle — 6 novembre 2026
+
+Les trois tests d’interface ciblés passent sur le simulateur iOS 27 : explication et visibilité uniquement pour aujourd’hui, langue anglaise, puis deux actualisations successives en mode démonstration. Ce dernier scénario vérifie le message d’indisponibilité, le bouton réutilisable et la conservation des mesures et du conseil local. La capture du détail a été inspectée. Les traductions des nouveaux textes ont aussi été vérifiées dans les quatre bundles compilés. La génération réelle reste à vérifier sur iPhone compatible.
+
+Preuves : `/tmp/walkuno-advice-refresh-ui-retry.xcresult` et `/tmp/walkuno-advice-refresh-captures/`.

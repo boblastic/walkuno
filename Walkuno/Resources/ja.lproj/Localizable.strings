@@ -527,6 +527,30 @@
 "goals.range %@ %@" = "%@から%@まで。";
 "insights.clock.more %@" = "%@先行";
 "insights.clock.less %@" = "通常より%@少なめ";
-"insights.clock.summary %@ %@" = "今日は%@、通常の1日全体では%@。";
+"insights.clock.summary %@ %@" = "今日は%@、1日の同じ時点での通常値は%@。";
 "unit.steps" = "歩";
 "unit.floors" = "階";
+
+/* Manual encouragement refresh. */
+"motivation.refresh" = "Apple Intelligenceで更新";
+"motivation.refreshing" = "更新中…";
+"motivation.refresh.hint" = "読み込み済みのアクティビティをもとに、アドバイスを言い換えます。";
+"motivation.refresh.unavailable" = "現在、言い換えを利用できません。アプリ内のアドバイスを引き続き表示します。";
+
+/* Widget gallery */
+"settings.widgets" = "ウィジェット";
+"widgets.gallery.examples" = "イメージプレビュー · サンプルデータ";
+"widgets.gallery.exclusive" = "WALKUNO PRO限定";
+"widgets.gallery.headline" = "あなたの進歩を、\nひと目で。";
+"widgets.gallery.intro" = "いつもの画面を、毎日のやる気に。歩数も目標も、小さな達成も。Proなら、いつでも目に入ります。";
+"widgets.gallery.surfaces" = "ホーム画面 · ロック画面 · Apple Watch";
+"widgets.gallery.counter.body" = "一日中、目標を身近に。お気に入りのカウンターとカラーを、小さなウィジェットから大きなアクティビティ表示まで楽しめます。";
+"widgets.gallery.charts.body" = "よく動いた時間、目標までの進み具合、一週間の変化を確認。5つの表示で、一歩一歩をもっと実感できます。";
+"widgets.gallery.dashboard.body" = "歩数、距離、一週間の傾向をひとつに。大きなサイズでは、上った階数、エクササイズ、目標の進み具合も確認できます。";
+"widgets.gallery.everywhere.title" = "やる気も、一緒に";
+"widgets.gallery.everywhere.body" = "ロック画面や手首をちらっと見るだけ。iPhoneのウィジェットもApple Watchのコンプリケーションも、すべてProに含まれています。";
+"widgets.gallery.install.title" = "自分だけの画面に";
+"widgets.gallery.install.body" = "iPhoneのホーム画面を長押しし、ウィジェット追加メニューでWalkunoを検索してください。ロック画面では壁紙のウィジェットをカスタマイズできます。Apple Watchでは文字盤を編集し、Walkunoのコンプリケーションを選んでください。";
+"widgets.gallery.unlocked" = "すべてのウィジェットが利用可能です";
+"widgets.gallery.cta" = "Proでウィジェットを使う";
+"widgets.gallery.pro.note" = "すべてのウィジェットとコンプリケーションはWalkuno Pro限定です。";

@@ -680,3 +680,16 @@ La version 1.0.0 (19) place le bloc « Votre activité, bientôt ici » sur tout
 - Le contrôle visuel de l’accueil sans données a été effectué sur simulateur. Le test historique du parcours d’accueil sans Santé avait confirmé le bloc puis échoué sur un texte attendu dans l’onglet Statistiques ; ce scénario complet n’est pas déclaré validé. Aucune installation directe sur la Watch n’a été effectuée.
 
 Preuves : `/tmp/walkuno-release-19-core.log`, `/tmp/walkuno-release-19-ui.xcresult`, `/tmp/walkuno-release-19-device.log`, `/tmp/walkuno-release-19-manifest.json`, `/tmp/walkuno-release-19-install.json`, `/tmp/walkuno-release-19-launch.json`, `/tmp/walkuno-release-19-after.json`, `/tmp/walkuno-empty-home-final.png`.
+
+## Livraison iPhone et GitHub — 6 novembre 2026, version 20
+
+La version 1.0.0 (20) compacte Liquid Glass, ajoute la miniature du compteur sélectionné et présente les trois familles de widgets existants dans une galerie dédiée à Pro. Elle inclut l’actualisation manuelle des encouragements, le vouvoiement français et la comparaison de l’horloge au même moment de la journée. Le raccourci Pro de développement dans les réglages reste limité à Debug.
+
+- Sources applicatives figées avant compilation ; 140 tests métier dans 14 suites réussis depuis cet instantané.
+- Trois scénarios d’interface vérifiés sur iOS 26 : les cinq mesures de l’horloge, la persistance du mode Pro de développement et deux actualisations successives des encouragements avec repli local. Pour ce dernier scénario, le test de défilement initial a échoué ; un défilement vers le bas de la page, sans dépendre des coordonnées hors écran de DisclosureGroup, a ensuite permis de valider le parcours. Seul le test a été modifié après la compilation signée.
+- La galerie Widgets (aperçus, ouverture/fermeture de Pro et accès déjà débloqué) et le curseur Liquid Glass ont également été validés sur simulateur avant le gel des sources ; les captures ont été inspectées.
+- 514 textes et autorisation Santé validés dans les sept langues ; traductions compilées contrôlées dans les quatre composants.
+- Compilation Release signée des quatre composants en 1.0.0 (20), signatures et profils vérifiés.
+- Mise à jour sur l’iPhone en conservant les données, lancement sans argument de démonstration et version 20 relue dans les métadonnées de l’appareil. Aucune installation directe sur la Watch.
+
+Preuves : `/tmp/walkuno-release-20-manifest.json`, `/tmp/walkuno-release-20-core.log`, `/tmp/walkuno-release-20-ui.log`, `/tmp/walkuno-release-20-motivation-final.xcresult`, `/tmp/walkuno-widgets-gallery-v2.xcresult`, `/tmp/walkuno-widgets-qa.xcresult`, `/tmp/walkuno-release-20-device.log`, `/tmp/walkuno-release-20-install.json`, `/tmp/walkuno-release-20-launch.json`, `/tmp/walkuno-release-20-after.json`.

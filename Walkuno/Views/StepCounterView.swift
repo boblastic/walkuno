@@ -20,6 +20,23 @@ extension CounterStyle {
     }
 }
 
+/// A static miniature of the selected face, using the same drawing as the counter.
+struct CounterStyleThumbnail: View {
+    var theme: WalkunoTheme
+    var style: CounterStyle
+
+    var body: some View {
+        StepCounterFace(displayedSteps: 6240, hasSteps: true, goal: 8000,
+                        title: "", theme: theme, style: style)
+            .environment(\.dynamicTypeSize, .medium)
+            .frame(width: 220, height: 220)
+            .scaleEffect(0.14)
+            .frame(width: 22, height: 30)
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
+    }
+}
+
 /// All five designs use the same interpolated value, semantic palette and layout
 /// in the dashboard and settings preview. The finite particle trail fades after the value settles.
 struct StepCounterFace: View {

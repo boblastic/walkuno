@@ -19,6 +19,10 @@ private struct MotivationCardContent: View {
     @State private var generatedText: String?
     @State private var generatedKey: MotivationWordingKey?
     @State private var showExplanation = false
+    @State private var refreshGeneration = 0
+    @State private var completedRefreshGeneration = 0
+    @State private var isGenerating = false
+    @State private var refreshUnavailable = false
     let snapshot: MotivationSnapshot
     let now: Date
 
@@ -72,6 +76,30 @@ private struct MotivationCardContent: View {
                         Text(L(personalizedText == nil ? "motivation.local" : "motivation.apple"))
                             .accessibilityIdentifier("motivation.source")
                         Text("motivation.privacy")
+                        Button {
+                            model.motivationWriter.clear()
+                            isGenerating = true
+                            refreshUnavailable = false
+                            refreshGeneration += 1
+                        } label: {
+                            HStack(spacing: 6) {
+                                if isGenerating {
+                                    ProgressView().controlSize(.mini)
+                                    Text("motivation.refreshing")
+                                } else {
+                                    Label("motivation.refresh", systemImage: "arrow.clockwise")
+                                }
+                            }
+                            .font(.caption.weight(.semibold))
+                        }
+                        .buttonStyle(.bordered).controlSize(.small)
+                        .disabled(isGenerating || snapshot.todaySteps == nil || scenePhase != .active)
+                        .accessibilityHint(Text("motivation.refresh.hint"))
+                        .accessibilityIdentifier("motivation.refresh")
+                        if refreshUnavailable {
+                            Text("motivation.refresh.unavailable")
+                                .accessibilityIdentifier("motivation.refresh.status")
+                        }
                     }
                     .font(.caption).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
@@ -87,15 +115,24 @@ private struct MotivationCardContent: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("today.motivation")
-        .task(id: Request(key: key, isActive: scenePhase == .active, isDemo: model.isDemo)) {
-            generatedText = nil
-            generatedKey = nil
-            guard scenePhase == .active else { return }
+        .task(id: Request(key: key, isActive: scenePhase == .active, isDemo: model.isDemo,
+                          refreshGeneration: refreshGeneration)) {
+            refreshUnavailable = false
+            guard scenePhase == .active else {
+                isGenerating = false
+                return
+            }
             let requestedKey = key
+            let requestedGeneration = refreshGeneration
+            let isManualRefresh = requestedGeneration != completedRefreshGeneration
+            isGenerating = true
             let text = await model.motivationWriter.encouragement(for: snapshot, key: requestedKey, isDemo: model.isDemo)
             guard !Task.isCancelled else { return }
             generatedKey = requestedKey
             generatedText = text
+            isGenerating = false
+            completedRefreshGeneration = requestedGeneration
+            refreshUnavailable = isManualRefresh && text == nil
         }
     }
 
@@ -103,5 +140,6 @@ private struct MotivationCardContent: View {
         var key: MotivationWordingKey
         var isActive: Bool
         var isDemo: Bool
+        var refreshGeneration: Int
     }
 }

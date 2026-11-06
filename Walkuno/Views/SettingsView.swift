@@ -28,6 +28,19 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("settings.subscription")
             }
+            #if DEBUG
+            Section {
+                Toggle("premium.development.pro", isOn: Binding(
+                    get: { model.purchases.isDevelopmentProEnabled },
+                    set: { model.purchases.isDevelopmentProEnabled = $0 }
+                ))
+                .accessibilityIdentifier("settings.development.pro")
+            } header: {
+                Text("premium.development.title")
+            } footer: {
+                Text("premium.development.note")
+            }
+            #endif
             Section("goals.daily") {
                 ForEach(ActivityMetric.allCases) { metric in
                     Button { goalMetric = metric } label: {
@@ -64,9 +77,28 @@ struct SettingsView: View {
                 NavigationLink {
                     CounterStylePickerView().appHeader()
                 } label: {
-                    LabeledContent("settings.counter", value: L(model.effectiveCounter.titleKey))
+                    HStack(spacing: 10) {
+                        CounterStyleThumbnail(theme: model.effectiveTheme, style: model.effectiveCounter)
+                        Text("settings.counter")
+                        Spacer()
+                        Text(L(model.effectiveCounter.titleKey)).foregroundStyle(.secondary)
+                    }
                 }
                 .accessibilityIdentifier("settings.counter")
+                NavigationLink {
+                    WidgetGalleryView().appHeader()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "square.grid.2x2.fill")
+                            .foregroundStyle(model.effectiveTheme.tint(for: scheme))
+                            .frame(width: 22)
+                        Text("settings.widgets")
+                        Spacer()
+                        Text("Pro").font(.caption.weight(.bold))
+                            .foregroundStyle(model.effectiveTheme.tint(for: scheme))
+                    }
+                }
+                .accessibilityIdentifier("settings.widgets")
                 GlassSettingsControls()
             }
             Section("settings.data") {

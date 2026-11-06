@@ -270,8 +270,12 @@ struct GlassSettingsControls: View {
     var body: some View {
         Group {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Liquid Glass").font(.headline)
-                LabeledContent("settings.glass.transparency", value: model.preferences.glassTransparency.formatted(.percent.precision(.fractionLength(0))))
+                HStack {
+                    Text("Liquid Glass").font(.headline)
+                    Spacer()
+                    Text(model.preferences.glassTransparency.formatted(.percent.precision(.fractionLength(0))))
+                        .monospacedDigit().foregroundStyle(.secondary)
+                }
                 Slider(value: Binding(get: { model.preferences.glassTransparency }, set: {
                     model.preferences.glassTransparency = $0
                     // Accessibility adjustments can change the value without a drag session.

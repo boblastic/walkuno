@@ -527,6 +527,30 @@
 "goals.range %@ %@" = "Zwischen %@ und %@.";
 "insights.clock.more %@" = "%@ voraus";
 "insights.clock.less %@" = "%@ weniger als üblich";
-"insights.clock.summary %@ %@" = "%@ heute, %@ üblicherweise an einem vollständigen Tag.";
+"insights.clock.summary %@ %@" = "%@ heute, %@ üblicherweise zu diesem Zeitpunkt des Tages.";
 "unit.steps" = "Schritte";
 "unit.floors" = "Etagen";
+
+/* Manual encouragement refresh. */
+"motivation.refresh" = "Mit Apple Intelligence aktualisieren";
+"motivation.refreshing" = "Wird aktualisiert…";
+"motivation.refresh.hint" = "Formuliert den Hinweis anhand der bereits geladenen Aktivität neu.";
+"motivation.refresh.unavailable" = "Eine neue Formulierung ist derzeit nicht verfügbar. Der lokale Hinweis bleibt sichtbar.";
+
+/* Widget gallery */
+"settings.widgets" = "Widgets";
+"widgets.gallery.examples" = "Illustrative Vorschauen · Beispieldaten";
+"widgets.gallery.exclusive" = "EXKLUSIV MIT WALKUNO PRO";
+"widgets.gallery.headline" = "Dein Fortschritt.\nAuf einen Blick.";
+"widgets.gallery.intro" = "Mach deinen Bildschirm zur täglichen Motivation. Deine Schritte, Ziele und kleinen Erfolge: mit Pro immer im Blick.";
+"widgets.gallery.surfaces" = "Home-Bildschirm · Sperrbildschirm · Apple Watch";
+"widgets.gallery.counter.body" = "Behalte dein Ziel den ganzen Tag im Blick. Nutze deinen Lieblingszähler und deine Farbpalette, vom kleinen Widget bis zur großen Aktivitätsübersicht.";
+"widgets.gallery.charts.body" = "Entdecke deine aktivsten Stunden, verfolge dein Ziel und sieh deine Woche wachsen. Fünf Ansichten, die jeden Schritt sichtbar machen.";
+"widgets.gallery.dashboard.body" = "Schritte, Strecke und Wochentrend in einem Widget. Im großen Format kommen Stockwerke, Training und Zielverfolgung hinzu.";
+"widgets.gallery.everywhere.title" = "Motivation, die dich begleitet";
+"widgets.gallery.everywhere.body" = "Ein Blick auf den Sperrbildschirm oder ans Handgelenk: Bleib auf Kurs mit iPhone-Widgets und Apple Watch-Komplikationen, alle in Pro enthalten.";
+"widgets.gallery.install.title" = "Gestalte deinen Bildschirm";
+"widgets.gallery.install.body" = "Halte auf dem iPhone den Home-Bildschirm gedrückt, öffne das Menü zum Hinzufügen von Widgets und suche nach Walkuno. Passe für den Sperrbildschirm die Widgets deines Hintergrundbilds an. Bearbeite auf der Apple Watch dein Zifferblatt und wähle eine Walkuno-Komplikation.";
+"widgets.gallery.unlocked" = "Alle deine Widgets sind freigeschaltet";
+"widgets.gallery.cta" = "Meine Widgets mit Pro freischalten";
+"widgets.gallery.pro.note" = "Alle Widgets und Komplikationen sind exklusiv mit Walkuno Pro verfügbar.";

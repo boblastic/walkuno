@@ -73,7 +73,7 @@ struct StepsClockCard: View {
     private func totals(_ snapshot: ActivityClockSnapshot) -> some View {
         Group {
             total(title: "insights.today", value: snapshot.current, color: accent, dashed: false, id: "today")
-            total(title: "insights.usual", value: snapshot.usualDayTotal, color: baseline, dashed: true, id: "usual")
+            total(title: "insights.usual", value: snapshot.usual, color: baseline, dashed: true, id: "usual")
         }
     }
 
@@ -200,7 +200,7 @@ private struct StepClockDial: View {
 
     private var accessibilitySummary: String {
         let current = snapshot.metric.clockText(snapshot.current, unit: unit)
-        let usual = snapshot.metric.clockText(snapshot.usualDayTotal, unit: unit)
+        let usual = snapshot.metric.clockText(snapshot.usual, unit: unit)
         return String(format: L("insights.clock.summary %@ %@"), current, usual)
     }
 

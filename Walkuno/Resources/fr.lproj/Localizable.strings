@@ -493,26 +493,26 @@
 "widget.pro.required" = "Widgets et complications réservés à Pro. Ouvrez Walkuno sur votre iPhone pour les débloquer.";
 
 /* Local activity encouragement. */
-"motivation.title" = "Ton élan du jour";
+"motivation.title" = "Votre élan du jour";
 "motivation.why" = "Pourquoi ce conseil ?";
 "motivation.fact.noData" = "Les pas d’aujourd’hui ne sont pas encore disponibles.";
-"motivation.fact.achieved %@" = "Ton objectif de %@ pas est atteint.";
-"motivation.fact.remaining %@ %@" = "Il te reste %@ pas pour atteindre ton objectif de %@.";
+"motivation.fact.achieved %@" = "Votre objectif de %@ pas est atteint.";
+"motivation.fact.remaining %@ %@" = "Il vous reste %@ pas pour atteindre votre objectif de %@.";
 "motivation.message.noData" = "Chaque petit pas peut être un début.";
-"motivation.message.starting" = "Trouve un rythme qui te convient, un pas après l’autre.";
-"motivation.message.steady" = "Une petite sortie, quand cela te convient, est l’occasion d’avancer.";
-"motivation.message.progressing" = "Tes progrès récents comptent, même avant d’atteindre ton objectif.";
-"motivation.message.easing" = "Tu peux reprendre doucement, sans rattraper les jours précédents.";
-"motivation.message.nearGoal" = "Tu es proche du but ; une petite sortie est une option si tu en as envie.";
-"motivation.message.achieved" = "Bravo pour les pas d’aujourd’hui, profite du chemin parcouru.";
-"motivation.message.evening" = "Ta journée peut se terminer tranquillement ; chaque pas déjà fait compte.";
-"motivation.action %@" = "Petit palier, si tu le souhaites : %@ pas de plus";
+"motivation.message.starting" = "Avancez à votre rythme, un pas après l’autre.";
+"motivation.message.steady" = "Une petite sortie, quand cela vous convient, est l’occasion d’avancer.";
+"motivation.message.progressing" = "Vos progrès récents comptent, même avant d’atteindre votre objectif.";
+"motivation.message.easing" = "Vous pouvez reprendre doucement, sans rattraper les jours précédents.";
+"motivation.message.nearGoal" = "Vous êtes proche du but ; une petite sortie est une option si vous en avez envie.";
+"motivation.message.achieved" = "Bravo pour les pas d’aujourd’hui, profitez du chemin parcouru.";
+"motivation.message.evening" = "Votre journée peut se terminer tranquillement ; chaque pas déjà fait compte.";
+"motivation.action %@" = "Une petite étape, si vous le souhaitez : %@ pas de plus";
 "motivation.basis %ld %ld" = "Objectif atteint %ld jours sur %ld jours mesurés parmi les 7 derniers jours terminés.";
 "motivation.average %@ %ld" = "Moyenne récente : %@ pas sur %ld jours mesurés.";
 "motivation.trend %@ %@ %ld" = "Évolution : %@%% par rapport aux 7 jours précédents (moyenne de %@ pas, %ld jours mesurés).";
-"motivation.pace.ahead" = "À l’heure de la mesure, tu dépassais ton activité habituelle.";
-"motivation.pace.similar" = "À l’heure de la mesure, tu étais proche de ton activité habituelle.";
-"motivation.pace.behind" = "À l’heure de la mesure, tu étais en dessous de ton activité habituelle ; rien à rattraper.";
+"motivation.pace.ahead" = "À l’heure de la mesure, vous dépassiez votre activité habituelle.";
+"motivation.pace.similar" = "À l’heure de la mesure, vous étiez proche de votre activité habituelle.";
+"motivation.pace.behind" = "À l’heure de la mesure, vous étiez en dessous de votre activité habituelle ; rien à rattraper.";
 "motivation.sameTime %@ %@ %ld" = "À %@ : moyenne habituelle de %@ pas, sur %ld jours récents avec mesures horaires à la même heure (jusqu’à 7 parmi les 28 derniers jours).";
 "motivation.history.note" = "Chaque jour est comparé à son objectif de l’époque ; les données absentes sont exclues des moyennes et aujourd’hui des tendances hebdomadaires.";
 "motivation.local" = "Encouragement préparé par Walkuno.";
@@ -528,6 +528,30 @@
 "goals.range %@ %@" = "Entre %@ et %@.";
 "insights.clock.more %@" = "%@ d’avance";
 "insights.clock.less %@" = "%@ de moins que d’habitude";
-"insights.clock.summary %@ %@" = "%@ aujourd’hui, %@ habituellement sur une journée complète.";
+"insights.clock.summary %@ %@" = "%@ aujourd’hui, %@ habituellement au même moment de la journée.";
 "unit.steps" = "pas";
 "unit.floors" = "étages";
+
+/* Manual encouragement refresh. */
+"motivation.refresh" = "Actualiser avec Apple Intelligence";
+"motivation.refreshing" = "Actualisation…";
+"motivation.refresh.hint" = "Relance la formulation du conseil à partir de l’activité déjà chargée.";
+"motivation.refresh.unavailable" = "La reformulation est indisponible pour le moment. Le conseil local reste affiché.";
+
+/* Widget gallery */
+"settings.widgets" = "Widgets";
+"widgets.gallery.examples" = "Aperçus illustratifs · données d’exemple";
+"widgets.gallery.exclusive" = "EXCLUSIVITÉ WALKUNO PRO";
+"widgets.gallery.headline" = "Vos progrès.\nAu premier regard.";
+"widgets.gallery.intro" = "Transformez votre écran en source de motivation. Vos pas, vos objectifs, vos petites victoires : toujours à portée de regard avec Pro.";
+"widgets.gallery.surfaces" = "Écran d’accueil · Écran verrouillé · Apple Watch";
+"widgets.gallery.counter.body" = "Votre objectif vous suit toute la journée. Retrouvez votre compteur et votre palette préférés, du petit format discret au grand aperçu de votre activité.";
+"widgets.gallery.charts.body" = "Repérez vos heures les plus actives, suivez votre objectif et admirez votre semaine. Cinq vues pour donner du relief à chaque pas.";
+"widgets.gallery.dashboard.body" = "Les pas, la distance et la tendance de la semaine, réunis dans un seul widget. En grand format, profitez aussi des étages, de l’exercice et du suivi de l’objectif.";
+"widgets.gallery.everywhere.title" = "Votre motivation vous accompagne";
+"widgets.gallery.everywhere.body" = "Un coup d’œil sur l’écran verrouillé, un regard au poignet : gardez le cap avec les widgets iPhone et les complications Apple Watch, tous inclus avec Pro.";
+"widgets.gallery.install.title" = "À vous de composer votre écran";
+"widgets.gallery.install.body" = "Sur iPhone, faites un appui long sur l’écran d’accueil, ouvrez le menu d’ajout de widgets et recherchez Walkuno. Pour l’écran verrouillé, personnalisez les widgets de votre fond d’écran. Sur Apple Watch, modifiez votre cadran et choisissez une complication Walkuno.";
+"widgets.gallery.unlocked" = "Tous vos widgets sont débloqués";
+"widgets.gallery.cta" = "Débloquer mes widgets avec Pro";
+"widgets.gallery.pro.note" = "Tous les widgets et complications sont réservés à Walkuno Pro.";

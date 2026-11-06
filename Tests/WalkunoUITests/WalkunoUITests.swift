@@ -104,6 +104,38 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(fact.waitForExistence(timeout: 3))
     }
 
+    func testMotivationRefreshKeepsLocalAdviceWhenGenerationIsUnavailable() {
+        let app = launch(pro: false)
+        XCTAssertTrue(app.tabBars.buttons["Accueil"].waitForExistence(timeout: 10))
+        let why = app.buttons["motivation.why"]
+        reveal(why, in: app)
+        why.tap()
+        let refresh = app.buttons["motivation.refresh"]
+        // iOS 26 can report negative frames for off-screen disclosure content.
+        // The refresh button is below the disclosure label: scroll forward in the content.
+        for _ in 0..<12 {
+            if refresh.isHittable { break }
+            app.scrollViews.firstMatch.swipeUp()
+        }
+        XCTAssertTrue(refresh.isHittable, app.debugDescription)
+        XCTAssertTrue(refresh.isEnabled)
+        XCTAssertEqual(refresh.label, "Actualiser avec Apple Intelligence")
+        let fact = app.staticTexts["motivation.fact"].label
+        let message = app.staticTexts["motivation.message"].label
+        // Demo mode deliberately bypasses the model, making the fallback deterministic.
+        for _ in 0..<2 {
+            refresh.tap()
+            let status = app.staticTexts["motivation.refresh.status"]
+            XCTAssertTrue(status.waitForExistence(timeout: 5))
+            XCTAssertEqual(status.label, "La reformulation est indisponible pour le moment. Le conseil local reste affiché.")
+            XCTAssertTrue(refresh.isEnabled)
+            XCTAssertEqual(app.staticTexts["motivation.fact"].label, fact)
+            XCTAssertEqual(app.staticTexts["motivation.message"].label, message)
+            XCTAssertEqual(app.staticTexts["motivation.source"].label, "Encouragement préparé par Walkuno.")
+        }
+        capture("Motivation-actualisation-indisponible")
+    }
+
     func testMotivationUsesTheSelectedLanguage() {
         let app = launch(languages: ["en"], locale: "en_US", pro: false)
         XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 10))
@@ -453,6 +485,45 @@ final class WalkunoUITests: XCTestCase {
         slider.adjust(toNormalizedSliderPosition: 0.7)
     }
 
+    func testWidgetGalleryShowsExistingWidgetsAndOffersPro() {
+        let app = launch(pro: false)
+        showSettings(in: app)
+        let widgets = app.buttons["settings.widgets"]
+        reveal(widgets, in: app)
+        capture("Reglages-Widgets-Verre")
+        widgets.tap()
+        let unlock = app.buttons["widgets.unlock"]
+        XCTAssertTrue(unlock.waitForExistence(timeout: 5))
+        XCTAssertTrue(unlock.isHittable)
+        XCTAssertTrue(app.staticTexts["Vos progrès.\nAu premier regard."].exists)
+        capture("Widgets-Presentation-Pro")
+        let hourly = app.buttons["widgets.chart.hourly"]
+        reveal(hourly, in: app)
+        XCTAssertTrue(hourly.isSelected)
+        let goal = app.buttons["widgets.chart.goalTracking"]
+        goal.tap()
+        XCTAssertTrue(goal.isSelected)
+        capture("Widgets-Compteurs-Graphiques")
+        let install = app.descendants(matching: .any)["widgets.install"].firstMatch
+        reveal(install, in: app)
+        XCTAssertTrue(app.staticTexts["Walkuno · Tableau de bord"].exists)
+        capture("Widgets-Installation")
+        unlock.tap()
+        XCTAssertTrue(app.staticTexts["Un peu plus loin.\nUn peu plus vous."].waitForExistence(timeout: 5))
+        app.buttons["Terminé"].tap()
+        XCTAssertTrue(unlock.waitForExistence(timeout: 5))
+        app.terminate()
+
+        let proApp = launch(pro: true)
+        showSettings(in: proApp)
+        let proWidgets = proApp.buttons["settings.widgets"]
+        reveal(proWidgets, in: proApp)
+        proWidgets.tap()
+        XCTAssertTrue(proApp.descendants(matching: .any)["widgets.unlocked"].waitForExistence(timeout: 5))
+        XCTAssertFalse(proApp.buttons["widgets.unlock"].exists)
+        proApp.terminate()
+    }
+
     private func showSettings(in app: XCUIApplication) {
         app.tabBars.buttons["Réglages"].tap()
         let title = app.buttons["settings.subscription"]
@@ -486,25 +557,33 @@ final class WalkunoUITests: XCTestCase {
     func testDevelopmentProPersistsAndUpdatesSubscriptionAccess() {
         let app = launch()
 
-        func openDevelopmentSwitch() -> XCUIElement {
+        func openDevelopmentSwitch(inSubscription: Bool = false) -> XCUIElement {
             app.tabBars.buttons["Réglages"].tap()
-            app.buttons["settings.subscription"].tap()
-            let toggle = app.switches["premium.development.pro"]
+            if inSubscription { app.buttons["settings.subscription"].tap() }
+            let toggle = app.switches[inSubscription ? "premium.development.pro" : "settings.development.pro"]
             XCTAssertTrue(toggle.waitForExistence(timeout: 5))
             if !toggle.isHittable { app.swipeUp() }
             return toggle
         }
 
+        func toggleDevelopmentPro(_ toggle: XCUIElement) {
+            let previous = toggle.value as? String
+            // A Form exposes the whole row as the switch; tap its trailing control.
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+            let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                toggle.value as? String != previous
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
+        }
+
         let initialToggle = openDevelopmentSwitch()
-        if initialToggle.value as? String == "1" { initialToggle.tap() }
-        app.buttons["Terminé"].firstMatch.tap()
+        if initialToggle.value as? String == "1" { toggleDevelopmentPro(initialToggle) }
         app.tabBars.buttons["Accueil"].tap()
         XCTAssertEqual(app.staticTexts["app.subscription"].label, "Gratuit")
         XCTAssertTrue(app.descendants(matching: .any)["app.brand"].exists)
         capture("09-Accueil-Gratuit")
 
-        openDevelopmentSwitch().tap()
-        app.buttons["Terminé"].firstMatch.tap()
+        toggleDevelopmentPro(openDevelopmentSwitch())
         app.tabBars.buttons["Accueil"].tap()
         XCTAssertEqual(app.staticTexts["app.subscription"].label, "Pro")
         capture("10-Accueil-Pro")
@@ -518,9 +597,9 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertFalse(app.navigationBars["Walkuno Pro"].exists)
         trendPeriod(app).buttons["7 jours"].tap()
 
-        let enabledToggle = openDevelopmentSwitch()
+        let enabledToggle = openDevelopmentSwitch(inSubscription: true)
         XCTAssertEqual(enabledToggle.value as? String, "1")
-        enabledToggle.tap()
+        toggleDevelopmentPro(enabledToggle)
         app.buttons["Terminé"].firstMatch.tap()
         app.tabBars.buttons["Accueil"].tap()
         XCTAssertEqual(app.staticTexts["app.subscription"].label, "Gratuit")
@@ -633,7 +712,8 @@ final class WalkunoUITests: XCTestCase {
             let dailyUsual = app.descendants(matching: .any)["insights.day.legend.insights.usual"].firstMatch
             XCTAssertTrue(dailyUsual.waitForExistence(timeout: 5))
             XCTAssertFalse(dailyUsual.label.contains("—"), dailyUsual.label)
-            XCTAssertEqual(usual.label, dailyUsual.label, metric)
+            XCTAssertTrue((chart.value as? String)?.contains("au même moment de la journée") == true,
+                          chart.value as? String ?? "")
             XCTAssertTrue((chart.value as? String)?.contains(unit) == true, chart.value as? String ?? "")
             let goal = app.staticTexts["insights.clock.goal"]
             XCTAssertTrue(goal.label.contains(unit), goal.label)

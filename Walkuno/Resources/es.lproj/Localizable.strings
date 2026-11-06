@@ -527,6 +527,30 @@
 "goals.range %@ %@" = "Entre %@ y %@.";
 "insights.clock.more %@" = "%@ de ventaja";
 "insights.clock.less %@" = "%@ menos de lo habitual";
-"insights.clock.summary %@ %@" = "%@ hoy, %@ habitualmente en un día completo.";
+"insights.clock.summary %@ %@" = "%@ hoy, %@ habitualmente a esta hora del día.";
 "unit.steps" = "pasos";
 "unit.floors" = "pisos";
+
+/* Manual encouragement refresh. */
+"motivation.refresh" = "Actualizar con Apple Intelligence";
+"motivation.refreshing" = "Actualizando…";
+"motivation.refresh.hint" = "Reformula el consejo con la actividad ya cargada.";
+"motivation.refresh.unavailable" = "La reformulación no está disponible por el momento. Se sigue mostrando el consejo local.";
+
+/* Widget gallery */
+"settings.widgets" = "Widgets";
+"widgets.gallery.examples" = "Vistas ilustrativas · datos de ejemplo";
+"widgets.gallery.exclusive" = "EXCLUSIVO DE WALKUNO PRO";
+"widgets.gallery.headline" = "Tu progreso.\nDe un vistazo.";
+"widgets.gallery.intro" = "Convierte tu pantalla en motivación diaria. Tus pasos, tus objetivos y tus pequeñas victorias: siempre a la vista con Pro.";
+"widgets.gallery.surfaces" = "Pantalla de inicio · Pantalla de bloqueo · Apple Watch";
+"widgets.gallery.counter.body" = "Ten tu objetivo presente todo el día. Disfruta de tu contador y paleta favoritos, desde un widget pequeño hasta una vista amplia de tu actividad.";
+"widgets.gallery.charts.body" = "Descubre tus horas más activas, sigue tu objetivo y ve cómo crece tu semana. Cinco vistas para dar valor a cada paso.";
+"widgets.gallery.dashboard.body" = "Pasos, distancia y tendencia semanal en un solo widget. En el formato grande, añade pisos, ejercicio y seguimiento del objetivo.";
+"widgets.gallery.everywhere.title" = "Tu motivación va contigo";
+"widgets.gallery.everywhere.body" = "Un vistazo a la pantalla de bloqueo o a tu muñeca: sigue tu rumbo con widgets de iPhone y complicaciones de Apple Watch, todos incluidos con Pro.";
+"widgets.gallery.install.title" = "Diseña tu propia pantalla";
+"widgets.gallery.install.body" = "En el iPhone, mantén pulsada la pantalla de inicio, abre el menú para añadir widgets y busca Walkuno. Para la pantalla de bloqueo, personaliza los widgets del fondo de pantalla. En Apple Watch, edita la esfera y elige una complicación Walkuno.";
+"widgets.gallery.unlocked" = "Todos tus widgets están desbloqueados";
+"widgets.gallery.cta" = "Desbloquear mis widgets con Pro";
+"widgets.gallery.pro.note" = "Todos los widgets y complicaciones son exclusivos de Walkuno Pro.";

@@ -3,7 +3,7 @@ import Testing
 @testable import WalkunoCore
 
 struct StepClockTests {
-    @Test func displayedHabitualTotalMatchesTheDailyCardForEveryMetric() {
+    @Test func clockUsesTheSameTimeReferenceWhileTheDailyCardKeepsCompleteDays() {
         let now = date("2026-11-04T09:30:00Z")
         let morning = HourActivity(date: date("2026-11-03T09:00:00Z"), steps: 200, meters: 150,
                                    kilocalories: 25, exerciseMinutes: 2.5, floors: 1)
@@ -13,35 +13,26 @@ struct StepClockTests {
             let comparison = DayComparison(today: [], history: [[morning]], metric: metric,
                 cutoffHour: 10.5, calendar: calendar, fullDayHistory: [[morning, evening]])
             let snapshot = ActivityClockSnapshot(metric: metric, sampledAt: now, current: metric.defaultGoal / 2,
-                goal: metric.defaultGoal, hours: [], usual: .init(comparison: comparison),
-                usualDayTotal: comparison.usualDayTotal, calendar: calendar)
-            #expect(snapshot.usualDayTotal == comparison.usualDayTotal)
-            #expect(snapshot.usualDayTotal == metric.value(in: morning)! + metric.value(in: evening)!)
-            // The live pace still compares matching portions of the day.
+                goal: metric.defaultGoal, hours: [], usual: .init(comparison: comparison), calendar: calendar)
             #expect(snapshot.usual == comparison.usual)
+            #expect(snapshot.usual == metric.value(in: morning))
+            #expect(snapshot.usual != comparison.usualDayTotal)
+            #expect(comparison.usualDayTotal == metric.value(in: morning)! + metric.value(in: evening)!)
             #expect(snapshot.difference == metric.defaultGoal / 2 - metric.value(in: morning)!)
             #expect(snapshot.usualProgress == metric.value(in: morning)! / metric.defaultGoal)
         }
     }
 
-    @Test func dailyReferenceRemainsDistinctFromMissingOrPartialReference() {
-        let now = date("2026-11-04T09:30:00Z")
-        let partialOnly = ActivityClockSnapshot(metric: .steps, sampledAt: now, current: 1_000, goal: 8_000,
-            hours: [], usual: usual(200), calendar: calendar)
-        #expect(partialOnly.usual == 200)
-        #expect(partialOnly.usualDayTotal == nil)
-        let completeOnly = ActivityClockSnapshot(metric: .steps, sampledAt: now, current: 1_000, goal: 8_000,
-            hours: [], usual: nil, usualDayTotal: 9_000, calendar: calendar)
-        #expect(completeOnly.usualDayTotal == 9_000)
-        #expect(completeOnly.change == nil)
-        let measuredZero = ActivityClockSnapshot(metric: .steps, sampledAt: now, current: 0, goal: 8_000,
-            hours: [], usual: nil, usualDayTotal: 0, calendar: calendar)
-        #expect(measuredZero.usualDayTotal == 0)
-        for invalid in [-1, Double.infinity, Double.nan] {
-            let missing = ActivityClockSnapshot(metric: .steps, sampledAt: now, current: 0, goal: 8_000,
-                hours: [], usual: nil, usualDayTotal: invalid, calendar: calendar)
-            #expect(missing.usualDayTotal == nil)
-        }
+    @Test func aCompleteDayDoesNotInventAMissingSameTimeReference() {
+        let comparison = DayComparison(today: [], history: [], metric: .steps,
+            cutoffHour: 10.5, calendar: calendar,
+            fullDayHistory: [[.init(date: date("2026-11-03T18:00:00Z"), steps: 9_000)]])
+        let snapshot = ActivityClockSnapshot(metric: .steps, sampledAt: date("2026-11-04T09:30:00Z"),
+            current: 1_000, goal: 8_000, hours: [], usual: .init(comparison: comparison), calendar: calendar)
+        #expect(comparison.usualDayTotal == 9_000)
+        #expect(snapshot.usual == nil)
+        #expect(snapshot.usualProgress == nil)
+        #expect(snapshot.change == nil)
     }
 
     @Test func eachMetricUsesItsOwnDailyValueHourlyRaysBaselineAndGoal() throws {
