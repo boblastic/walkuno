@@ -3,6 +3,7 @@ import SwiftUI
 /// The same fixed header sits above every app screen, including presented details.
 private struct AppHeaderModifier: ViewModifier {
     @Environment(\.colorScheme) private var scheme
+    var subscriptionLinkEnabled: Bool
 
     func body(content: Content) -> some View {
         ZStack {
@@ -11,7 +12,7 @@ private struct AppHeaderModifier: ViewModifier {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Reserve the header's height during layout and let content scroll behind its glass.
         .safeAreaInset(edge: .top, spacing: 0) {
-            AppHeader()
+            AppHeader(subscriptionLinkEnabled: subscriptionLinkEnabled)
                 .padding(.horizontal, 16)
                 .padding(.top, 6)
                 .padding(.bottom, 10)
@@ -22,8 +23,8 @@ private struct AppHeaderModifier: ViewModifier {
 
 extension View {
     /// Apply to screen content inside a NavigationStack, below its system navigation controls.
-    func appHeader() -> some View {
-        modifier(AppHeaderModifier())
+    func appHeader(subscriptionLinkEnabled: Bool = true) -> some View {
+        modifier(AppHeaderModifier(subscriptionLinkEnabled: subscriptionLinkEnabled))
     }
 }
 
@@ -31,6 +32,8 @@ private struct AppHeader: View {
     @Environment(AppModel.self) private var model
     @Environment(\.colorScheme) private var scheme
     @State private var showsStreak = false
+    @State private var showsPremium = false
+    var subscriptionLinkEnabled: Bool
 
     private var ink: Color { model.effectiveTheme.tint(for: scheme) }
     private var streak: Int? {
@@ -53,6 +56,7 @@ private struct AppHeader: View {
         .background { WalkunoGlassSurface() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("app.header")
+        .sheet(isPresented: $showsPremium) { PremiumView() }
     }
 
     private var streakBadge: some View {
@@ -101,15 +105,21 @@ private struct AppHeader: View {
             .accessibilityLabel("Walkuno")
             .accessibilityIdentifier("app.brand")
 
-            Text(L(model.purchases.isPremium ? "subscription.pro" : "subscription.free"))
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(model.purchases.isPremium ? ink : Color.secondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .overlay {
-                    Capsule().strokeBorder(model.purchases.isPremium ? ink.opacity(0.45) : Color.primary.opacity(0.2), lineWidth: 1)
-                }
-                .accessibilityIdentifier("app.subscription")
+            Button { showsPremium = true } label: {
+                Text(L(model.purchases.isPremium ? "subscription.pro" : "subscription.free"))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(model.purchases.isPremium ? ink : Color.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .overlay {
+                        Capsule().strokeBorder(model.purchases.isPremium ? ink.opacity(0.45) : Color.primary.opacity(0.2), lineWidth: 1)
+                    }
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!subscriptionLinkEnabled)
+            .accessibilityIdentifier("app.subscription")
         }
         .fixedSize(horizontal: true, vertical: false)
     }

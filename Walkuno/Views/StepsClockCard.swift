@@ -176,7 +176,7 @@ private struct StepClockDial: View {
                         .accessibilityIdentifier("insights.clock.total")
                     Text(detail)
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(baseline).monospacedDigit()
+                        .foregroundStyle(.primary).monospacedDigit()
                         .lineLimit(1).minimumScaleFactor(0.6)
                     if let progress = snapshot.progress {
                         Text(progress, format: .percent.precision(.fractionLength(0)))

@@ -85,7 +85,7 @@ public enum CounterStyle: String, CaseIterable, Codable, Identifiable, Sendable 
     // Keep "minimal" on disk so existing choices become the typographic design.
     case horizon, ring, path, milestones, minimal
     public var id: String { rawValue }
-    public var requiresPremium: Bool { self != .ring && self != .horizon }
+    public var requiresPremium: Bool { self != .horizon }
 }
 
 public enum CounterEffect: String, CaseIterable, Codable, Identifiable, Sendable {

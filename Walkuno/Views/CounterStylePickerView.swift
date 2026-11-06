@@ -5,15 +5,12 @@ struct CounterStylePickerView: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var preview: CounterStyle?
     @State private var showPremium = false
-    @State private var previewEffect: CounterEffect?
     @State private var replayCounter = 0
 
-    private var style: CounterStyle { preview ?? model.effectiveCounter }
+    private var style: CounterStyle { model.effectiveCounter }
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
-    private var effect: CounterEffect { previewEffect ?? model.effectiveEffect }
-    private var isLocked: Bool { (style.requiresPremium || effect.requiresPremium) && !model.purchases.isPremium }
+    private var effect: CounterEffect { model.effectiveEffect }
 
     var body: some View {
         ScrollViewReader { reader in
@@ -27,11 +24,7 @@ struct CounterStylePickerView: View {
                                 .font(.caption.weight(.medium)).foregroundStyle(accent)
                                 .lineLimit(1).minimumScaleFactor(0.6)
                         }
-                        AnimatedStepCounter(steps: 6240, goal: 8000, title: L("tab.today"),
-                                            theme: model.effectiveTheme, style: style, effect: effect,
-                                            replay: "\(style.rawValue)-\(effect.rawValue)-\(replayCounter)",
-                                            animateEntry: true, animateUpdates: true)
-                            .id("\(style.rawValue)-\(effect.rawValue)-\(replayCounter)")
+                        counterPreview
                             .frame(height: typeSize.isAccessibilitySize ? 320 : 232)
                             .background {
                                 RadialGradient(colors: [accent.opacity(0.10), .clear], center: .center, startRadius: 15, endRadius: 170)
@@ -40,12 +33,14 @@ struct CounterStylePickerView: View {
                             .accessibilityLabel(Text("counter.preview"))
                             .accessibilityValue(Text(LocalizedStringKey(style.titleKey)))
                             .accessibilityIdentifier("counter.preview")
-                        Button { replayCounter += 1 } label: {
-                            Label("counter.effect.replay", systemImage: "arrow.clockwise")
-                                .font(.caption.weight(.semibold)).padding(.vertical, 4)
+                        if model.purchases.isPremium {
+                            Button { replayCounter += 1 } label: {
+                                Label("counter.effect.replay", systemImage: "arrow.clockwise")
+                                    .font(.caption.weight(.semibold)).padding(.vertical, 4)
+                            }
+                            .buttonStyle(.bordered).tint(accent)
+                            .accessibilityIdentifier("counter.effect.replay")
                         }
-                        .buttonStyle(.bordered).tint(accent)
-                        .accessibilityIdentifier("counter.effect.replay")
                     }
                     .padding(18)
                     .background(WalkunoStyle.card(scheme), in: RoundedRectangle(cornerRadius: 28))
@@ -62,15 +57,6 @@ struct CounterStylePickerView: View {
                             option(candidate)
                         }
                     }
-                    if isLocked {
-                        Button { showPremium = true } label: {
-                            Label("counter.unlock", systemImage: "sparkles")
-                                .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(.vertical, 7)
-                        }
-                        .buttonStyle(.borderedProminent).tint(model.effectiveTheme.accent)
-                        .foregroundStyle(WalkunoStyle.ink)
-                        .accessibilityIdentifier("counter.unlock")
-                    }
                     Text("counter.palette.note").font(.caption).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center).padding(.horizontal, 8)
                 }
@@ -81,7 +67,7 @@ struct CounterStylePickerView: View {
                     reader.scrollTo("counter.preview.card", anchor: .top)
                 }
             }
-            .onChange(of: preview) { _, _ in
+            .onChange(of: style) { _, _ in
                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
                     reader.scrollTo("counter.preview.card", anchor: .top)
                 }
@@ -90,17 +76,34 @@ struct CounterStylePickerView: View {
         .background(WalkunoStyle.background(scheme))
         .navigationTitle("settings.counter")
         .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !model.purchases.isPremium {
+                Button { showPremium = true } label: {
+                    Label("counter.unlock", systemImage: "sparkles")
+                        .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(.vertical, 7)
+                }
+                .buttonStyle(.borderedProminent).tint(model.effectiveTheme.accent)
+                .foregroundStyle(WalkunoStyle.ink)
+                .accessibilityIdentifier("counter.unlock")
+                .padding(.horizontal, 20).padding(.vertical, 12)
+                .background(.regularMaterial)
+            }
+        }
         .sensoryFeedback(.selection, trigger: style)
         .sheet(isPresented: $showPremium) { PremiumView() }
-        .onChange(of: model.purchases.isPremium) { _, premium in
-            if premium {
-                select(style)
-                model.preferences.counterEffect = effect
-                model.persist()
-            } else {
-                preview = model.effectiveCounter
-                previewEffect = model.effectiveEffect
-            }
+    }
+
+    @ViewBuilder private var counterPreview: some View {
+        if model.purchases.isPremium {
+            AnimatedStepCounter(steps: 6240, goal: 8000, title: L("tab.today"),
+                                theme: model.effectiveTheme, style: style, effect: effect,
+                                replay: "\(style.rawValue)-\(effect.rawValue)-\(replayCounter)",
+                                animateEntry: true, animateUpdates: true)
+                .id("\(style.rawValue)-\(effect.rawValue)-\(replayCounter)")
+        } else {
+            StepCounterFace(displayedSteps: 6240, hasSteps: true, goal: 8000,
+                            title: L("tab.today"), theme: model.effectiveTheme,
+                            style: style, effect: effect)
         }
     }
 
@@ -108,11 +111,9 @@ struct CounterStylePickerView: View {
         let selected = candidate == effect
         let locked = candidate.requiresPremium && !model.purchases.isPremium
         return Button {
-            previewEffect = candidate
-            if !locked {
-                model.preferences.counterEffect = candidate
-                model.persist()
-            }
+            guard model.purchases.isPremium else { return }
+            model.preferences.counterEffect = candidate
+            model.persist()
             replayCounter += 1
         } label: {
             VStack(alignment: .leading, spacing: 8) {
@@ -134,17 +135,17 @@ struct CounterStylePickerView: View {
             .contentShape(RoundedRectangle(cornerRadius: 20))
         }
         .buttonStyle(.plain)
+        .disabled(!model.purchases.isPremium)
         .accessibilityLabel(Text(LocalizedStringKey(candidate.titleKey)))
+        .accessibilityValue(Text(LocalizedStringKey(selected ? "counter.selected" : locked ? "premium.title" : "theme.available")))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
         .accessibilityIdentifier("counter.effect.\(candidate.rawValue)")
     }
 
     private func select(_ candidate: CounterStyle) {
-        preview = candidate
-        if !candidate.requiresPremium || model.purchases.isPremium {
-            model.preferences.counterStyle = candidate
-            model.persist()
-        }
+        guard model.purchases.isPremium else { return }
+        model.preferences.counterStyle = candidate
+        model.persist()
     }
 
     private func option(_ candidate: CounterStyle) -> some View {
@@ -176,6 +177,7 @@ struct CounterStylePickerView: View {
             .contentShape(RoundedRectangle(cornerRadius: 22))
         }
         .buttonStyle(.plain)
+        .disabled(!model.purchases.isPremium)
         .accessibilityLabel(Text(LocalizedStringKey(candidate.titleKey)))
         .accessibilityValue(Text(LocalizedStringKey(selected ? "counter.selected" : locked ? "premium.title" : "theme.available")))
         .accessibilityHint(Text(LocalizedStringKey(candidate.descriptionKey)))

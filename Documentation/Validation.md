@@ -693,3 +693,27 @@ La version 1.0.0 (20) compacte Liquid Glass, ajoute la miniature du compteur sé
 - Mise à jour sur l’iPhone en conservant les données, lancement sans argument de démonstration et version 20 relue dans les métadonnées de l’appareil. Aucune installation directe sur la Watch.
 
 Preuves : `/tmp/walkuno-release-20-manifest.json`, `/tmp/walkuno-release-20-core.log`, `/tmp/walkuno-release-20-ui.log`, `/tmp/walkuno-release-20-motivation-final.xcresult`, `/tmp/walkuno-widgets-gallery-v2.xcresult`, `/tmp/walkuno-widgets-qa.xcresult`, `/tmp/walkuno-release-20-device.log`, `/tmp/walkuno-release-20-install.json`, `/tmp/walkuno-release-20-launch.json`, `/tmp/walkuno-release-20-after.json`.
+
+
+## Bascule Pro de développement et pastille d’abonnement — 6 novembre 2026
+
+La bascule Pro est réservée à l’écran des offres, dans une carte Développement placée avant la liste des fonctionnalités. Elle a été retirée des Réglages. La pastille Gratuit/Pro du bandeau ouvre les offres ; sur cet écran, elle est désactivée pour éviter d’empiler une seconde présentation. Le contrôle et la simulation d’accès restent sous `#if DEBUG`.
+
+La cause de l’absence sur l’iPhone était la compilation Release des dernières livraisons, malgré leur signature de développement. Une compilation Debug signée de la version 1.0.0 (20), avec `-DDEBUG` confirmé, a été installée sans désinstallation sur iBoblastic. Le chemin du bundle installé et la version ont été relus. Le lancement automatique a été refusé parce que l’iPhone était verrouillé ; aucun contrôle visuel sur appareil physique n’est revendiqué.
+
+- Test UI ciblé réussi sur iOS 26.3 : ouverture depuis la pastille, activation, persistance après relancement, accès annuel, absence de bascule dans Réglages et désactivation depuis les offres.
+- Compilation Debug signée des quatre composants et vérification stricte de signature réussies.
+- 514 textes et autorisation Santé vérifiés dans les sept langues, y compris les quatre bundles compilés ; `git diff --check` réussi.
+
+Preuves locales : `/tmp/walkuno-pro-badge-retest.log`, `/tmp/walkuno-pro-badge-sim/Logs/Test/Test-Walkuno-2026.11.06_07-54-54-+0100.xcresult`, `/tmp/walkuno-pro-badge-device-build.log`, `/tmp/walkuno-pro-badge-iphone-{install,launch,after}.json`. Aucun déploiement direct sur la Watch ni publication.
+
+## Captures complètes des widgets et centrage du petit compteur — 6 novembre 2026
+
+La galerie des réglages utilise des captures générées depuis les vues réelles des widgets, avec données d’exemple, fond et marges. Les formats petit/grand des compteurs, petit/moyen/grand des graphiques et tableaux de bord, ainsi que les accessoires d’écran verrouillé sont affichés sans recadrage. Les captures suivent la palette, les unités et le style de compteur effectifs. Le petit compteur Horizon est légèrement abaissé sous le logo pour compenser l’espace vide sous son arc ; la capture reprend ce centrage.
+
+- Parcours UI de la galerie gratuit/Pro réussi après le centrage ; captures exportées et contrôlées visuellement.
+- Compilation Debug signée et vérification stricte de signature réussies ; installation et lancement sur iBoblastic confirmés, sans désinstallation ni argument de démonstration.
+- Avant le commit, 140 tests métier et validation des 514 textes dans les sept langues réussis.
+- Deux tests UI supplémentaires des réglages gratuits réussis : styles et effets désactivés, maintien d’Horizon / Étoiles et ouverture de Pro depuis le bouton dédié.
+
+Preuves locales : `/tmp/walkuno-widget-centered.xcresult`, `/tmp/walkuno-widget-centered-preview/`, `/tmp/walkuno-widget-centered-install.log`, `/tmp/walkuno-commit-core.log` et `/tmp/walkuno-commit-free-settings.xcresult`.

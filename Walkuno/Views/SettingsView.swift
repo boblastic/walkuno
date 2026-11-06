@@ -28,19 +28,6 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("settings.subscription")
             }
-            #if DEBUG
-            Section {
-                Toggle("premium.development.pro", isOn: Binding(
-                    get: { model.purchases.isDevelopmentProEnabled },
-                    set: { model.purchases.isDevelopmentProEnabled = $0 }
-                ))
-                .accessibilityIdentifier("settings.development.pro")
-            } header: {
-                Text("premium.development.title")
-            } footer: {
-                Text("premium.development.note")
-            }
-            #endif
             Section("goals.daily") {
                 ForEach(ActivityMetric.allCases) { metric in
                     Button { goalMetric = metric } label: {

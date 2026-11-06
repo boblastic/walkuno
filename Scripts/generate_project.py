@@ -52,14 +52,14 @@ for lang, uid in zip(languages, info_locales):
 targets = {}
 specs = [
     ('Walkuno', 'fr.orbelio.walkuno', 'iphoneos', 'com.apple.product-type.application',
-     core + shared + health + sorted(str(p.relative_to(ROOT)) for p in (ROOT / 'Walkuno').rglob('*.swift')),
+     core + shared + health + ['Widgets/WalkunoWidgets.swift'] + sorted(str(p.relative_to(ROOT)) for p in (ROOT / 'Walkuno').rglob('*.swift')),
      ['Walkuno/Assets.xcassets', 'Config/PrivacyInfo.xcprivacy']),
     ('WalkunoWidgets', 'fr.orbelio.walkuno.widgets', 'iphoneos', 'com.apple.product-type.app-extension',
-     core + shared + ['Widgets/WalkunoWidgets.swift'], ['Config/PrivacyInfo.xcprivacy']),
+     core + shared + ['Widgets/WalkunoWidgets.swift', 'Widgets/WalkunoWidgetBundle.swift'], ['Config/PrivacyInfo.xcprivacy']),
     ('WalkunoWatch', 'fr.orbelio.walkuno.watchkitapp', 'watchos', 'com.apple.product-type.application',
      core + shared + health + ['WatchApp/WalkunoWatchApp.swift', 'Walkuno/Views/StepCounterView.swift', 'Walkuno/Views/CounterStarlight.swift'], ['WatchApp/Assets.xcassets', 'Config/PrivacyInfo.xcprivacy']),
     ('WalkunoWatchWidgets', 'fr.orbelio.walkuno.watchkitapp.widgets', 'watchos', 'com.apple.product-type.app-extension',
-     core + shared + ['Widgets/WalkunoWidgets.swift'], ['Config/PrivacyInfo.xcprivacy'])
+     core + shared + ['Widgets/WalkunoWidgets.swift', 'Widgets/WalkunoWidgetBundle.swift'], ['Config/PrivacyInfo.xcprivacy'])
 ]
 products = []
 for name, bundle_id, sdk, product_type, sources, resources in specs:

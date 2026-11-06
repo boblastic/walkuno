@@ -33,8 +33,8 @@ struct ProAccessTests {
         #expect(decoded.proAccess == nil)
     }
 
-    @Test func onlyStarsAreIncludedAmongTheFreeEffects() {
+    @Test func onlyHorizonAndStarsAreIncludedInFreeCustomization() {
         #expect(CounterEffect.allCases.filter { !$0.requiresPremium } == [.stars])
-        #expect(CounterStyle.allCases.filter { !$0.requiresPremium } == [.horizon, .ring])
+        #expect(CounterStyle.allCases.filter { !$0.requiresPremium } == [.horizon])
     }
 }

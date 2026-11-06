@@ -103,7 +103,7 @@ private struct WidgetProGate<Content: View>: View {
     var access: ProAccess
     var date: Date
     @ViewBuilder var content: () -> Content
-    @Environment(\.widgetFamily) private var family
+    @Environment(\.walkunoWidgetFamily) private var family
 
     var body: some View {
         if access.isActive(at: date) {
@@ -133,7 +133,7 @@ private struct WidgetProGate<Content: View>: View {
 
 struct WalkunoWidgetView: View {
     var entry: WalkunoEntry
-    @Environment(\.widgetFamily) private var family
+    @Environment(\.walkunoWidgetFamily) private var family
     private var theme: WalkunoTheme { entry.snapshot?.theme ?? .mint }
     private var steps: Int? { entry.snapshot?.today.steps }
     private var progress: Double { ActivityMath.progress(steps: steps, goal: entry.snapshot?.goal ?? 8000) }
@@ -215,6 +215,8 @@ struct WalkunoWidgetView: View {
                 if small {
                     WidgetCounter(snapshot: entry.snapshot).frame(width: counterSize, height: counterSize)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        // The open arc leaves empty space below its drawing; center the visible content under the header.
+                        .offset(y: (entry.snapshot?.display?.counter ?? .horizon) == .horizon ? counterSize * 0.09 : 0)
                 } else {
                     WidgetLargeOverview(snapshot: entry.snapshot, date: entry.date)
                 }
@@ -226,7 +228,7 @@ struct WalkunoWidgetView: View {
 
 struct WalkunoChartWidgetView: View {
     var entry: WalkunoChartEntry
-    @Environment(\.widgetFamily) private var family
+    @Environment(\.walkunoWidgetFamily) private var family
     private var compact: Bool { family == .accessoryRectangular }
     private var small: Bool {
         #if os(iOS)
@@ -627,22 +629,25 @@ struct WalkunoChartWidget: Widget {
     }
 }
 
-@main
-struct WalkunoWidgetBundle: WidgetBundle {
-    var body: some Widget {
-        WalkunoActivityWidget()
-        WalkunoChartWidget()
-        #if os(iOS)
-        WalkunoDashboardWidget()
-        #endif
-    }
-}
-
 // MARK: - Shared widget design
 
+private struct WidgetCaptureKey: EnvironmentKey {
+    static let defaultValue: WidgetFamily? = nil
+}
+
+extension EnvironmentValues {
+    /// Supplies WidgetKit's content margins and background when capturing a complete widget in the app.
+    var widgetCaptureFamily: WidgetFamily? {
+        get { self[WidgetCaptureKey.self] }
+        set { self[WidgetCaptureKey.self] = newValue }
+    }
+    var walkunoWidgetFamily: WidgetFamily { widgetCaptureFamily ?? widgetFamily }
+}
+
 private struct WidgetSurface: ViewModifier {
+    @Environment(\.widgetCaptureFamily) private var captureFamily
     var theme: WalkunoTheme
-    @Environment(\.widgetFamily) private var family
+    @Environment(\.walkunoWidgetFamily) private var family
     @Environment(\.colorScheme) private var scheme
     private var home: Bool {
         #if os(iOS)
@@ -651,15 +656,24 @@ private struct WidgetSurface: ViewModifier {
         false
         #endif
     }
-    func body(content: Content) -> some View {
-        content
-            .environment(\.colorScheme, home ? .dark : scheme)
-            .containerBackground(for: .widget) {
-                if home {
-                    LinearGradient(colors: [WalkunoStyle.ink, WalkunoStyle.ink, theme.secondaryAccent.opacity(0.28)],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing)
-                } else { WalkunoStyle.ink }
-            }
+    @ViewBuilder func body(content: Content) -> some View {
+        if captureFamily != nil {
+            content
+                .environment(\.colorScheme, .dark)
+                .padding(home ? 16 : 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background { surface }
+        } else {
+            content
+                .environment(\.colorScheme, home ? .dark : scheme)
+                .containerBackground(for: .widget) { surface }
+        }
+    }
+    @ViewBuilder private var surface: some View {
+        if home {
+            LinearGradient(colors: [WalkunoStyle.ink, WalkunoStyle.ink, theme.secondaryAccent.opacity(0.28)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        } else { WalkunoStyle.ink }
     }
 }
 
@@ -931,7 +945,7 @@ private struct WidgetDailyRhythm: View {
 
 struct WalkunoDashboardView: View {
     var entry: WalkunoEntry
-    @Environment(\.widgetFamily) private var family
+    @Environment(\.walkunoWidgetFamily) private var family
     private var small: Bool { family == .systemSmall }
     private var large: Bool { family == .systemLarge }
     private var lock: Bool { family == .accessoryRectangular }

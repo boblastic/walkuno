@@ -160,7 +160,7 @@ final class WalkunoUITests: XCTestCase {
         picker.tap()
         app.buttons["English"].tap()
         XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.staticTexts["app.subscription"].firstMatch.label, "Free")
+        XCTAssertEqual(app.buttons["app.subscription"].firstMatch.label, "Free")
         XCTAssertTrue(picker.label.contains("English"))
         capture("Langue-choisie-Anglais")
 
@@ -173,13 +173,13 @@ final class WalkunoUITests: XCTestCase {
         picker.tap()
         app.buttons["日本語"].tap()
         XCTAssertTrue(app.tabBars.buttons["設定"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.staticTexts["app.subscription"].firstMatch.label, "無料")
+        XCTAssertEqual(app.buttons["app.subscription"].firstMatch.label, "無料")
         XCTAssertTrue(picker.label.contains("日本語"))
         capture("Langue-choisie-Japonais")
         picker.tap()
         app.buttons["電話の言語"].tap()
         XCTAssertTrue(app.tabBars.buttons["Réglages"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.staticTexts["app.subscription"].firstMatch.label, "Gratuit")
+        XCTAssertEqual(app.buttons["app.subscription"].firstMatch.label, "Gratuit")
         XCTAssertTrue(picker.label.contains("Langue du téléphone"))
     }
 
@@ -492,20 +492,57 @@ final class WalkunoUITests: XCTestCase {
         reveal(widgets, in: app)
         capture("Reglages-Widgets-Verre")
         widgets.tap()
+        func revealCapture(_ element: XCUIElement) {
+            for _ in 0..<24 {
+                let top = app.frame.height * 0.22
+                let bottom = app.buttons["widgets.unlock"].frame.minY - 16
+                let frame = element.frame
+                if element.exists && element.isHittable && frame.minY >= top && frame.maxY <= bottom { return }
+                let down = element.exists && !frame.isEmpty && frame.minY < top
+                let distance = element.exists && !frame.isEmpty
+                    ? (down ? top - frame.minY : frame.maxY - bottom) + 8 : 180
+                let delta = min(180, max(24, distance)) / app.frame.height
+                let start = app.windows.firstMatch.coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.54))
+                let end = app.windows.firstMatch.coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.54 + (down ? delta : -delta)))
+                start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
+            }
+            XCTAssertTrue(element.isHittable)
+            XCTAssertGreaterThanOrEqual(element.frame.minY, app.frame.height * 0.22 - 1)
+            XCTAssertLessThanOrEqual(element.frame.maxY, app.buttons["widgets.unlock"].frame.minY - 15)
+        }
         let unlock = app.buttons["widgets.unlock"]
         XCTAssertTrue(unlock.waitForExistence(timeout: 5))
         XCTAssertTrue(unlock.isHittable)
         XCTAssertTrue(app.staticTexts["Vos progrès.\nAu premier regard."].exists)
         capture("Widgets-Presentation-Pro")
+        for family in ["small", "large"] {
+            let image = app.images["widgets.capture.counter." + family]
+            XCTAssertTrue(image.waitForExistence(timeout: 5))
+            revealCapture(image)
+            XCTAssertGreaterThan(image.frame.height, 150)
+            XCTAssertGreaterThanOrEqual(image.frame.minX, 0)
+            XCTAssertLessThanOrEqual(image.frame.maxX, app.frame.width)
+            capture("Widgets-Compteur-" + family)
+        }
         let hourly = app.buttons["widgets.chart.hourly"]
-        reveal(hourly, in: app)
+        revealCapture(hourly)
         XCTAssertTrue(hourly.isSelected)
         let goal = app.buttons["widgets.chart.goalTracking"]
         goal.tap()
         XCTAssertTrue(goal.isSelected)
+        let chartCapture = app.images["widgets.capture.chart.medium"]
+        revealCapture(chartCapture)
         capture("Widgets-Compteurs-Graphiques")
+        for family in ["small", "medium", "large"] {
+            let image = app.images["widgets.capture.dashboard." + family]
+            revealCapture(image)
+            capture("Widgets-Tableau-de-bord-" + family)
+        }
+        let accessory = app.images["widgets.capture.counter.rectangular"]
+        revealCapture(accessory)
+        capture("Widgets-Ecran-verrouille")
         let install = app.descendants(matching: .any)["widgets.install"].firstMatch
-        reveal(install, in: app)
+        revealCapture(install)
         XCTAssertTrue(app.staticTexts["Walkuno · Tableau de bord"].exists)
         capture("Widgets-Installation")
         unlock.tap()
@@ -557,10 +594,17 @@ final class WalkunoUITests: XCTestCase {
     func testDevelopmentProPersistsAndUpdatesSubscriptionAccess() {
         let app = launch()
 
-        func openDevelopmentSwitch(inSubscription: Bool = false) -> XCUIElement {
-            app.tabBars.buttons["Réglages"].tap()
-            if inSubscription { app.buttons["settings.subscription"].tap() }
-            let toggle = app.switches[inSubscription ? "premium.development.pro" : "settings.development.pro"]
+        func openDevelopmentSwitch(fromSettings: Bool = false) -> XCUIElement {
+            if fromSettings {
+                app.tabBars.buttons["Réglages"].tap()
+                XCTAssertFalse(app.switches["settings.development.pro"].exists)
+                app.buttons["settings.subscription"].tap()
+            } else {
+                app.buttons["app.subscription"].tap()
+            }
+            XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
+            XCTAssertFalse(app.buttons["app.subscription"].firstMatch.isEnabled)
+            let toggle = app.switches["premium.development.pro"]
             XCTAssertTrue(toggle.waitForExistence(timeout: 5))
             if !toggle.isHittable { app.swipeUp() }
             return toggle
@@ -568,7 +612,7 @@ final class WalkunoUITests: XCTestCase {
 
         func toggleDevelopmentPro(_ toggle: XCUIElement) {
             let previous = toggle.value as? String
-            // A Form exposes the whole row as the switch; tap its trailing control.
+            // Tap the trailing switch control, away from its label.
             toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
             let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
                 toggle.value as? String != previous
@@ -578,31 +622,33 @@ final class WalkunoUITests: XCTestCase {
 
         let initialToggle = openDevelopmentSwitch()
         if initialToggle.value as? String == "1" { toggleDevelopmentPro(initialToggle) }
+        app.buttons["Terminé"].firstMatch.tap()
         app.tabBars.buttons["Accueil"].tap()
-        XCTAssertEqual(app.staticTexts["app.subscription"].label, "Gratuit")
+        XCTAssertEqual(app.buttons["app.subscription"].label, "Gratuit")
         XCTAssertTrue(app.descendants(matching: .any)["app.brand"].exists)
         capture("09-Accueil-Gratuit")
 
         toggleDevelopmentPro(openDevelopmentSwitch())
+        app.buttons["Terminé"].firstMatch.tap()
         app.tabBars.buttons["Accueil"].tap()
-        XCTAssertEqual(app.staticTexts["app.subscription"].label, "Pro")
+        XCTAssertEqual(app.buttons["app.subscription"].label, "Pro")
         capture("10-Accueil-Pro")
 
         app.terminate()
         app.launch()
-        XCTAssertTrue(app.staticTexts["app.subscription"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["app.subscription"].label, "Pro")
+        XCTAssertTrue(app.buttons["app.subscription"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.buttons["app.subscription"].label, "Pro")
         app.tabBars.buttons["Statistiques"].tap()
         trendPeriod(app).buttons["Année"].tap()
         XCTAssertFalse(app.navigationBars["Walkuno Pro"].exists)
         trendPeriod(app).buttons["7 jours"].tap()
 
-        let enabledToggle = openDevelopmentSwitch(inSubscription: true)
+        let enabledToggle = openDevelopmentSwitch(fromSettings: true)
         XCTAssertEqual(enabledToggle.value as? String, "1")
         toggleDevelopmentPro(enabledToggle)
         app.buttons["Terminé"].firstMatch.tap()
         app.tabBars.buttons["Accueil"].tap()
-        XCTAssertEqual(app.staticTexts["app.subscription"].label, "Gratuit")
+        XCTAssertEqual(app.buttons["app.subscription"].label, "Gratuit")
         app.tabBars.buttons["Statistiques"].tap()
         trendPeriod(app).buttons["Année"].tap()
         XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
@@ -1854,7 +1900,7 @@ final class WalkunoUITests: XCTestCase {
         }
     }
 
-    func testFreeCounterPreviewDoesNotOverwriteTheSelectedStyle() {
+    func testFreeCounterSettingsDisableStylesAndKeepHorizon() {
         let app = launch(pro: false)
         XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
         XCTAssertEqual(app.buttons["today.counter"].value as? String, "Horizon")
@@ -1862,11 +1908,13 @@ final class WalkunoUITests: XCTestCase {
         reveal(app.buttons["settings.counter"], in: app)
         app.buttons["settings.counter"].tap()
         XCTAssertTrue(app.buttons["counter.effect.stars"].isSelected)
-        let option = app.buttons["counter.style.path"]
-        reveal(option, in: app)
-        option.tap()
-        XCTAssertFalse(option.isSelected)
-        XCTAssertTrue(app.buttons["counter.style.horizon"].isSelected)
+        for identifier in ["horizon", "ring", "path", "milestones", "minimal"] {
+            let option = app.buttons["counter.style." + identifier]
+            reveal(option, in: app)
+            XCTAssertFalse(option.isEnabled)
+            XCTAssertEqual(option.isSelected, identifier == "horizon")
+        }
+        XCTAssertFalse(app.buttons["counter.effect.replay"].exists)
         let unlock = app.buttons["counter.unlock"]
         reveal(unlock, in: app)
         unlock.tap()
@@ -1893,15 +1941,19 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Walkuno Pro"].waitForExistence(timeout: 5))
     }
 
-    func testFreeEffectPreviewOffersProAndKeepsTheCounterUsable() {
+    func testFreeCounterSettingsDisableEffectsAndOfferPro() {
         let app = launch(pro: false)
         XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 15))
         app.tabBars.buttons["Réglages"].tap()
         reveal(app.buttons["settings.counter"], in: app)
         app.buttons["settings.counter"].tap()
-        let fire = app.buttons["counter.effect.fire"]
-        reveal(fire, in: app)
-        fire.tap()
+        XCTAssertFalse(app.buttons["counter.effect.replay"].exists)
+        for identifier in ["stars", "fire", "aurora", "liquid"] {
+            let option = app.buttons["counter.effect." + identifier]
+            reveal(option, in: app)
+            XCTAssertFalse(option.isEnabled)
+            XCTAssertEqual(option.isSelected, identifier == "stars")
+        }
         let unlock = app.buttons["counter.unlock"]
         reveal(unlock, in: app)
         unlock.tap()
@@ -1909,7 +1961,7 @@ final class WalkunoUITests: XCTestCase {
         app.buttons["Terminé"].firstMatch.tap()
         app.tabBars.buttons["Accueil"].tap()
         XCTAssertTrue(app.buttons["today.counter"].isHittable)
-        XCTAssertEqual(app.staticTexts["app.subscription"].firstMatch.label, "Gratuit")
+        XCTAssertEqual(app.buttons["app.subscription"].firstMatch.label, "Gratuit")
     }
 
     func testCounterRemainsReadableWithAccessibilityText() {

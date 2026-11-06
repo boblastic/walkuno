@@ -165,7 +165,7 @@
 "premium.settings.subtitle" = "Todo tu historial, todos tus widgets y estilos.";
 "premium.feature.history" = "Historial completo, vista anual y calendario";
 "premium.feature.themes" = "9 vibrantes paletas de colores";
-"premium.feature.counter" = "3 estilos de contador adicionales";
+"premium.feature.counter" = "4 estilos de contador adicionales";
 "premium.feature.records" = "Récords semanales y mensuales";
 "premium.history.cta" = "Descubre todo tu historial con Pro";
 "premium.annual.condition" = "Suscripción anual con renovación automática";
@@ -539,7 +539,7 @@
 
 /* Widget gallery */
 "settings.widgets" = "Widgets";
-"widgets.gallery.examples" = "Vistas ilustrativas · datos de ejemplo";
+"widgets.gallery.examples" = "Capturas de widgets · datos de ejemplo";
 "widgets.gallery.exclusive" = "EXCLUSIVO DE WALKUNO PRO";
 "widgets.gallery.headline" = "Tu progreso.\nDe un vistazo.";
 "widgets.gallery.intro" = "Convierte tu pantalla en motivación diaria. Tus pasos, tus objetivos y tus pequeñas victorias: siempre a la vista con Pro.";

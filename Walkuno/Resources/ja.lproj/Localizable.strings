@@ -165,7 +165,7 @@
 "premium.settings.subtitle" = "すべての履歴、ウィジェット、スタイル。";
 "premium.feature.history" = "全履歴、年間表示、カレンダー";
 "premium.feature.themes" = "鮮やかな9つのカラーパレット";
-"premium.feature.counter" = "3種類の追加カウンタースタイル";
+"premium.feature.counter" = "4種類の追加カウンタースタイル";
 "premium.feature.records" = "週間・月間の記録";
 "premium.history.cta" = "Proですべての履歴を見る";
 "premium.annual.condition" = "自動更新の年間サブスクリプション";
@@ -539,7 +539,7 @@
 
 /* Widget gallery */
 "settings.widgets" = "ウィジェット";
-"widgets.gallery.examples" = "イメージプレビュー · サンプルデータ";
+"widgets.gallery.examples" = "ウィジェットのキャプチャ · サンプルデータ";
 "widgets.gallery.exclusive" = "WALKUNO PRO限定";
 "widgets.gallery.headline" = "あなたの進歩を、\nひと目で。";
 "widgets.gallery.intro" = "いつもの画面を、毎日のやる気に。歩数も目標も、小さな達成も。Proなら、いつでも目に入ります。";

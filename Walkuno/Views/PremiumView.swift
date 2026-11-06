@@ -13,15 +13,6 @@ struct PremiumView: View {
                     Image(systemName: "sparkles").font(.system(size: 44)).foregroundStyle(model.effectiveTheme.tint(for: scheme)).padding(.top, 20)
                     Text("premium.headline").font(.system(.largeTitle, design: .rounded, weight: .bold))
                     Text("premium.body").foregroundStyle(.secondary)
-                    VStack(alignment: .leading, spacing: 20) {
-                        Label("premium.feature.history", systemImage: "calendar")
-                        Label("premium.feature.themes", systemImage: "paintpalette")
-                        Label("premium.feature.counter", systemImage: "circle.dotted.circle")
-                        Label("premium.feature.records", systemImage: "trophy")
-                        Label("premium.feature.analysis", systemImage: "chart.bar.xaxis")
-                        Label("premium.feature.widgets", systemImage: "square.grid.2x2")
-                        Label("premium.feature.effects", systemImage: "sparkles")
-                    }.font(.subheadline.weight(.medium))
                     #if DEBUG
                     WalkunoCard {
                         VStack(alignment: .leading, spacing: 10) {
@@ -35,6 +26,15 @@ struct PremiumView: View {
                         }
                     }
                     #endif
+                    VStack(alignment: .leading, spacing: 20) {
+                        Label("premium.feature.history", systemImage: "calendar")
+                        Label("premium.feature.themes", systemImage: "paintpalette")
+                        Label("premium.feature.counter", systemImage: "circle.dotted.circle")
+                        Label("premium.feature.records", systemImage: "trophy")
+                        Label("premium.feature.analysis", systemImage: "chart.bar.xaxis")
+                        Label("premium.feature.widgets", systemImage: "square.grid.2x2")
+                        Label("premium.feature.effects", systemImage: "sparkles")
+                    }.font(.subheadline.weight(.medium))
                     if model.purchases.isPremium {
                         Label("premium.active", systemImage: "checkmark.seal.fill").foregroundStyle(model.effectiveTheme.tint(for: scheme))
                     } else if model.purchases.products.isEmpty {
@@ -75,7 +75,7 @@ struct PremiumView: View {
             .alert("purchase.title", isPresented: Binding(get: { model.purchases.message != nil }, set: { if !$0 { model.purchases.message = nil } })) {
                 Button("common.done") { model.purchases.message = nil }
             } message: { Text(model.purchases.message ?? "") }
-            .appHeader()
+            .appHeader(subscriptionLinkEnabled: false)
         }
     }
 }

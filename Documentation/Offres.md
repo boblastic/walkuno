@@ -1,6 +1,6 @@
 # Walkuno — offres Gratuite et Pro
 
-Répartition retenue le 5 novembre 2026. La formule gratuite permet un suivi quotidien complet. Pro débloque l’historique détaillé ancien, les analyses longues, tous les widgets et la personnalisation supplémentaire. Abonnement annuel et achat à vie donnent les mêmes fonctionnalités Pro ; les tarifs restent à valider.
+Répartition retenue le 6 novembre 2026. La formule gratuite permet un suivi quotidien complet. Pro débloque l’historique détaillé ancien, les analyses longues, tous les widgets et la personnalisation supplémentaire. Abonnement annuel et achat à vie donnent les mêmes fonctionnalités Pro ; les tarifs restent à valider.
 
 | Fonctionnalité | Gratuit | Pro |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ Répartition retenue le 5 novembre 2026. La formule gratuite permet un suivi quo
 | Objectifs à 100/200/300 %, séries et périodes parfaites | Tous inclus | Identique |
 | 22 traversées et multiplicateurs | Toutes incluses, cumul sans limite de 31 jours | Identique |
 | Palettes | Walkuno | Les neuf palettes |
-| Compteurs | Horizon et Anneau | Les cinq styles |
+| Compteurs | Horizon | Les cinq styles |
 | Effets du compteur | Étoiles | Étoiles, Feu vivant, Aurore boréale et Onde liquide |
 | Icône iPhone assortie à la palette | Walkuno | Variantes des palettes |
 | Widgets iPhone Compteurs, Graphiques, Tableau de bord | — | Toutes les tailles |
@@ -33,7 +33,7 @@ Répartition retenue le 5 novembre 2026. La formule gratuite permet un suivi quo
 ## Présentation et changements de formule
 
 - Le nom commercial est **Walkuno Pro** dans les sept langues. Les identifiants StoreKit existants restent inchangés pour conserver les achats.
-- Les styles et effets payants sont prévisualisables sans remplacer la préférence enregistrée. Les cartes de palettes montrent leurs couleurs avant achat.
+- Sans Pro, le paramétrage du compteur affiche un aperçu fixe Horizon / Étoiles, sans relecture. Les choix de styles et d’effets sont désactivés ; les options payantes, dont Anneau, portent un verrou. Un bouton distinct permet de débloquer la personnalisation. Pro permet de sélectionner les cinq styles et les quatre effets et de rejouer les animations. Les cartes de palettes montrent leurs couleurs avant achat.
 - Une fonction Pro sollicitée ouvre l’offre ou propose un bouton de déblocage ; le compteur gratuit reste utilisable.
 - Les widgets restent présents dans la galerie système pour permettre leur découverte. Sans Pro, une fois ajoutés, ils affichent uniquement un verrou et la mention Walkuno Pro, sans mesure d’activité. Sur iPhone, le toucher ouvre l’offre ; sur Watch, le texte invite à ouvrir Walkuno sur l’iPhone.
 - À l’expiration, le suivi détaillé revient aux 31 jours et l’apparence effective revient à Walkuno / Horizon / Étoiles si les choix enregistrés sont payants. Les préférences restent conservées pour une réactivation.

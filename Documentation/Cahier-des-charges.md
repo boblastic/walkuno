@@ -508,7 +508,7 @@ L'abonnement Premium ne doit pas être obligatoire pour accéder au compteur.
 
 ## 7.1. Modèle freemium
 
-Répartition ajustée le 5 novembre 2026 : [tableau détaillé Gratuit / Pro](Offres.md).
+Répartition ajustée le 6 novembre 2026 : [tableau détaillé Gratuit / Pro](Offres.md).
 
 Walkuno doit proposer une application gratuite réellement utile, complétée par Walkuno Pro.
 
@@ -519,7 +519,7 @@ Walkuno doit proposer une application gratuite réellement utile, complétée pa
 - Statistiques récentes et tendance sur sept jours.
 - Consultation détaillée des 31 derniers jours, aujourd’hui compris.
 - Records quotidiens, tous les trophées, séries et traversées sur l’historique disponible.
-- Palette Walkuno, compteurs Horizon et Anneau, effet Étoiles.
+- Palette Walkuno, compteur Horizon, effet Étoiles. Dans le paramétrage du compteur, aperçu fixe sans relecture et choix désactivés ; bouton distinct de déblocage Pro.
 - Application Apple Watch, objectifs et sept jours récents.
 - Partage des périodes récentes, records et étapes.
 
@@ -527,7 +527,7 @@ Walkuno doit proposer une application gratuite réellement utile, complétée pa
 
 - Historique détaillé complet, calendrier complet et vue annuelle.
 - Tendances mensuelles/annuelles et historique par année.
-- Toutes les palettes, tous les compteurs et tous les effets.
+- Toutes les palettes, tous les compteurs (dont Anneau) et tous les effets, avec sélection et relecture dans le paramétrage.
 - Tous les widgets iPhone, widgets d’écran verrouillé et complications Apple Watch.
 - Records agrégés semaine/mois/année et partage annuel.
 

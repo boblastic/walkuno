@@ -1,12 +1,23 @@
 import SwiftUI
-import Charts
+import WidgetKit
 
-/// Illustrative previews of the three shipped WidgetKit families and their accessories.
+/// Full widget captures, rendered from the same views shipped in the WidgetKit extension.
 struct WidgetGalleryView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.colorScheme) private var scheme
     @State private var showPremium = false
     @State private var chart = WidgetGalleryChart.hourly
+
+    @State private var example = WidgetSnapshot.preview(at:
+        Calendar.current.date(bySettingHour: 18, minute: 42, second: 0, of: .now) ?? .now)
+
+    private var snapshot: WidgetSnapshot {
+        var value = example
+        value.theme = model.effectiveTheme
+        value.unit = model.preferences.unit
+        value.display = .init(counter: model.effectiveCounter)
+        return value
+    }
 
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
 
@@ -17,21 +28,10 @@ struct WidgetGalleryView: View {
                 Text("widgets.gallery.examples")
                     .font(.caption).foregroundStyle(.secondary)
                 feature("widget.name", body: "widgets.gallery.counter.body", symbol: "circle.dotted.circle") {
-                    HStack(spacing: 18) {
-                        StepCounterFace(displayedSteps: 6240, hasSteps: true, goal: 8000,
-                                        title: L("today.steps"), theme: model.effectiveTheme,
-                                        style: model.effectiveCounter)
-                            .frame(width: 220, height: 220)
-                            .scaleEffect(0.65)
-                            .frame(width: 143, height: 143)
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("78 %").font(.system(.title, design: .rounded, weight: .bold))
-                            Text("widget.goal").font(.caption).foregroundStyle(.secondary)
-                            Text("8 000").font(.headline.monospacedDigit())
-                        }
-                        Spacer(minLength: 0)
+                    VStack(spacing: 18) {
+                        capture(.counter, family: .systemSmall)
+                        capture(.counter, family: .systemLarge)
                     }
-                    .previewSurface()
                 }
 
                 feature("widget.charts.name", body: "widgets.gallery.charts.body", symbol: "chart.xyaxis.line") {
@@ -53,43 +53,32 @@ struct WidgetGalleryView: View {
                                 }
                             }
                         }.scrollIndicators(.hidden)
-                        VStack(alignment: .leading, spacing: 12) {
-                            previewHeading(chart.titleKey)
-                            WidgetGalleryPlot(style: chart, accent: accent).frame(height: 120)
-                        }.previewSurface()
+                        capture(.chart, family: .systemMedium)
+                        capture(.chart, family: .systemSmall)
+                        capture(.chart, family: .systemLarge)
                     }
                 }
 
                 feature("widget.dashboard.name", body: "widgets.gallery.dashboard.body", symbol: "rectangle.grid.1x2") {
-                    dashboard.previewSurface()
+                    VStack(spacing: 18) {
+                        capture(.dashboard, family: .systemSmall)
+                        capture(.dashboard, family: .systemMedium)
+                        capture(.dashboard, family: .systemLarge)
+                    }
                 }
 
                 feature("widgets.gallery.everywhere.title", body: "widgets.gallery.everywhere.body", symbol: "applewatch") {
-                    HStack(spacing: 20) {
-                        HStack(spacing: 10) {
-                            ProgressRing(progress: 0.78, accent: accent, lineWidth: 5)
-                                .frame(width: 42, height: 42)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("6 240").font(.system(.title3, design: .rounded, weight: .bold))
-                                Text("today.steps").font(.caption2)
-                            }
+                    VStack(spacing: 20) {
+                        HStack(spacing: 24) {
+                            capture(.counter, family: .accessoryCircular)
+                            capture(.counter, family: .accessoryRectangular)
                         }
-                        .padding(16)
-                        .background(accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 22))
-                        Spacer(minLength: 0)
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 24).fill(WalkunoStyle.ink)
-                            VStack(spacing: 8) {
-                                Image(systemName: "figure.walk").font(.title3)
-                                Text("6 240").font(.system(.headline, design: .rounded, weight: .bold))
-                                Capsule().fill(WalkunoStyle.electric.opacity(0.2))
-                                    .overlay(alignment: .leading) {
-                                        Capsule().fill(WalkunoStyle.electric).frame(width: 34)
-                                    }.frame(width: 44, height: 4)
-                            }.foregroundStyle(WalkunoStyle.electric)
-                        }.frame(width: 84, height: 104)
-                            .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(.secondary.opacity(0.3), lineWidth: 3))
-                    }.previewSurface()
+                        capture(.counter, family: .accessoryInline)
+                        capture(.chart, family: .accessoryRectangular)
+                    }
+                    .padding(24)
+                    .frame(maxWidth: .infinity)
+                    .background(WalkunoStyle.ink, in: RoundedRectangle(cornerRadius: 28))
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -100,6 +89,7 @@ struct WidgetGalleryView: View {
                 }
                 .padding(20)
                 .background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 24))
+                .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("widgets.install")
             }
             .padding(20)
@@ -151,33 +141,8 @@ struct WidgetGalleryView: View {
         }
     }
 
-    private func previewHeading(_ title: String) -> some View {
-        HStack {
-            BrandMark(size: 18, theme: model.effectiveTheme).foregroundStyle(accent)
-            Text("Walkuno").font(.caption.weight(.bold))
-            Spacer()
-            Text(LocalizedStringKey(title)).font(.caption2).foregroundStyle(.secondary)
-                .lineLimit(1).minimumScaleFactor(0.7)
-        }
-    }
-
-    private var dashboard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            previewHeading("today.this.week")
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text("6 240").font(.system(.largeTitle, design: .rounded, weight: .bold))
-                Text("today.steps").font(.caption).foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-                Text(distanceText(4680, unit: model.preferences.unit))
-                    .font(.subheadline.weight(.semibold)).foregroundStyle(accent)
-            }
-            WidgetGalleryPlot(style: .weeklyLine, accent: accent).frame(height: 80)
-            HStack {
-                Label("widget.average", systemImage: "chart.line.uptrend.xyaxis")
-                Spacer()
-                Text("7 120").monospacedDigit()
-            }.font(.caption).foregroundStyle(.secondary)
-        }
+    private func capture(_ kind: WidgetGalleryKind, family: WidgetFamily) -> some View {
+        WidgetGalleryCapture(kind: kind, family: family, chart: chart.widgetStyle, snapshot: snapshot)
     }
 
     private var proAction: some View {
@@ -214,53 +179,98 @@ private enum WidgetGalleryChart: String, CaseIterable, Identifiable {
     }
 }
 
-private struct WidgetGalleryPlot: View {
-    var style: WidgetGalleryChart
-    var accent: Color
-    private var values: [Double] {
-        switch style {
-        case .hourly: [1, 2, 1, 4, 8, 5, 3, 6, 10, 7, 4, 2]
-        case .goalTracking: [0, 1, 1.5, 3, 3.4, 4, 6, 6.2, 8, 9, 9.2, 10]
-        case .weekly, .weeklyLine: [4, 7, 5, 9, 6, 8, 6.24]
-        case .dailyRhythm: [1, 1, 2, 4, 7, 9, 7, 5, 3, 2, 1, 1]
-        }
-    }
+private enum WidgetGalleryKind: String {
+    case counter, chart, dashboard
 
-    var body: some View {
-        Chart {
-            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
-                if style == .goalTracking || style == .weeklyLine {
-                    AreaMark(x: .value("x", index), y: .value("y", value))
-                        .interpolationMethod(.monotone)
-                        .foregroundStyle(LinearGradient(colors: [accent.opacity(0.25), accent.opacity(0.01)],
-                                                        startPoint: .top, endPoint: .bottom))
-                    LineMark(x: .value("x", index), y: .value("y", value))
-                        .interpolationMethod(.monotone).lineStyle(StrokeStyle(lineWidth: 3))
-                        .foregroundStyle(accent)
-                } else {
-                    BarMark(x: .value("x", index), y: .value("y", value))
-                        .cornerRadius(4).foregroundStyle(accent.gradient)
-                }
-            }
-            if style == .goalTracking || style == .weekly || style == .weeklyLine {
-                RuleMark(y: .value("goal", 8))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                    .foregroundStyle(.secondary.opacity(0.5))
-            }
+    var titleKey: String {
+        switch self {
+        case .counter: "widget.name"
+        case .chart: "widget.charts.name"
+        case .dashboard: "widget.dashboard.name"
         }
-        .chartXAxis(.hidden).chartYAxis(.hidden)
-        .chartYScale(domain: 0...11)
     }
 }
 
-private extension View {
-    func previewSurface() -> some View {
-        self
+private extension WidgetGalleryChart {
+    var widgetStyle: WidgetChartStyle { WidgetChartStyle(rawValue: rawValue) ?? .hourly }
+}
+
+/// Capture at the native widget dimensions, then fit the entire image in the available width.
+/// No independent approximation of the widget's content is maintained in this gallery.
+private struct WidgetGalleryCapture: View {
+    var kind: WidgetGalleryKind
+    var family: WidgetFamily
+    var chart: WidgetChartStyle
+    var snapshot: WidgetSnapshot
+    @Environment(\.displayScale) private var displayScale
+    @Environment(\.locale) private var locale
+    @State private var image: UIImage?
+
+    private var familyID: String {
+        switch family {
+        case .systemSmall: "small"
+        case .systemMedium: "medium"
+        case .systemLarge: "large"
+        case .accessoryCircular: "circular"
+        case .accessoryRectangular: "rectangular"
+        default: "inline"
+        }
+    }
+
+    private var size: CGSize {
+        switch family {
+        case .systemSmall: .init(width: 170, height: 170)
+        case .systemMedium: .init(width: 364, height: 170)
+        case .systemLarge: .init(width: 364, height: 382)
+        case .accessoryCircular: .init(width: 76, height: 76)
+        case .accessoryRectangular: .init(width: 172, height: 76)
+        default: .init(width: 240, height: 24)
+        }
+    }
+
+    private var captureID: String {
+        "\(kind.rawValue)-\(family.rawValue)-\(chart.rawValue)-\(snapshot.theme.rawValue)-\(snapshot.unit.rawValue)-\(snapshot.display?.counter.rawValue ?? "")-\(locale.identifier)-\(displayScale)"
+    }
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .accessibilityLabel(Text(LocalizedStringKey(kind.titleKey)))
+                    .accessibilityIdentifier("widgets.capture.\(kind.rawValue).\(familyID)")
+            } else {
+                Color.clear.aspectRatio(size, contentMode: .fit)
+                    .overlay { ProgressView() }.accessibilityHidden(true)
+            }
+        }
+        .frame(maxWidth: size.width)
+        .frame(maxWidth: .infinity)
+        .task(id: captureID) { render() }
+    }
+
+    @MainActor private func render() {
+        let content = widget
+            .environment(\.widgetCaptureFamily, family)
+            .environment(\.locale, locale)
+            .environment(\.colorScheme, .dark)
             .dynamicTypeSize(.medium)
-            .padding(18)
-            .frame(maxWidth: .infinity)
-            .background(.background, in: RoundedRectangle(cornerRadius: 26))
-            .overlay(RoundedRectangle(cornerRadius: 26).strokeBorder(.primary.opacity(0.06)))
-            .accessibilityHidden(true)
+            .frame(width: size.width, height: size.height)
+            .clipShape(RoundedRectangle(cornerRadius: family == .systemSmall || family == .systemMedium || family == .systemLarge ? 26 : 0))
+        let renderer = ImageRenderer(content: content)
+        renderer.scale = displayScale
+        image = renderer.uiImage
+    }
+
+    @ViewBuilder private var widget: some View {
+        switch kind {
+        case .counter:
+            WalkunoWidgetView(entry: .init(date: snapshot.updatedAt, snapshot: snapshot))
+        case .chart:
+            WalkunoChartWidgetView(entry: .init(date: snapshot.updatedAt, snapshot: snapshot, style: chart))
+        case .dashboard:
+            WalkunoDashboardView(entry: .init(date: snapshot.updatedAt, snapshot: snapshot))
+        }
     }
 }
