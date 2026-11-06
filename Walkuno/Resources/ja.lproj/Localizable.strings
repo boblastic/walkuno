@@ -97,7 +97,6 @@
 "settings.glass.transparency" = "ガラスの透明度";
 "settings.glass.opaque" = "不透明";
 "settings.glass.transparent" = "透明";
-"settings.glass.note" = "上部バーの透明度を調整します。変更はすべての画面にすぐに反映されます。";
 "settings.glass.accessibility" = "iOSのアクセシビリティ設定に合わせて、バーは不透明になります。透明度の設定は保存されます。";
 "account.title" = "マイアカウント";
 "account.local" = "あなたのWalkunoスペース";
@@ -106,8 +105,6 @@
 "account.plan" = "現在のプラン";
 "settings.mode" = "外観";
 "settings.counter" = "カウンターのスタイル";
-"settings.period.animations" = "期間の切り替えをアニメーション表示";
-"settings.period.animations.description" = "日付間を移動するときに、進捗と歩数のアニメーションを再生します。日・週・月・年の切り替えでは、常にアニメーションを再生します。";
 "settings.data" = "ヘルスケアとプライバシー";
 "settings.purchases" = "購入";
 "settings.version %@" = "バージョン %@";
@@ -530,6 +527,6 @@
 "goals.range %@ %@" = "%@から%@まで。";
 "insights.clock.more %@" = "%@先行";
 "insights.clock.less %@" = "通常より%@少なめ";
-"insights.clock.summary %@ %@" = "今日は%@、1日の同じ時点での通常値は%@。";
+"insights.clock.summary %@ %@" = "今日は%@、通常の1日全体では%@。";
 "unit.steps" = "歩";
 "unit.floors" = "階";

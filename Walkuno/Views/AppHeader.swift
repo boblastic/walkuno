@@ -294,8 +294,10 @@ struct GlassSettingsControls: View {
                     Text("settings.glass.transparent")
                 }.font(.caption).foregroundStyle(.secondary)
             }.padding(.vertical, 4)
-            Text(systemOverridesTransparency ? "settings.glass.accessibility" : "settings.glass.note")
-                .font(.caption).foregroundStyle(.secondary)
+            if systemOverridesTransparency {
+                Text("settings.glass.accessibility")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 }

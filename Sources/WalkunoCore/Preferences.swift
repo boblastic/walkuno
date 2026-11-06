@@ -198,7 +198,6 @@ public struct Preferences: Codable, Equatable, Sendable {
     public var appearance: Appearance = .dark
     public var counterStyle: CounterStyle = .horizon
     public var counterEffect: CounterEffect = .stars
-    public var animatePeriodChanges = true
     public var onboardingComplete = false
     public var healthRequested = false
     public var glassTransparency = 0.7
@@ -206,7 +205,7 @@ public struct Preferences: Codable, Equatable, Sendable {
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case goals, activityGoals, theme, unit, language, appearance, counterStyle, counterEffect, animatePeriodChanges, onboardingComplete, healthRequested, glassTransparency, statisticsWidgets
+        case goals, activityGoals, theme, unit, language, appearance, counterStyle, counterEffect, onboardingComplete, healthRequested, glassTransparency, statisticsWidgets
     }
 
     public init(from decoder: Decoder) throws {
@@ -219,7 +218,6 @@ public struct Preferences: Codable, Equatable, Sendable {
         appearance = try values.decode(Appearance.self, forKey: .appearance)
         counterStyle = try values.decode(CounterStyle.self, forKey: .counterStyle)
         counterEffect = (try values.decodeIfPresent(String.self, forKey: .counterEffect)).flatMap(CounterEffect.init(rawValue:)) ?? .stars
-        animatePeriodChanges = try values.decodeIfPresent(Bool.self, forKey: .animatePeriodChanges) ?? true
         onboardingComplete = try values.decode(Bool.self, forKey: .onboardingComplete)
         healthRequested = try values.decode(Bool.self, forKey: .healthRequested)
         // Existing installations keep their goals and preferences when the glass setting is added.

@@ -97,7 +97,6 @@
 "settings.glass.transparency" = "Glass transparency";
 "settings.glass.opaque" = "Opaque";
 "settings.glass.transparent" = "Transparent";
-"settings.glass.note" = "Adjust the transparency of the top bar. Changes appear immediately on every screen.";
 "settings.glass.accessibility" = "The bar stays opaque to respect your iOS accessibility settings. Your transparency preference is saved.";
 "account.title" = "My account";
 "account.local" = "Your Walkuno space";
@@ -106,8 +105,6 @@
 "account.plan" = "Current plan";
 "settings.mode" = "Appearance";
 "settings.counter" = "Counter style";
-"settings.period.animations" = "Animate period changes";
-"settings.period.animations.description" = "Replay the counter fill and step count when navigating between dates. Switching between Day, Week, Month and Year always replays the animation.";
 "settings.data" = "Health and privacy";
 "settings.purchases" = "Purchases";
 "settings.version %@" = "Version %@";
@@ -531,6 +528,6 @@
 "goals.range %@ %@" = "Between %@ and %@.";
 "insights.clock.more %@" = "%@ ahead";
 "insights.clock.less %@" = "%@ less than usual";
-"insights.clock.summary %@ %@" = "%@ today, %@ usually at this point in the day.";
+"insights.clock.summary %@ %@" = "%@ today, %@ usually over a complete day.";
 "unit.steps" = "steps";
 "unit.floors" = "floors";

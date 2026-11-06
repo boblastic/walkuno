@@ -13,6 +13,65 @@ final class WalkunoUITests: XCTestCase {
         return app
     }
 
+    func testHealthButtonRequestsAllActivityPermissionsAndExplainsRepeatRequests() {
+        let app = launch(demo: false, languages: ["en"], locale: "en_US")
+        if app.buttons["Continue"].waitForExistence(timeout: 5) {
+            for label in ["Continue", "Continue without connecting Health", "Continue", "Let’s walk"] {
+                let button = app.buttons[label]
+                for _ in 0..<8 {
+                    if button.isHittable { break }
+                    app.scrollViews.firstMatch.swipeUp()
+                }
+                XCTAssertTrue(button.isHittable, app.debugDescription)
+                button.tap()
+            }
+        }
+        XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["Settings"].tap()
+        let authorize = app.buttons["settings.health.authorize"]
+        reveal(authorize, in: app)
+        XCTAssertEqual(app.buttons.matching(identifier: "settings.health.authorize").count, 1)
+        XCTAssertEqual(authorize.label, "Allow Apple Health access")
+        let explanation = app.staticTexts["settings.health.explanation"]
+        XCTAssertTrue(explanation.exists)
+        XCTAssertTrue(explanation.label.contains("No data is written to Health"))
+        authorize.tap()
+
+        let guidance = app.alerts["Allow Apple Health access"]
+        let reviewPath = "To review permissions: Health → your profile → Apps and Services → Walkuno."
+        // A fresh simulator also verifies the native request. A repeat run must explain how to review access.
+        let allow = app.buttons["UIA.Health.Allow.Button"]
+        guard allow.waitForExistence(timeout: 15) else {
+            XCTAssertTrue(guidance.waitForExistence(timeout: 30), app.debugDescription)
+            XCTAssertTrue(guidance.staticTexts[reviewPath].exists)
+            return
+        }
+        let readPermissions = app.cells.matching(NSPredicate(format: "identifier BEGINSWITH %@", "UIA.Health.Read."))
+        XCTAssertEqual(readPermissions.count, 5)
+        for names in [
+            ["Steps", "Nombre de pas"], ["Walking + Running Distance", "Distance (marche et course)"],
+            ["Active Energy", "Énergie en activité"], ["Exercise Minutes", "Minutes d’exercice"],
+            ["Flights Climbed", "Étages montés"]
+        ] {
+            XCTAssertTrue(readPermissions.matching(NSPredicate(format: "label IN %@", names)).firstMatch.exists)
+        }
+        XCTAssertEqual(app.cells.matching(NSPredicate(format: "identifier BEGINSWITH %@", "UIA.Health.Write.")).count, 0)
+        app.cells["UIA.Health.AuthSheet.AllCategoryButton"].tap()
+        XCTAssertTrue(allow.isEnabled)
+        capture("Health-All-Read-Permissions")
+        allow.tap()
+
+        XCTAssertTrue(authorize.waitForExistence(timeout: 20))
+        let enabled = NSPredicate(format: "enabled == true")
+        expectation(for: enabled, evaluatedWith: authorize)
+        waitForExpectations(timeout: 30)
+        reveal(authorize, in: app)
+        authorize.tap()
+        XCTAssertTrue(guidance.waitForExistence(timeout: 30), app.debugDescription)
+        XCTAssertTrue(guidance.staticTexts[reviewPath].exists)
+        capture("Health-Review-Permissions")
+    }
+
     func testMotivationExplainsLocalAnalysisAndOnlyAppearsForToday() {
         let app = launch(pro: false)
         XCTAssertTrue(app.tabBars.buttons["Accueil"].waitForExistence(timeout: 10))
@@ -215,9 +274,7 @@ final class WalkunoUITests: XCTestCase {
 
         app.tabBars.buttons["Réglages"].tap()
         XCTAssertTrue(app.buttons["settings.subscription"].exists)
-        let animations = app.switches["settings.period.animations"]
-        scrollTo(animations)
-        XCTAssertEqual(animations.value as? String, "1")
+        XCTAssertFalse(app.switches["settings.period.animations"].exists)
         let slider = app.sliders["settings.glass.transparency"]
         scrollTo(slider)
         XCTAssertEqual((slider.value as? String)?.filter(\.isNumber), "70")
@@ -564,8 +621,8 @@ final class WalkunoUITests: XCTestCase {
         let usual = app.descendants(matching: .any)["insights.clock.usual"].firstMatch
         let chart = app.descendants(matching: .any)["insights.clock.chart"].firstMatch
         let cases = [("steps", "Pas", "6 432", "pas"), ("distance", "Distance", "4,6 km", "km"),
-                     ("energy", "Énergie active", "225 kcal", "kcal"), ("exerciseTime", "Temps d’exercice", "36 min", "min"),
-                     ("floors", "Étages", "9 étages", "étages")]
+                     ("energy", "Énergie active", "225 kcal", "kcal"), ("exerciseTime", "Temps d’exercice", "0:36 h", "min"),
+                     ("floors", "Étages", "9", "étages")]
         for (metric, name, expected, unit) in cases {
             let button = app.buttons["statistics.metric." + metric]
             if !button.isHittable { app.scrollViews["statistics.metric"].swipeLeft() }
@@ -573,6 +630,10 @@ final class WalkunoUITests: XCTestCase {
             XCTAssertEqual(title.value as? String, name)
             XCTAssertTrue(current.label.contains(expected), current.label)
             XCTAssertTrue(usual.waitForExistence(timeout: 5))
+            let dailyUsual = app.descendants(matching: .any)["insights.day.legend.insights.usual"].firstMatch
+            XCTAssertTrue(dailyUsual.waitForExistence(timeout: 5))
+            XCTAssertFalse(dailyUsual.label.contains("—"), dailyUsual.label)
+            XCTAssertEqual(usual.label, dailyUsual.label, metric)
             XCTAssertTrue((chart.value as? String)?.contains(unit) == true, chart.value as? String ?? "")
             let goal = app.staticTexts["insights.clock.goal"]
             XCTAssertTrue(goal.label.contains(unit), goal.label)
@@ -581,7 +642,7 @@ final class WalkunoUITests: XCTestCase {
         app.tabBars.buttons["Accueil"].tap()
         app.tabBars.buttons["Statistiques"].tap()
         XCTAssertEqual(title.value as? String, "Étages")
-        XCTAssertTrue(current.label.contains("9 étages"))
+        XCTAssertTrue(current.label.contains("9"))
     }
 
     func testDailyActivityGoalsCanBeEditedAndUsedByTheClock() {
@@ -1198,11 +1259,7 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["La comparaison apparaîtra lorsque des mesures horaires seront disponibles à la même heure sur les journées récentes."].waitForExistence(timeout: 5))
         capture("08-Statistiques-Sans-donnees")
         app.tabBars.buttons["Réglages"].tap()
-        let periodAnimations = app.switches["settings.period.animations"]
-        reveal(periodAnimations, in: app)
-        XCTAssertEqual(periodAnimations.value as? String, "0")
-        periodAnimations.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-        XCTAssertEqual(periodAnimations.value as? String, "1")
+        XCTAssertFalse(app.switches["settings.period.animations"].exists)
         let transparency = app.sliders["settings.glass.transparency"]
         reveal(transparency, in: app)
         transparency.adjust(toNormalizedSliderPosition: 0.35)
@@ -1213,42 +1270,34 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["today.counter"].waitForExistence(timeout: 10))
         assertBelowHeader(app.segmentedControls["today.period"], in: app)
         app.tabBars.buttons["Réglages"].tap()
-        reveal(periodAnimations, in: app)
-        XCTAssertEqual(periodAnimations.value as? String, "1")
+        XCTAssertFalse(app.switches["settings.period.animations"].exists)
         reveal(transparency, in: app)
         XCTAssertEqual(transparency.value as? String, savedTransparency)
         capture("Verre-Preference-Conservee")
     }
 
-    func testHomeNavigationWithPeriodAnimationsEnabledAndDisabled() {
+    func testHomeNavigationWithoutPeriodAnimationSetting() {
         let app = launch(pro: true)
         let counter = app.buttons["today.counter"]
         XCTAssertTrue(counter.waitForExistence(timeout: 10))
-        for enabled in [true, false] {
-            app.tabBars.buttons["Réglages"].tap()
-            let toggle = app.switches["settings.period.animations"]
-            reveal(toggle, in: app)
-            if (toggle.value as? String) != (enabled ? "1" : "0") {
-                toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-            }
-            XCTAssertEqual(toggle.value as? String, enabled ? "1" : "0")
-            capture(enabled ? "Animation-periodes-Activee" : "Animation-periodes-Desactivee")
-            app.tabBars.buttons["Accueil"].tap()
-            let picker = app.segmentedControls["today.period"]
-            for period in ["Jour", "Semaine", "Mois", "Année"] {
-                picker.buttons[period].tap()
-                let currentDate = app.staticTexts["today.date"].label
-                counter.swipeRight()
-                XCTAssertTrue(app.buttons["today.current"].waitForExistence(timeout: 4))
-                XCTAssertNotEqual(app.staticTexts["today.date"].label, currentDate)
-                XCTAssertTrue(app.buttons["today.next"].isEnabled)
-                XCTAssertFalse(app.sheets.firstMatch.exists)
-                capture("Cercle-\(period)-Animation-\(enabled)")
-                counter.swipeLeft()
-                XCTAssertTrue(app.buttons["today.current"].waitForNonExistence(timeout: 4))
-                XCTAssertEqual(app.staticTexts["today.date"].label, currentDate)
-                XCTAssertFalse(app.buttons["today.next"].isEnabled)
-            }
+        app.tabBars.buttons["Réglages"].tap()
+        reveal(app.sliders["settings.glass.transparency"], in: app)
+        XCTAssertFalse(app.switches["settings.period.animations"].exists)
+        app.tabBars.buttons["Accueil"].tap()
+        let picker = app.segmentedControls["today.period"]
+        for period in ["Jour", "Semaine", "Mois", "Année"] {
+            picker.buttons[period].tap()
+            let currentDate = app.staticTexts["today.date"].label
+            counter.swipeRight()
+            XCTAssertTrue(app.buttons["today.current"].waitForExistence(timeout: 4))
+            XCTAssertNotEqual(app.staticTexts["today.date"].label, currentDate)
+            XCTAssertTrue(app.buttons["today.next"].isEnabled)
+            XCTAssertFalse(app.sheets.firstMatch.exists)
+            capture("Cercle-\(period)-Animation")
+            counter.swipeLeft()
+            XCTAssertTrue(app.buttons["today.current"].waitForNonExistence(timeout: 4))
+            XCTAssertEqual(app.staticTexts["today.date"].label, currentDate)
+            XCTAssertFalse(app.buttons["today.next"].isEnabled)
         }
     }
 

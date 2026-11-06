@@ -97,7 +97,6 @@
 "settings.glass.transparency" = "Trasparenza del vetro";
 "settings.glass.opaque" = "Opaco";
 "settings.glass.transparent" = "Trasparente";
-"settings.glass.note" = "Regola la trasparenza della barra superiore. Le modifiche sono visibili subito su ogni schermata.";
 "settings.glass.accessibility" = "La barra rimane opaca per rispettare le impostazioni di accessibilità di iOS. La preferenza di trasparenza viene salvata.";
 "account.title" = "Il mio account";
 "account.local" = "Il tuo spazio Walkuno";
@@ -106,8 +105,6 @@
 "account.plan" = "Piano attuale";
 "settings.mode" = "Aspetto";
 "settings.counter" = "Stile del contatore";
-"settings.period.animations" = "Anima i cambi di periodo";
-"settings.period.animations.description" = "Ripeti il riempimento del contatore e il conteggio quando navighi tra le date. Il passaggio tra Giorno, Settimana, Mese e Anno riproduce sempre l’animazione.";
 "settings.data" = "Salute e privacy";
 "settings.purchases" = "Acquisti";
 "settings.version %@" = "Versione %@";
@@ -530,6 +527,6 @@
 "goals.range %@ %@" = "Tra %@ e %@.";
 "insights.clock.more %@" = "%@ in anticipo";
 "insights.clock.less %@" = "%@ in meno del solito";
-"insights.clock.summary %@ %@" = "%@ oggi, %@ di solito a questo punto della giornata.";
+"insights.clock.summary %@ %@" = "%@ oggi, %@ di solito in una giornata completa.";
 "unit.steps" = "passi";
 "unit.floors" = "piani";

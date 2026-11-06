@@ -17,7 +17,6 @@ struct TodayView: View {
     @State private var ringReplay = 0
     @State private var pageWindow: DashboardPageWindow?
     @State private var paging = CounterPagingState()
-    @State private var replayCounterOnEntry = true
     @State private var selectedHours: [HourActivity] = []
     @State private var selectedPreviousHours: [HourActivity] = []
     @State private var loadedHoursDate: Date?
@@ -96,7 +95,7 @@ struct TodayView: View {
                     Picker("statistics.period", selection: Binding(get: { period }, set: { value in
                         guard !paging.isSliding else { return }
                         if value == .year && !model.purchases.isPremium { showPremium = true }
-                        else if value != period { replayCounterOnEntry = true; period = value }
+                        else if value != period { period = value }
                     })) {
                         ForEach(ActivityPeriod.allCases) { value in
                             Text(L("period.\(value.rawValue)")).tag(value)
@@ -112,6 +111,7 @@ struct TodayView: View {
                                 .zIndex(1)
                             counter
                         }
+                        if activity.summary.total == nil && !model.isLoading { HealthEmptyView() }
                         TodayTrendChart(activity: chartActivity, selectedDate: period == .day ? anchor : nil,
                                         goal: model.preferences.goals.value(on: anchor), accent: ink, period: period) { date in
                             // Keep all seven days available while comparing dates in this window.
@@ -140,7 +140,6 @@ struct TodayView: View {
                 if period == .day && calendar.isDateInToday(anchor) {
                     MotivationCard()
                 }
-                if activity.summary.total == nil && !model.isLoading { HealthEmptyView() }
                 if model.isLoading && activity.summary.total == nil {
                     HStack { ProgressView(); Text("health.refreshing").font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity)
                 }
@@ -183,7 +182,7 @@ struct TodayView: View {
         .onChange(of: model.purchases.isPremium) { _, premium in
             if !premium {
                 chartWindowAnchor = nil
-                if period == .year { replayCounterOnEntry = true; period = .day }
+                if period == .year { period = .day }
                 if let earliest, anchor < earliest { anchor = .now }
             }
         }
@@ -215,8 +214,7 @@ struct TodayView: View {
             current: AnimatedStepCounter(steps: activity.summary.total, goal: activity.goal, title: title,
                                           theme: model.effectiveTheme, style: model.effectiveCounter, effect: model.effectiveEffect,
                                           distance: distanceText(for: activity), replay: counterReplay,
-                                          animateEntry: model.preferences.animatePeriodChanges || replayCounterOnEntry,
-                                          animateUpdates: model.preferences.animatePeriodChanges || (period == .day && calendar.isDateInToday(anchor)))
+                                          animateEntry: true, animateUpdates: true)
                 .id("\(period.rawValue)-\(activity.interval.start.timeIntervalSinceReferenceDate)")
                 .frame(height: counterHeight),
             previous: preparedCounter(pageWindow?.previous), next: preparedCounter(pageWindow?.next), paging: paging)
@@ -250,7 +248,7 @@ struct TodayView: View {
         Group {
             if let page {
                 // Match the incoming counter's first frame: never reveal its target before a replay.
-                StepCounterFace(displayedSteps: model.preferences.animatePeriodChanges && !reduceMotion
+                StepCounterFace(displayedSteps: !reduceMotion
                                     ? 0 : Double(page.activity.summary.total ?? 0),
                                   hasSteps: page.activity.summary.total != nil, goal: page.activity.goal,
                                   title: title(for: page.anchor, activity: page.activity), theme: model.effectiveTheme,
@@ -364,7 +362,6 @@ struct TodayView: View {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
-            replayCounterOnEntry = false
             anchor = date
             paging.offset = 0
             preparePages()
@@ -722,6 +719,7 @@ struct HealthEmptyView: View {
                     Text("health.permissions.path").font(.caption).foregroundStyle(.secondary)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

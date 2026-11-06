@@ -14,7 +14,10 @@ public struct ActivityClockSnapshot: Sendable {
     public let current: Double?
     public let goal: Double
     public let hours: [ActivityClockHour]
+    /// Same-time reference for the live pace and its comparison percentage.
     public let usual: Double?
+    /// Complete-day reference shown in both statistics card headers.
+    public let usualDayTotal: Double?
     public let baselineDays: Int
 
     public var progress: Double? { current.flatMap { goal.isFinite && goal > 0 ? $0 / goal : nil } }
@@ -32,9 +35,11 @@ public struct ActivityClockSnapshot: Sendable {
     }
 
     public init(metric: ActivityMetric, sampledAt: Date, current: Double?, goal: Double,
-                hours: [HourActivity], usual: WidgetUsualActivity?, calendar: Calendar = .current) {
+                hours: [HourActivity], usual: WidgetUsualActivity?, usualDayTotal: Double? = nil,
+                calendar: Calendar = .current) {
         self.metric = metric; self.sampledAt = sampledAt; self.goal = goal
         self.current = current.flatMap { $0.isFinite ? max(0, $0) : nil }
+        self.usualDayTotal = usualDayTotal.flatMap { $0.isFinite && $0 >= 0 ? $0 : nil }
         let clock = calendar.dateComponents([.hour, .minute, .second], from: sampledAt)
         let cutoff = Double(clock.hour ?? 0) + Double(clock.minute ?? 0) / 60 + Double(clock.second ?? 0) / 3600
         var totals: [Int: Double] = [:]

@@ -29,6 +29,8 @@ struct StatisticsView: View {
                 .contentShape(Rectangle())
             }
             .accessibilityIdentifier("statistics.content")
+            .refreshable { await model.refresh() }
+            .scrollBounceBehavior(.always, axes: .vertical)
             .scrollDisabled(chartScrubbing)
             .environment(\.chartScrubbing, $chartScrubbing)
         }

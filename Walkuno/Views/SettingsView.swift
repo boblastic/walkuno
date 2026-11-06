@@ -67,9 +67,6 @@ struct SettingsView: View {
                     LabeledContent("settings.counter", value: L(model.effectiveCounter.titleKey))
                 }
                 .accessibilityIdentifier("settings.counter")
-                Toggle("settings.period.animations", isOn: $model.preferences.animatePeriodChanges)
-                    .accessibilityIdentifier("settings.period.animations")
-                Text("settings.period.animations.description").font(.caption).foregroundStyle(.secondary)
                 GlassSettingsControls()
             }
             Section("settings.data") {

@@ -666,3 +666,17 @@ La version 1.0.0 (18) est construite depuis un instantané figé du projet, afin
 - Index Git contrôlé fichier par fichier contre l’instantané ; les modifications arrivées après sa copie restent dans le dossier de travail.
 
 Preuves : `/tmp/walkuno-release-18-snapshot-core.log`, `/tmp/walkuno-release-18-snapshot-ui.xcresult`, `/tmp/walkuno-release-18-snapshot-device.log`, `/tmp/walkuno-release-18-snapshot/manifest.json`, `/tmp/walkuno-release-18-iphone-install.json`, `/tmp/walkuno-release-18-iphone-launch.json`, `/tmp/walkuno-release-18-iphone-app.json`.
+
+
+## Livraison iPhone et GitHub — 6 novembre 2026, version 19
+
+La version 1.0.0 (19) place le bloc « Votre activité, bientôt ici » sur toute la largeur, immédiatement sous le compteur principal et avant le graphique hebdomadaire. Il reste conditionné à l’absence de données pour la période sélectionnée après le chargement ; zéro pas reste une mesure disponible. Elle inclut les animations systématiques de navigation, l’actualisation par glissement dans Explorer et Statistiques, la simplification des réglages et la référence quotidienne habituelle commune aux deux cartes de statistiques.
+
+- 140 tests métier dans 14 suites réussis depuis un instantané figé des sources.
+- Trois tests d’interface ciblés réussis : cinq mesures et références habituelles de l’horloge, navigation animée de l’accueil, sélecteur de période et onglets.
+- 494 textes et autorisation Santé validés dans les sept langues ; ressources compilées contrôlées dans les quatre composants.
+- Compilation Release signée des quatre composants en 1.0.0 (19), signature vérifiée.
+- Installation sur l’iPhone sans désinstallation, lancement sans argument de démonstration et version 19 relue dans les métadonnées de l’appareil.
+- Le contrôle visuel de l’accueil sans données a été effectué sur simulateur. Le test historique du parcours d’accueil sans Santé avait confirmé le bloc puis échoué sur un texte attendu dans l’onglet Statistiques ; ce scénario complet n’est pas déclaré validé. Aucune installation directe sur la Watch n’a été effectuée.
+
+Preuves : `/tmp/walkuno-release-19-core.log`, `/tmp/walkuno-release-19-ui.xcresult`, `/tmp/walkuno-release-19-device.log`, `/tmp/walkuno-release-19-manifest.json`, `/tmp/walkuno-release-19-install.json`, `/tmp/walkuno-release-19-launch.json`, `/tmp/walkuno-release-19-after.json`, `/tmp/walkuno-empty-home-final.png`.

@@ -19,7 +19,7 @@ struct StepsClockCard: View {
     var body: some View {
         WalkunoCard {
             VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .center, spacing: 10) {
+                HStack(alignment: .top, spacing: 10) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("insights.clock.title").font(.subheadline.weight(.semibold))
                             .lineLimit(2).minimumScaleFactor(0.8)
@@ -73,14 +73,14 @@ struct StepsClockCard: View {
     private func totals(_ snapshot: ActivityClockSnapshot) -> some View {
         Group {
             total(title: "insights.today", value: snapshot.current, color: accent, dashed: false, id: "today")
-            total(title: "insights.usual", value: snapshot.usual, color: baseline, dashed: true, id: "usual")
+            total(title: "insights.usual", value: snapshot.usualDayTotal, color: baseline, dashed: true, id: "usual")
         }
     }
 
     private func total(title: String, value: Double?, color: Color, dashed: Bool, id: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             legend(title: title, color: color, dashed: dashed)
-            Text(metric == .steps ? metric.clockNumber(value, unit: model.preferences.unit) : metric.clockText(value, unit: model.preferences.unit))
+            Text(metric.text(value, unit: model.preferences.unit))
                 .font(.system(.subheadline, design: .rounded, weight: .bold)).monospacedDigit()
                 .contentTransition(.numericText()).lineLimit(1).minimumScaleFactor(0.6)
         }
@@ -200,7 +200,7 @@ private struct StepClockDial: View {
 
     private var accessibilitySummary: String {
         let current = snapshot.metric.clockText(snapshot.current, unit: unit)
-        let usual = snapshot.metric.clockText(snapshot.usual, unit: unit)
+        let usual = snapshot.metric.clockText(snapshot.usualDayTotal, unit: unit)
         return String(format: L("insights.clock.summary %@ %@"), current, usual)
     }
 

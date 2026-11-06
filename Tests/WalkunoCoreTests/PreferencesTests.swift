@@ -196,7 +196,7 @@ struct PreferencesTests {
         }
     }
 
-    @Test func addingPeriodAnimationsPreservesExistingPreferences() throws {
+    @Test func retiredPeriodAnimationSettingPreservesExistingPreferences() throws {
         var original = Preferences()
         original.goals.set(12_000)
         original.theme = .coral
@@ -208,19 +208,12 @@ struct PreferencesTests {
         original.healthRequested = true
         let encoded = try JSONEncoder().encode(original)
         var legacy = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
-        legacy.removeValue(forKey: "animatePeriodChanges")
-
-        let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy))
-        #expect(restored == original)
-        #expect(restored.animatePeriodChanges)
-    }
-
-    @Test func periodAnimationChoiceSurvivesSaving() throws {
         for enabled in [false, true] {
-            var preferences = Preferences()
-            preferences.animatePeriodChanges = enabled
-            let restored = try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(preferences))
-            #expect(restored.animatePeriodChanges == enabled)
+            legacy["animatePeriodChanges"] = enabled
+            let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: legacy))
+            #expect(restored == original)
+            let saved = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(restored)) as? [String: Any])
+            #expect(saved["animatePeriodChanges"] == nil)
         }
     }
 

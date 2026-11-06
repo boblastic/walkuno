@@ -61,6 +61,8 @@ struct ExplorerView: View {
             // Keep gesture coordinates fixed while the cards move and scroll underneath.
             .contentShape(Rectangle())
             .simultaneousGesture(pageDrag)
+            .refreshable { await model.refresh() }
+            .scrollBounceBehavior(.always, axes: .vertical)
             .scrollDisabled(chartScrubbing)
             .accessibilityIdentifier("explorer.scroll")
             .environment(\.chartScrubbing, $chartScrubbing)

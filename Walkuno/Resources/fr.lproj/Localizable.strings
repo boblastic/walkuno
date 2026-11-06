@@ -97,7 +97,6 @@
 "settings.glass.transparency" = "Transparence du verre";
 "settings.glass.opaque" = "Opaque";
 "settings.glass.transparent" = "Transparent";
-"settings.glass.note" = "Ajustez la transparence du bandeau supérieur. Le résultat s’affiche immédiatement sur tous les écrans.";
 "settings.glass.accessibility" = "Le bandeau reste opaque pour respecter vos réglages d’accessibilité iOS. Votre niveau de transparence est conservé.";
 "account.title" = "Mon compte";
 "account.local" = "Votre espace Walkuno";
@@ -106,8 +105,6 @@
 "account.plan" = "Formule actuelle";
 "settings.mode" = "Apparence";
 "settings.counter" = "Style du compteur";
-"settings.period.animations" = "Animer les changements de période";
-"settings.period.animations.description" = "Rejouer le remplissage du compteur et le décompte en naviguant entre les dates. Le passage entre Jour, Semaine, Mois et Année rejoue toujours l’animation.";
 "settings.data" = "Santé et confidentialité";
 "settings.purchases" = "Achats";
 "settings.version %@" = "Version %@";
@@ -531,6 +528,6 @@
 "goals.range %@ %@" = "Entre %@ et %@.";
 "insights.clock.more %@" = "%@ d’avance";
 "insights.clock.less %@" = "%@ de moins que d’habitude";
-"insights.clock.summary %@ %@" = "%@ aujourd’hui, %@ habituellement au même moment de la journée.";
+"insights.clock.summary %@ %@" = "%@ aujourd’hui, %@ habituellement sur une journée complète.";
 "unit.steps" = "pas";
 "unit.floors" = "étages";

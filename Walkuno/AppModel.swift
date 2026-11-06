@@ -99,7 +99,7 @@ final class AppModel {
         let reference = data.map { WidgetUsualActivity(comparison: $0.comparison) } ?? (metric == .steps ? cached?.usual : nil)
         return .init(metric: metric, sampledAt: sampledAt, current: metric.value(in: data?.today ?? today),
                      goal: preferences.goal(for: metric), hours: data?.hours ?? cached?.todayHours ?? (isDemo ? hours : []),
-                     usual: reference, calendar: calendar)
+                     usual: reference, usualDayTotal: data?.comparison.usualDayTotal, calendar: calendar)
     }
 
     func motivationSnapshot(at now: Date) -> MotivationSnapshot {
