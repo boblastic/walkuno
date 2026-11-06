@@ -156,36 +156,39 @@ struct WatchRootView: View {
     var body: some View {
         GeometryReader { geometry in
             let width = max(1, geometry.size.width - 16)
-            // Keep the identity and the entire counter visible together on the first screen.
-            let counterSize = min(width, max(1, geometry.size.height - brandSize - 20))
+            // Use the full dashboard width, independent of the space below the brand.
+            let counterSize = width
             ScrollView {
                 VStack(spacing: 16) {
-                    HStack(spacing: 8) {
-                        BrandMark(size: brandSize, theme: model.effectiveTheme)
-                        Text("Walkuno")
-                            .font(.system(.headline, design: .rounded, weight: .bold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Walkuno")
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityIdentifier("watch.brand")
-
-                    AnimatedStepCounter(steps: model.current.steps, goal: model.goal, title: L("tab.today"),
-                                        theme: model.effectiveTheme, style: model.effectiveCounter,
-                                        effect: model.effectiveEffect,
-                                        distance: distanceText(model.current.meters, unit: model.preferences.unit),
-                                        replay: model.current.date.description, animateEntry: true, animateUpdates: true)
-                        // Reuse the phone's five faces, fitted below the header on each watch size.
-                        .frame(width: 260, height: 260)
-                        .scaleEffect(counterSize / 260)
-                        .frame(width: width, height: counterSize)
+                    VStack(spacing: 4) {
+                        HStack(spacing: 8) {
+                            BrandMark(size: brandSize, theme: model.effectiveTheme)
+                            Text("Walkuno")
+                                .font(.system(.headline, design: .rounded, weight: .bold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                        }
+                        .padding(.leading, 8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(Text("today.counter.accessibility \(stepsText(model.current.steps)) \(model.goal.formatted())"))
-                        .accessibilityValue(Text(L(model.effectiveCounter.titleKey)) + Text(", " + distanceText(model.current.meters, unit: model.preferences.unit)))
-                        .accessibilityIdentifier("watch.counter")
+                        .accessibilityLabel("Walkuno")
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityIdentifier("watch.brand")
+
+                        AnimatedStepCounter(steps: model.current.steps, goal: model.goal, title: L("tab.today"),
+                                            theme: model.effectiveTheme, style: model.effectiveCounter,
+                                            effect: model.effectiveEffect,
+                                            distance: distanceText(model.current.meters, unit: model.preferences.unit),
+                                            replay: model.current.date.description, animateEntry: true, animateUpdates: true)
+                            // Reuse the phone's five faces at the full dashboard width on each watch size.
+                            .frame(width: 260, height: 260)
+                            .scaleEffect(counterSize / 260)
+                            .frame(width: width, height: counterSize)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(Text("today.counter.accessibility \(stepsText(model.current.steps)) \(model.goal.formatted())"))
+                            .accessibilityValue(Text(L(model.effectiveCounter.titleKey)) + Text(", " + distanceText(model.current.meters, unit: model.preferences.unit)))
+                            .accessibilityIdentifier("watch.counter")
+                    }
                     WatchTrendChart(days: model.week + [model.current], goal: model.goal, accent: model.effectiveTheme.accent)
                     WatchRhythmChart(date: model.current.date, hours: model.activity?.todayHours ?? [],
                                      previousHours: model.activity?.yesterdayHours ?? [], accent: model.effectiveTheme.accent)
@@ -204,10 +207,12 @@ struct WatchRootView: View {
                     }
                 }
                 .frame(width: width, alignment: .center)
-                .padding(.horizontal, 8).padding(.top, 4).padding(.bottom, 12)
+                // Align the 24-point brand with the system clock, clear of the rounded corner.
+                .padding(.horizontal, 8).padding(.top, 16).padding(.bottom, 12)
             }
             .accessibilityIdentifier("watch.dashboard")
         }
+        .ignoresSafeArea(.container, edges: .top)
         .background(WalkunoStyle.ink.ignoresSafeArea())
         .sensoryFeedback(.success, trigger: model.progress >= 1)
     }
