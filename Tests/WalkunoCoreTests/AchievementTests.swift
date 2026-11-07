@@ -16,7 +16,7 @@ struct AchievementTests {
             .init(date: calendar.startOfDay(for: calendar.date(byAdding: .day, value: offset, to: date(start))!), steps: steps)
         }
     }
-    func summary(_ days: [ActivityDay], now: String, goals: GoalHistory = .init()) -> AchievementSummary {
+    func summary(_ days: [ActivityDay], now: String, goals: GoalHistory = .init(initialGoal: 8_000)) -> AchievementSummary {
         .init(days: days, goals: goals, now: date(now), calendar: calendar)
     }
 

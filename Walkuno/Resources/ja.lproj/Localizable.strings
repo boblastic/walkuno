@@ -26,7 +26,7 @@
 "today.rhythm.accessibility" = "0時から24時までの活動と、横に並べた灰色の棒で示した前日の活動";
 "today.peak %@" = "最も活動的な時間：%@";
 "today.comparison" = "昨日との比較";
-"today.comparison.note" = "今日の現時点まで · 昨日1日分";
+"today.comparison.note" = "今日と昨日の同じ時刻までを比較";
 "today.updated %@" = "最終更新：%@";
 "today.cached" = "保存済みの測定値 · 取得でき次第更新";
 "metric.distance" = "距離";
@@ -227,18 +227,18 @@
 "insights.day.ahead" = "この時刻のアクティビティは、いつもの水準を上回っています。一つひとつの努力が力になります！";
 "insights.day.behind" = "この時刻のアクティビティは、いつもの水準を下回っています。1日はまだ続きます。";
 "insights.day.basis" = "時間ごとの測定値がある最近の%ld日間の%@時点の平均。直近28日間から最大7日分を使用します。";
-"insights.trends" = "傾向";
+"insights.trends" = "期間別の傾向";
 "insights.daily.average" = "1日平均";
 "insights.average" = "平均";
-"insights.current" = "現在の期間";
-"insights.previous" = "前の期間";
+"insights.current" = "現在";
+"insights.previous" = "前回";
 "insights.trend.note" = "終了した日を同じ日数で比較します。測定値のない日は平均から除外されます。";
 "insights.trend.coverage" = "現在の期間：%ld日分のデータ · 前の期間：%ld日分。";
 "insights.weekday" = "いつもの1週間";
 "insights.best.weekday" = "最も活動的な曜日";
 "insights.weekday.summary" = "最も活動的な曜日は%@です。平均 %@（%@）。";
 "insights.weekday.note" = "利用可能な履歴の曜日ごとの平均です。今日は含みません。";
-"insights.records" = "記録";
+"insights.records" = "ベストスコア";
 "insights.record" = "最高記録";
 "insights.chart.record %@" = "最高記録：%@";
 "insights.record.day" = "最高の1日";
@@ -546,6 +546,7 @@
 "statistics.widgets.instructions" = "表示するウィジェットを選び、ハンドルをドラッグして順序を変更できます。変更は自動的に保存されます。";
 
 /* Configurable daily objectives and metric-aware activity clock. */
+"goals.title" = "目標";
 "goals.daily" = "1日の目標";
 "goals.target %@" = "目標 %@";
 "goals.range %@ %@" = "%@から%@まで。";
@@ -578,3 +579,8 @@
 "widgets.gallery.unlocked" = "すべてのウィジェットが利用可能です";
 "widgets.gallery.cta" = "Proでウィジェットを使う";
 "widgets.gallery.pro.note" = "すべてのウィジェットとコンプリケーションはWalkuno Pro限定です。";
+
+/* Daily goals Home Screen widget */
+"widget.dailyGoal.name" = "Walkuno · 毎日の目標";
+"widget.dailyGoal.description" = "歩数、距離、エネルギー、エクササイズ、階数の5つの毎日の目標。";
+"widgets.gallery.dailyGoal.body" = "統計の5つのカウンターをホーム画面に。中サイズと大サイズで、それぞれの測定値と目標を確認できます。選択した配色と単位が反映されます。";

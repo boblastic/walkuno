@@ -43,17 +43,22 @@ struct StepCounterFace: View {
     var displayedSteps: Double
     var trail: CounterTrailFrame? = nil
     var hasSteps: Bool
-    var goal: Int
+    var goal: Double
     var title: String
     var theme: WalkunoTheme
     var style: CounterStyle
     var effect: CounterEffect = .stars
     var distance: String? = nil
+    var numberText: String? = nil
+    var objectiveText: String? = nil
+    var showsRemaining = true
+    var showsAnnotations = true
+    var celebratesGoal = false
     @ScaledMetric(relativeTo: .largeTitle) private var counterSize = 55
     @Environment(\.colorScheme) private var scheme
     @Environment(\.dynamicTypeSize) private var typeSize
 
-    private var progress: CounterProgress { .init(steps: hasSteps ? displayedSteps : 0, goal: goal) }
+    private var progress: CounterProgress { .init(value: hasSteps ? displayedSteps : 0, goal: goal) }
     private var accent: Color { theme.tint(for: scheme) }
     private var secondary: Color { theme.secondaryTint(for: scheme) }
     private var gradient: LinearGradient {
@@ -62,7 +67,7 @@ struct StepCounterFace: View {
     private var overflow: Color {
         progress.overflowLap.truncatingRemainder(dividingBy: 2) == 1 ? .white.opacity(0.88) : WalkunoStyle.ink.opacity(0.85)
     }
-    private var number: String { hasSteps ? Int(max(0, displayedSteps).rounded()).formatted() : "—" }
+    private var number: String { hasSteps ? numberText ?? Int(max(0, displayedSteps).rounded()).formatted() : "—" }
 
     var body: some View {
         GeometryReader { geometry in
@@ -83,9 +88,11 @@ struct StepCounterFace: View {
         .transaction { $0.animation = nil; $0.disablesAnimations = true }
     }
 
-    private var heading: some View {
-        Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(accent)
-            .lineLimit(1).minimumScaleFactor(0.65)
+    @ViewBuilder private var heading: some View {
+        if showsAnnotations {
+            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(accent)
+                .lineLimit(1).minimumScaleFactor(0.65)
+        }
     }
 
     private func count(size: CGFloat, alignment: Alignment = .center) -> some View {
@@ -95,9 +102,14 @@ struct StepCounterFace: View {
             .frame(maxWidth: .infinity, alignment: alignment)
     }
 
-    private var objective: some View {
-        Text("today.of \(goal.formatted())")
+    @ViewBuilder private var objective: some View {
+        if showsAnnotations {
+            Group {
+                if let objectiveText { Text(objectiveText) }
+                else { Text("today.of \(Int(goal).formatted())") }
+            }
             .font(.caption).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.6)
+        }
     }
 
     private func total(size: CGFloat, alignment: Alignment = .center) -> some View {
@@ -115,16 +127,19 @@ struct StepCounterFace: View {
         }
     }
 
-    private var percentage: some View {
-        HStack(spacing: 4) {
-            if hasSteps, progress.ratio >= 1 { Image(systemName: "checkmark").font(.caption2.weight(.bold)) }
-            Text(hasSteps ? progress.ratio.formatted(.percent.precision(.fractionLength(0))) : "—")
-                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
+    @ViewBuilder private var percentage: some View {
+        if showsAnnotations {
+            HStack(spacing: 4) {
+                if hasSteps, progress.ratio >= 1 { Image(systemName: "checkmark").font(.caption2.weight(.bold)) }
+                Text(hasSteps ? progress.ratio.formatted(.percent.precision(.fractionLength(0))) : "—")
+                    .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
+            }
+            .font(.caption2.weight(.bold)).foregroundStyle(WalkunoStyle.ink)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(theme.accent, in: Capsule())
+            .fixedSize(horizontal: false, vertical: true)
+            .goalSurpassingStars(isActive: celebratesGoal && hasSteps && progress.ratio >= 1, theme: theme)
         }
-        .font(.caption2.weight(.bold)).foregroundStyle(WalkunoStyle.ink)
-        .padding(.horizontal, 10).padding(.vertical, 5)
-        .background(theme.accent, in: Capsule())
-        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var remaining: some View {
@@ -201,7 +216,10 @@ struct StepCounterFace: View {
                          starAccent: theme.accent, starSecondary: theme.secondaryAccent)
                 .frame(height: typeSize.isAccessibilitySize ? 90 : 76)
                 .padding(.top, 8)
-            HStack { remaining; Spacer(minLength: 8); percentage }
+            HStack {
+                if showsRemaining { remaining; Spacer(minLength: 8) }
+                percentage
+            }
                 .padding(.horizontal, 4)
         }
         .frame(maxHeight: .infinity)
@@ -245,10 +263,10 @@ struct StepCounterFace: View {
             .frame(height: typeSize.isAccessibilitySize ? 80 : 60)
             .padding(.top, 22).padding(.bottom, 7)
             HStack(spacing: 8) {
-                if hasSteps, let next = progress.nextMilestone(goal: goal) {
+                if showsRemaining, hasSteps, let next = progress.nextMilestone(goal: Int(goal)) {
                     Text("counter.next \(next.formatted())").font(.caption).foregroundStyle(.secondary)
                         .lineLimit(1).minimumScaleFactor(0.6)
-                } else { remaining }
+                } else if showsRemaining { remaining }
                 Spacer(minLength: 0)
                 percentage
             }
@@ -278,7 +296,7 @@ struct StepCounterFace: View {
                 }
             }
             .frame(height: 9).padding(.top, 22).padding(.bottom, 10)
-            remaining.padding(.top, 4)
+            if showsRemaining { remaining.padding(.top, 4) }
         }
         .frame(maxHeight: .infinity)
         .padding(.horizontal, 8)
@@ -297,6 +315,7 @@ struct CompactStepCounterFace: View {
     var text: String
     var theme: WalkunoTheme
     var style: CounterStyle
+    var celebratesGoal = false
     @Environment(\.colorScheme) private var scheme
 
     private var value: CounterProgress { .init(steps: progress ?? 0, goal: 1) }
@@ -356,6 +375,7 @@ struct CompactStepCounterFace: View {
                     .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
                     .foregroundStyle(progress == nil ? Color.secondary : Color.primary)
                     .frame(width: size * (hasBase ? 0.95 : 0.65))
+                    .goalSurpassingStars(isActive: celebratesGoal && value.ratio >= 1, theme: theme)
                     .offset(y: hasBase ? -size * 0.14 : 0)
             }
             .opacity(progress == nil ? 0.45 : 1)
@@ -460,11 +480,13 @@ struct AnimatedStepCounter: View {
     var replay: String
     var animateEntry: Bool
     var animateUpdates: Bool
+    var celebratesGoal = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         CounterPlaybackView(steps: steps, goal: goal, title: title, theme: theme, style: style, effect: effect, distance: distance,
-                            animateEntry: animateEntry && !reduceMotion, animateUpdates: animateUpdates)
+                            animateEntry: animateEntry && !reduceMotion, animateUpdates: animateUpdates,
+                            celebratesGoal: celebratesGoal)
             .id(replay)
     }
 }
@@ -479,11 +501,13 @@ private struct CounterPlaybackView: View {
     var distance: String? = nil
     var animateEntry: Bool
     var animateUpdates: Bool
+    var celebratesGoal: Bool
 
     var body: some View {
         CounterPlayback(value: steps.map(Double.init), goal: Double(goal), animateEntry: animateEntry, animateUpdates: animateUpdates) { value, trail in
             StepCounterFace(displayedSteps: value, trail: trail, hasSteps: steps != nil,
-                            goal: goal, title: title, theme: theme, style: style, effect: effect, distance: distance)
+                            goal: Double(goal), title: title, theme: theme, style: style, effect: effect, distance: distance,
+                            celebratesGoal: celebratesGoal)
         }
     }
 }
@@ -510,7 +534,7 @@ struct AnimatedCounterRing: View {
     }
 }
 
-private struct CounterPlayback<Content: View>: View {
+struct CounterPlayback<Content: View>: View {
     var value: Double?
     var goal: Double
     var animateEntry: Bool
@@ -554,16 +578,13 @@ private struct CounterPlayback<Content: View>: View {
     }
 
     var body: some View {
-        ZStack {
-            if let playback, !reduceMotion {
-                // This clock exists only for the sweep and the final 0.8 seconds of dissipation.
-                TimelineView(.animation(minimumInterval: 1.0 / 60)) { context in
-                    let frame = playback.frame(at: context.date)
-                    content(playback.value(at: context.date), frame.isActive ? frame : nil)
-                }
-            } else {
-                content(reduceMotion ? (value ?? 0) : settledValue, nil)
-            }
+        // Keep the face's identity when the sweep settles so its percentage stars
+        // can finish without being interrupted or replayed. The sweep clock pauses at rest.
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: playback == nil || reduceMotion)) { context in
+            let current = reduceMotion ? nil : playback
+            let frame = current?.frame(at: context.date)
+            let displayed = reduceMotion ? (value ?? 0) : (current?.value(at: context.date) ?? settledValue)
+            content(displayed, frame?.isActive == true ? frame : nil)
         }
         .task(id: Request(value: value, goal: goal, reduceMotion: reduceMotion,
                           animateEntry: animateEntry, animateUpdates: animateUpdates)) {

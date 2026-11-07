@@ -12,7 +12,7 @@ struct MotivationTests {
     func day(_ offset: Int, _ steps: Int?) -> ActivityDay {
         .init(date: calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now))!, steps: steps)
     }
-    func snapshot(_ days: [ActivityDay], goals: GoalHistory = .init(), detail: WidgetActivityDetail? = nil,
+    func snapshot(_ days: [ActivityDay], goals: GoalHistory = .init(initialGoal: 8_000), detail: WidgetActivityDetail? = nil,
                   at: Date? = nil) -> MotivationSnapshot {
         .init(days: days, goals: goals, detail: detail, now: at ?? now, calendar: calendar)
     }
@@ -225,7 +225,7 @@ struct MotivationTests {
     }
 
     @Test func wordingCacheChangesForMeaningfulProgressLanguageGoalAndMidnight() {
-        func key(_ steps: Int, locale: String = "fr_FR", goals: GoalHistory = .init(), at: Date? = nil) -> MotivationWordingKey {
+        func key(_ steps: Int, locale: String = "fr_FR", goals: GoalHistory = .init(initialGoal: 8_000), at: Date? = nil) -> MotivationWordingKey {
             snapshot([day(0, steps)], goals: goals, at: at).wordingKey(locale: locale, now: at ?? now, calendar: calendar)
         }
         #expect(key(5_001) == key(5_200))

@@ -16,6 +16,8 @@ struct WidgetGalleryView: View {
         value.theme = model.effectiveTheme
         value.unit = model.preferences.unit
         value.display = .init(counter: model.effectiveCounter)
+        value.goal = model.goal
+        value.activityGoals = model.preferences.activityGoals
         return value
     }
 
@@ -64,6 +66,13 @@ struct WidgetGalleryView: View {
                         capture(.dashboard, family: .systemSmall)
                         capture(.dashboard, family: .systemMedium)
                         capture(.dashboard, family: .systemLarge)
+                    }
+                }
+
+                feature("widget.dailyGoal.name", body: "widgets.gallery.dailyGoal.body", symbol: "target") {
+                    VStack(spacing: 18) {
+                        capture(.dailyGoal, family: .systemMedium)
+                        capture(.dailyGoal, family: .systemLarge)
                     }
                 }
 
@@ -180,13 +189,14 @@ private enum WidgetGalleryChart: String, CaseIterable, Identifiable {
 }
 
 private enum WidgetGalleryKind: String {
-    case counter, chart, dashboard
+    case counter, chart, dashboard, dailyGoal
 
     var titleKey: String {
         switch self {
         case .counter: "widget.name"
         case .chart: "widget.charts.name"
         case .dashboard: "widget.dashboard.name"
+        case .dailyGoal: "widget.dailyGoal.name"
         }
     }
 }
@@ -229,7 +239,7 @@ private struct WidgetGalleryCapture: View {
     }
 
     private var captureID: String {
-        "\(kind.rawValue)-\(family.rawValue)-\(chart.rawValue)-\(snapshot.theme.rawValue)-\(snapshot.unit.rawValue)-\(snapshot.display?.counter.rawValue ?? "")-\(locale.identifier)-\(displayScale)"
+        "\(kind.rawValue)-\(family.rawValue)-\(chart.rawValue)-\(snapshot.theme.rawValue)-\(snapshot.unit.rawValue)-\(snapshot.display?.counter.rawValue ?? "")-\(ActivityMetric.allCases.map { snapshot.goal(for: $0) })-\(locale.identifier)-\(displayScale)"
     }
 
     var body: some View {
@@ -271,6 +281,8 @@ private struct WidgetGalleryCapture: View {
             WalkunoChartWidgetView(entry: .init(date: snapshot.updatedAt, snapshot: snapshot, style: chart))
         case .dashboard:
             WalkunoDashboardView(entry: .init(date: snapshot.updatedAt, snapshot: snapshot))
+        case .dailyGoal:
+            WalkunoDailyGoalView(entry: .init(date: snapshot.updatedAt, snapshot: snapshot))
         }
     }
 }

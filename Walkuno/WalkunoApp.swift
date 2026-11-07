@@ -117,6 +117,7 @@ struct RootView: View {
                 NavigationStack { SettingsView().toolbar(.hidden, for: .navigationBar).appHeader() }
                     .tabItem { Label("tab.settings", systemImage: "slider.horizontal.3") }.tag(4)
             }
+            .environment(\.streakGlowReplay, selection)
             .onOpenURL { url in
                 guard url.scheme == "walkuno" else { return }
                 switch url.host {

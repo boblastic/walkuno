@@ -26,7 +26,7 @@
 "today.rhythm.accessibility" = "Actividad de 0 a 24 horas, con el día anterior en barras grises una al lado de la otra";
 "today.peak %@" = "Tu hora más activa: %@";
 "today.comparison" = "En comparación con ayer";
-"today.comparison.note" = "Hoy hasta ahora · todo el día de ayer";
+"today.comparison.note" = "Hoy y ayer a la misma hora";
 "today.updated %@" = "Última actualización a las %@";
 "today.cached" = "Mediciones guardadas · se actualizarán cuando estén disponibles";
 "metric.distance" = "Distancia";
@@ -52,7 +52,7 @@
 "chart.hourly" = "Pasos por hora";
 "chart.values" = "Ver valores por hora";
 "goal.title" = "Objetivo diario";
-"goal.edit" = "Editar objetivo";
+"goal.edit" = "Editar objetivos";
 "goal.range" = "Entre 500 y 100.000 pasos.";
 "goal.presets" = "Elige tu ritmo";
 "goal.note" = "Un objetivo adaptado a ti, no un consejo médico. Se conservan los objetivos de los días anteriores.";
@@ -227,18 +227,18 @@
 "insights.day.ahead" = "A esta hora, tu actividad está por encima de tu nivel habitual. ¡Cada esfuerzo cuenta!";
 "insights.day.behind" = "A esta hora, tu actividad está por debajo de tu nivel habitual. El día continúa.";
 "insights.day.basis" = "Media de %ld días recientes con mediciones por hora, a las %@. Hasta 7 días de los últimos 28.";
-"insights.trends" = "Tendencias";
+"insights.trends" = "Tendencia por periodo";
 "insights.daily.average" = "Media diaria";
 "insights.average" = "Media";
-"insights.current" = "Periodo actual";
-"insights.previous" = "Periodo anterior";
+"insights.current" = "Actual";
+"insights.previous" = "Anterior";
 "insights.trend.note" = "Se comparan los días completos sobre el mismo número de días naturales. Los días sin mediciones se excluyen de las medias.";
 "insights.trend.coverage" = "%ld días observados en el periodo actual · %ld en el anterior.";
 "insights.weekday" = "Tu semana habitual";
 "insights.best.weekday" = "Día de la semana más activo";
 "insights.weekday.summary" = "Tu día de la semana más activo es el %@: una media de %@ (%@).";
 "insights.weekday.note" = "Media de cada día de la semana en el historial disponible, excluyendo hoy.";
-"insights.records" = "Récords";
+"insights.records" = "Las mejores puntuaciones";
 "insights.record" = "Récord";
 "insights.chart.record %@" = "Récord: %@";
 "insights.record.day" = "Mejor día";
@@ -546,6 +546,7 @@
 "statistics.widgets.instructions" = "Elige los widgets que quieres mostrar y arrastra los tiradores para cambiar su orden. Los cambios se guardan automáticamente.";
 
 /* Configurable daily objectives and metric-aware activity clock. */
+"goals.title" = "Objetivos";
 "goals.daily" = "Objetivos diarios";
 "goals.target %@" = "Objetivo %@";
 "goals.range %@ %@" = "Entre %@ y %@.";
@@ -578,3 +579,8 @@
 "widgets.gallery.unlocked" = "Todos tus widgets están desbloqueados";
 "widgets.gallery.cta" = "Desbloquear mis widgets con Pro";
 "widgets.gallery.pro.note" = "Todos los widgets y complicaciones son exclusivos de Walkuno Pro.";
+
+/* Daily goals Home Screen widget */
+"widget.dailyGoal.name" = "Walkuno · Objetivos diarios";
+"widget.dailyGoal.description" = "Tus cinco objetivos del día: pasos, distancia, energía, ejercicio y pisos.";
+"widgets.gallery.dailyGoal.body" = "Lleva los cinco contadores de Estadísticas a tu pantalla de inicio. Sigue cada medida y su objetivo en tamaños mediano y grande, con tu paleta y tus unidades.";

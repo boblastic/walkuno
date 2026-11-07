@@ -33,7 +33,7 @@ struct ActivityTests {
         history.set(10000, on: date("2026-11-04T12:00:00Z"), calendar: calendar)
         #expect(history.value(on: date("2026-11-03T12:00:00Z"), calendar: calendar) == 5000)
         #expect(history.value(on: date("2026-11-04T23:00:00Z"), calendar: calendar) == 10000)
-        #expect(history.value(on: date("2026-09-01T12:00:00Z"), calendar: calendar) == 8000)
+        #expect(history.value(on: date("2026-09-01T12:00:00Z"), calendar: calendar) == GoalHistory.defaultGoal)
         history.set(-1, calendar: calendar)
         #expect(history.changes.count == 2)
     }

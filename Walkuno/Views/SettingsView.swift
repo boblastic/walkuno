@@ -4,7 +4,7 @@ import StoreKit
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.colorScheme) private var scheme
-    @State private var goalMetric: ActivityMetric?
+    @State private var showGoals = false
     @State private var showPremium = false
     @State private var showPrivacy = false
     @State private var showTerms = false
@@ -28,13 +28,15 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("settings.subscription")
             }
-            Section("goals.daily") {
-                ForEach(ActivityMetric.allCases) { metric in
-                    Button { goalMetric = metric } label: {
-                        LabeledContent(L(metric.titleKey), value: metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))
+            Section {
+                Button { showGoals = true } label: {
+                    HStack {
+                        Label("goals.daily", systemImage: "scope")
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.caption)
                     }
-                    .accessibilityIdentifier("settings.goal.\(metric.rawValue)")
                 }
+                .accessibilityIdentifier("settings.goals")
             }
             Section("settings.appearance") {
                 Picker("settings.unit", selection: $model.preferences.unit) {
@@ -48,7 +50,6 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityIdentifier("settings.language")
-                Text("settings.language.note").font(.caption).foregroundStyle(.secondary)
                 NavigationLink {
                     ThemePaletteView().appHeader()
                 } label: {
@@ -135,7 +136,7 @@ struct SettingsView: View {
                 else if previous.language != newPreferences.language { model.persist(sync: false) }
             }
         }
-        .sheet(item: $goalMetric) { GoalEditor(metric: $0) }
+        .sheet(isPresented: $showGoals) { GoalEditor() }
         .sheet(isPresented: $showPremium) { PremiumView() }
         .sheet(isPresented: $showPrivacy) { PrivacyView() }
         .sheet(isPresented: $showTerms) { TermsView() }
@@ -229,97 +230,105 @@ private struct ThemePaletteView: View {
 }
 
 struct GoalEditor: View {
-    var metric: ActivityMetric = .steps
     @Environment(\.colorScheme) private var scheme
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @State private var input = ""
-    private var unit: DistanceUnit { model.preferences.unit }
-    private var value: Double { model.preferences.goal(for: metric) }
-    private var formatter: NumberFormatter {
-        let formatter = NumberFormatter()
-        formatter.locale = AppLocalization.locale
-        formatter.numberStyle = .decimal
-        formatter.usesGroupingSeparator = false
-        formatter.maximumFractionDigits = metric == .distance ? 3 : 0
-        return formatter
-    }
-    private func editText(_ value: Double) -> String {
-        formatter.string(from: NSNumber(value: metric == .distance ? unit.convert(meters: value) : value)) ?? ""
-    }
-    private var parsedGoal: Double? {
-        // Saving an unchanged distance must not round-trip meters through rounded miles.
-        if input == editText(value) { return value }
-        let separator = formatter.decimalSeparator ?? "."
-        let parts = input.components(separatedBy: separator)
-        guard parts.count <= (metric == .distance ? 2 : 1),
-              parts.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }),
-              let number = formatter.number(from: input) else { return nil }
-        let displayed = number.doubleValue
-        let canonical = metric == .distance ? displayed * (unit == .kilometers ? 1_000 : 1_609.344) : displayed
-        return metric.acceptsGoal(canonical) ? canonical : nil
-    }
-    private var presets: [Double] {
-        switch metric {
-        case .steps: [5_000, 8_000, 10_000, 12_000]
-        case .distance: unit == .kilometers ? [3_000, 5_000, 8_000, 10_000] : [2, 3, 5, 6].map { $0 * 1_609.344 }
-        case .energy: [200, 400, 600, 800]
-        case .exerciseTime: [15, 30, 45, 60]
-        case .floors: [5, 10, 15, 20]
-        }
-    }
-    private var rangeText: String {
-        func bound(_ value: Double) -> String {
-            let displayed = metric == .distance ? unit.convert(meters: value) : value
-            return displayed.formatted(.number.locale(AppLocalization.locale).precision(.fractionLength(0...3))) + " " + metric.clockUnit(unit)
-        }
-        return String(format: L("goals.range %@ %@"), bound(metric.goalRange.lowerBound), bound(metric.goalRange.upperBound))
-    }
+    @State private var goals: [ActivityMetric: Double] = [:]
+
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    HStack {
-                        TextField(L(metric.titleKey), text: $input)
-                            .keyboardType(metric == .distance ? .decimalPad : .numberPad)
-                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                            .accessibilityIdentifier("goal.input")
-                            .accessibilityLabel(Text(L(metric.titleKey)))
-                        Text(metric.clockUnit(unit)).foregroundStyle(.secondary)
-                    }
-                    Text(rangeText).font(.caption).foregroundStyle(.secondary)
-                }
-                Section("goal.presets") {
-                    ForEach(presets, id: \.self) { value in
-                        Button { input = editText(value) } label: {
-                            HStack {
-                                Text(metric == .steps ? metric.clockNumber(value, unit: unit) : metric.clockText(value, unit: unit))
-                                Spacer()
-                                if let parsedGoal, abs(parsedGoal - value) < 0.001 { Image(systemName: "checkmark") }
-                            }
-                        }
+                ForEach(ActivityMetric.allCases) { metric in
+                    Section {
+                        DailyGoalSlider(metric: metric, value: Binding(
+                            get: { goals[metric] ?? model.preferences.goal(for: metric) },
+                            set: { goals[metric] = $0 }), unit: model.preferences.unit)
                     }
                 }
-                if metric == .steps {
-                    Section { Text("goal.note").font(.subheadline).foregroundStyle(.secondary) }
-                }
+                Section { Text("goal.note").font(.caption).foregroundStyle(.secondary) }
             }
+            .accessibilityIdentifier("goals.editor")
             .scrollContentBackground(.hidden)
             .background(WalkunoStyle.background(scheme))
-            .navigationTitle(L(metric.shortTitleKey)).navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("goals.title").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("common.cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("common.save") {
-                        if let value = parsedGoal { model.setGoal(value, for: metric); dismiss() }
-                    }.disabled(parsedGoal == nil)
-                    .accessibilityIdentifier("goal.save")
+                    Button("common.save") { model.setGoals(goals); dismiss() }
+                        .accessibilityIdentifier("goal.save")
                 }
             }
-            .onAppear { input = editText(value) }
             .appHeader()
         }
         .presentationDetents([.large])
+    }
+}
+
+private struct DailyGoalSlider: View {
+    let metric: ActivityMetric
+    @Binding var value: Double
+    let unit: DistanceUnit
+    @State private var sliderMaximum: Double?
+
+    // Keep the useful everyday range easy to drag. The stepper can reach the full
+    // supported range, and saved higher goals extend the slider without being reset.
+    private var usualMaximum: Double {
+        switch metric {
+        case .steps: 30_000
+        case .distance: 20_000
+        case .energy: 2_000
+        case .exerciseTime: 180
+        case .floors: 50
+        }
+    }
+    private var increment: Double { metric.goalIncrement }
+    private var maximum: Double { max(sliderMaximum ?? usualMaximum, ceil(value / increment) * increment) }
+    private var stops: Binding<Double> {
+        Binding(get: { max(1, value / increment) },
+                set: { value = min(metric.goalRange.upperBound, $0.rounded() * increment) })
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Stepper(value: stops, in: 1...floor(metric.goalRange.upperBound / increment), step: 1) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L(metric.titleKey)).font(.subheadline)
+                    Text(metric.clockText(value, unit: unit))
+                        .font(.system(.title2, design: .rounded, weight: .bold)).monospacedDigit()
+                        .accessibilityIdentifier("goal.value.\(metric.rawValue)")
+                }
+            }
+            .accessibilityIdentifier("goal.stepper.\(metric.rawValue)")
+            Slider(value: stops, in: 1...(maximum / increment), step: 1) {
+                Text(L(metric.titleKey))
+            }
+            .accessibilityLabel(Text(L(metric.titleKey)) + Text(", " + metric.clockText(value, unit: unit)))
+            .accessibilityIdentifier("goal.slider.\(metric.rawValue)")
+            Canvas { context, size in
+                let intervals = Int(maximum / increment) - 1
+                for index in 0...intervals {
+                    let major = index.isMultiple(of: 5)
+                    let x = size.width * Double(index) / Double(intervals)
+                    var tick = Path()
+                    tick.move(to: CGPoint(x: x, y: 0))
+                    tick.addLine(to: CGPoint(x: x, y: major ? 7 : 4))
+                    context.stroke(tick, with: .color(.secondary.opacity(major ? 0.65 : 0.3)), lineWidth: 1)
+                }
+            }
+            .frame(height: 7)
+            .padding(.horizontal, 14)
+            .accessibilityHidden(true)
+            HStack {
+                Text(metric.clockText(increment, unit: unit))
+                Spacer()
+                Text(metric.clockText(maximum, unit: unit))
+            }
+            .font(.caption2).foregroundStyle(.secondary).monospacedDigit()
+            .accessibilityHidden(true)
+        }
+        .padding(.vertical, 4)
+        .onAppear { sliderMaximum = maximum }
+        .onChange(of: value) { _, _ in sliderMaximum = maximum }
     }
 }
 

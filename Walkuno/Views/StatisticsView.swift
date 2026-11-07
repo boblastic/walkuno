@@ -81,7 +81,7 @@ struct StatisticsView: View {
 private extension StatisticsWidget {
     var titleKey: String {
         switch self {
-        case .dailyGoal: "goal.title"
+        case .dailyGoal: "goals.daily"
         case .clock: "insights.clock.title"
         case .day: "insights.day"
         case .trends: "insights.trends"
@@ -92,19 +92,15 @@ private extension StatisticsWidget {
 }
 
 struct DailyGoalCard: View {
-    @Environment(\.dynamicTypeSize) private var typeSize
-
     var body: some View {
         WalkunoCard {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("goal.title")
+            VStack(alignment: .leading, spacing: 12) {
+                Text("goals.daily")
                     .font(.subheadline.weight(.semibold))
                     .accessibilityIdentifier("statistics.dailyGoal.title")
-                DailyGoalMetricTile(metric: .steps, prominent: true)
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12),
-                                         count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 12) {
-                    ForEach(ActivityMetric.allCases.filter { $0 != .steps }) { metric in
-                        DailyGoalMetricTile(metric: metric)
+                HStack(alignment: .top, spacing: 4) {
+                    ForEach(ActivityMetric.allCases) { metric in
+                        DailyGoalMetricCounter(metric: metric)
                     }
                 }
             }
@@ -114,71 +110,71 @@ struct DailyGoalCard: View {
     }
 }
 
-private struct DailyGoalMetricTile: View {
+private struct DailyGoalMetricCounter: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.colorScheme) private var scheme
+    @ScaledMetric(relativeTo: .caption2) private var goalFontSize = 9
     var metric: ActivityMetric
-    var prominent = false
 
-    private var value: Double? { metric.value(in: model.today) }
+    // This overview deliberately treats missing daily measurements as zero.
+    private var value: Double { metric.value(in: model.today) ?? 0 }
     private var goal: Double { model.preferences.goal(for: metric) }
-    private var progress: Double? { value.map { $0 / goal } }
     private var unit: DistanceUnit { model.preferences.unit }
-    private var accent: Color { model.effectiveTheme.tint(for: scheme) }
 
     var body: some View {
-        Group {
-            if prominent {
-                HStack(spacing: 16) {
-                    counter
-                    details.frame(maxWidth: .infinity)
+        VStack(spacing: 4) {
+            Color.clear
+                .aspectRatio(1, contentMode: .fit)
+                .overlay {
+                    GeometryReader { geometry in
+                        counter
+                            .environment(\.dynamicTypeSize, .medium)
+                            .frame(width: 220, height: 220)
+                            .scaleEffect(geometry.size.width / 220)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                    }
                 }
-            } else {
-                VStack(spacing: 8) {
-                    counter
-                    details
-                }
+            VStack(spacing: 0) {
+                Text(L(metric.shortTitleKey))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(model.effectiveTheme.accent)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .accessibilityIdentifier("statistics.dailyGoal.label.\(metric.rawValue)")
+                Text(metric.clockText(goal, unit: unit))
+                    .font(.system(size: goalFontSize)).monospacedDigit().foregroundStyle(.secondary)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .accessibilityIdentifier("statistics.dailyGoal.goal.\(metric.rawValue)")
             }
         }
-        .padding(12)
         .frame(maxWidth: .infinity)
-        .background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 18))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(L(metric.titleKey)))
         .accessibilityValue(Text(metric.clockText(value, unit: unit)) + Text(", ") +
-                            Text("goals.target \(metric.clockText(goal, unit: unit))") + Text(", \(percentage)"))
+                            Text("goals.target \(metric.clockText(goal, unit: unit))"))
         .accessibilityIdentifier("statistics.dailyGoal.\(metric.rawValue)")
     }
 
     private var counter: some View {
-        CompactStepCounterFace(progress: progress, text: metric.clockNumber(value, unit: unit),
-                               theme: model.effectiveTheme, style: model.effectiveCounter)
-            .frame(width: 88, height: 88)
-    }
-
-    private var details: some View {
-        VStack(spacing: 5) {
-            Text(L(metric.titleKey))
-                .font(.caption.weight(.semibold))
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-            Text("goals.target \(metric.clockText(goal, unit: unit))")
-                .font(.caption2).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 4) {
-                if let progress, progress >= 1 {
-                    Image(systemName: "checkmark").font(.caption2.weight(.bold))
+        CounterPlayback(value: value, goal: goal, animateEntry: true, animateUpdates: true,
+                        replayOnAppear: true) { displayedValue, trail in
+            StepCounterFace(displayedSteps: displayedValue, trail: trail, hasSteps: true,
+                            goal: goal, title: "", theme: model.effectiveTheme,
+                            style: .horizon, effect: model.effectiveEffect,
+                            numberText: metric.clockNumber(displayedValue, unit: unit),
+                            showsRemaining: false, showsAnnotations: false)
+                .overlay {
+                    GeometryReader { geometry in
+                        Text(metric.clockUnit(unit))
+                            .font(.system(size: 26, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                            .frame(width: geometry.size.width * 0.65, height: 30)
+                            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.79)
+                    }
+                    .accessibilityHidden(true)
                 }
-                Text(percentage).monospacedDigit()
-            }
-            .font(.caption.weight(.bold)).foregroundStyle(accent)
         }
     }
 
-    private var percentage: String {
-        progress?.formatted(.percent.precision(.fractionLength(0))) ?? "—"
-    }
 }
 
 private struct StatisticsWidgetSettingsView: View {

@@ -3,6 +3,30 @@ import Testing
 @testable import WalkunoCore
 
 struct PreferencesTests {
+    @Test func freshInstallUsesAllFiveRequestedGoalsAndIncrements() throws {
+        let preferences = Preferences()
+        for (metric, goal, increment): (ActivityMetric, Double, Double) in [
+            (.steps, 6_000, 500), (.distance, 5_000, 500), (.energy, 500, 50),
+            (.exerciseTime, 30, 5), (.floors, 5, 1)
+        ] {
+            #expect(preferences.goal(for: metric) == goal)
+            #expect(metric.goalIncrement == increment)
+        }
+        #expect(try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(preferences)) == preferences)
+    }
+
+    @Test func legacyStepHistoryKeepsItsOriginalFallbackAndSavedGoals() throws {
+        let legacy = Data(#"{"changes":[]}"#.utf8)
+        let history = try JSONDecoder().decode(GoalHistory.self, from: legacy)
+        #expect(history.value(on: .now) == 8_000)
+        var edited = history
+        edited.set(9_500)
+        #expect(edited.value(on: .now) == 9_500)
+        #expect(edited.value(on: .now.addingTimeInterval(-172_800)) == 8_000)
+        let restored = try JSONDecoder().decode(GoalHistory.self, from: JSONEncoder().encode(edited))
+        #expect(restored == edited)
+    }
+
     @Test func addingActivityGoalsPreservesLegacyPreferencesAndStepHistory() throws {
         var original = Preferences()
         original.goals.set(11_500)
@@ -14,9 +38,9 @@ struct PreferencesTests {
         #expect(restored == original)
         #expect(restored.goal(for: .steps) == 11_500)
         #expect(restored.goal(for: .distance) == 5_000)
-        #expect(restored.goal(for: .energy) == 400)
+        #expect(restored.goal(for: .energy) == 500)
         #expect(restored.goal(for: .exerciseTime) == 30)
-        #expect(restored.goal(for: .floors) == 10)
+        #expect(restored.goal(for: .floors) == 5)
     }
 
     @Test func metricGoalsPersistIndependentlyAndDistanceDoesNotChangeWithDisplayUnits() throws {
@@ -57,9 +81,9 @@ struct PreferencesTests {
         let saved = Data(#"{"distance":7000,"energy":0,"floors":2.5}"#.utf8)
         let restored = try JSONDecoder().decode(ActivityGoals.self, from: saved)
         #expect(restored.value(for: .distance) == 7_000)
-        #expect(restored.value(for: .energy) == 400)
+        #expect(restored.value(for: .energy) == 500)
         #expect(restored.value(for: .exerciseTime) == 30)
-        #expect(restored.value(for: .floors) == 10)
+        #expect(restored.value(for: .floors) == 5)
     }
 
     @Test func statisticsWidgetChoicesSurviveSavingIncludingAllHidden() throws {

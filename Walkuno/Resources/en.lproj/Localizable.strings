@@ -26,7 +26,7 @@
 "today.rhythm.accessibility" = "Activity from midnight to midnight, with the previous day shown as gray bars side by side";
 "today.peak %@" = "Your most active hour: %@";
 "today.comparison" = "Compared with yesterday";
-"today.comparison.note" = "Today so far · all of yesterday";
+"today.comparison.note" = "Today and yesterday at the same time";
 "today.updated %@" = "Last updated at %@";
 "today.cached" = "Cached measurements · refreshing when available";
 "metric.steps" = "Steps";
@@ -52,7 +52,7 @@
 "chart.hourly" = "Steps by hour";
 "chart.values" = "View hourly values";
 "goal.title" = "Daily goal";
-"goal.edit" = "Edit goal";
+"goal.edit" = "Edit goals";
 "goal.range" = "Between 500 and 100,000 steps.";
 "goal.presets" = "Choose your pace";
 "goal.note" = "A goal that suits you, rather than medical advice. Goals from previous days are preserved.";
@@ -228,18 +228,18 @@
 "insights.day.ahead" = "At this time, your activity is above your usual level. Every effort counts!";
 "insights.day.behind" = "At this time, your activity is below your usual level. The day continues.";
 "insights.day.basis" = "Average of %ld recent days with hourly measurements, at %@. Up to 7 days from the last 28 days.";
-"insights.trends" = "Trends";
+"insights.trends" = "Trend by period";
 "insights.daily.average" = "Daily average";
 "insights.average" = "Average";
-"insights.current" = "Current period";
-"insights.previous" = "Previous period";
+"insights.current" = "Current";
+"insights.previous" = "Previous";
 "insights.trend.note" = "Completed days are compared over the same number of calendar days. Days without measurements are excluded from averages.";
 "insights.trend.coverage" = "%ld observed days in the current period · %ld in the previous period.";
 "insights.weekday" = "Your typical week";
 "insights.best.weekday" = "Most active weekday";
 "insights.weekday.summary" = "Your most active weekday is %@: an average of %@ (%@).";
 "insights.weekday.note" = "Average for each weekday across available history, excluding today.";
-"insights.records" = "Records";
+"insights.records" = "Best scores";
 "insights.record" = "Record";
 "insights.chart.record %@" = "Record: %@";
 "insights.record.day" = "Best day";
@@ -547,6 +547,7 @@
 "statistics.widgets.instructions" = "Choose which widgets to show and drag the handles to change their order. Changes are saved automatically.";
 
 /* Configurable daily objectives and metric-aware activity clock. */
+"goals.title" = "Goals";
 "goals.daily" = "Daily goals";
 "goals.target %@" = "Goal %@";
 "goals.range %@ %@" = "Between %@ and %@.";
@@ -579,3 +580,8 @@
 "widgets.gallery.unlocked" = "All your widgets are unlocked";
 "widgets.gallery.cta" = "Unlock my widgets with Pro";
 "widgets.gallery.pro.note" = "All widgets and complications are exclusive to Walkuno Pro.";
+
+/* Daily goals Home Screen widget */
+"widget.dailyGoal.name" = "Walkuno · Daily goals";
+"widget.dailyGoal.description" = "Your five daily goals: steps, distance, energy, exercise and floors.";
+"widgets.gallery.dailyGoal.body" = "Bring the five counters from Statistics to your Home Screen. Track each measurement and its goal in medium and large sizes, with your palette and units.";

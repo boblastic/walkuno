@@ -8,6 +8,7 @@ struct WalkunoWidgetBundle: WidgetBundle {
         WalkunoChartWidget()
         #if os(iOS)
         WalkunoDashboardWidget()
+        WalkunoDailyGoalWidget()
         #endif
     }
 }

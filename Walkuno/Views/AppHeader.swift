@@ -1,5 +1,16 @@
 import SwiftUI
 
+private struct StreakGlowReplayKey: EnvironmentKey {
+    static let defaultValue = 0
+}
+
+extension EnvironmentValues {
+    var streakGlowReplay: Int {
+        get { self[StreakGlowReplayKey.self] }
+        set { self[StreakGlowReplayKey.self] = newValue }
+    }
+}
+
 /// The same fixed header sits above every app screen, including presented details.
 private struct AppHeaderModifier: ViewModifier {
     @Environment(\.colorScheme) private var scheme
@@ -125,32 +136,47 @@ private struct AppHeader: View {
 private struct StreakStar: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.streakGlowReplay) private var glowReplay
+    @State private var glowStartedAt = Date.now
     let active: Bool
     let theme: WalkunoTheme
     let size: CGFloat
 
     var body: some View {
-        Group {
-            if active {
-                if !reduceMotion, scenePhase == .active {
-                    PhaseAnimator([0.0, 1.0]) { phase in
-                        glowingStar(phase: phase)
-                    } animation: { _ in
-                        .easeInOut(duration: 3.2)
+        // The drawing never participates in layout. A phase animation on the
+        // whole view could animate its initial placement when a tab appeared.
+        Color.clear
+            .frame(width: size + 4, height: size + 4)
+            .overlay {
+                if active {
+                    if !reduceMotion, scenePhase == .active {
+                        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+                            let elapsed = max(0, context.date.timeIntervalSince(glowStartedAt))
+                            let phase = (1 - cos(elapsed * .pi / 3.2)) / 2
+                            glowingStar(phase: phase, emphasis: emphasis(at: elapsed))
+                        }
+                    } else {
+                        glowingStar(phase: 0.5)
                     }
                 } else {
-                    glowingStar(phase: 0.5)
+                    Image(systemName: "star")
+                        .font(.system(size: size, weight: .medium))
+                        .foregroundStyle(theme.accent.opacity(0.65))
                 }
-            } else {
-                Image(systemName: "star")
-                    .font(.system(size: size, weight: .medium))
-                    .foregroundStyle(theme.accent.opacity(0.65))
             }
-        }
-        .frame(width: size + 4, height: size + 4)
-        .allowsHitTesting(false)
-        .accessibilityElement(children: .ignore)
-        .accessibilityHidden(true)
+            // Only light changes over time; inherited animations must not move the star.
+            .transaction { transaction in
+                transaction.animation = nil
+                transaction.disablesAnimations = true
+            }
+            .onAppear { glowStartedAt = .now }
+            .onChange(of: glowReplay) { _, _ in glowStartedAt = .now }
+            .onChange(of: active) { _, isActive in
+                if isActive { glowStartedAt = .now }
+            }
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .ignore)
+            .accessibilityHidden(true)
     }
 
     private var silhouette: some View {
@@ -159,13 +185,20 @@ private struct StreakStar: View {
             .frame(width: size + 4, height: size + 4)
     }
 
-    private func glowingStar(phase: Double) -> some View {
+    /// A short rise followed by a smooth return to the idle glow, over 1.8 seconds.
+    private func emphasis(at elapsed: TimeInterval) -> Double {
+        let progress = elapsed < 0.16 ? elapsed / 0.16 : max(0, (1.8 - elapsed) / 1.64)
+        return progress * progress * (3 - 2 * progress)
+    }
+
+    private func glowingStar(phase: Double, emphasis: Double = 0) -> some View {
         ZStack {
             Circle()
-                .fill(RadialGradient(colors: [theme.accent.opacity(0.32), theme.secondaryAccent.opacity(0.12), .clear],
+                .fill(RadialGradient(colors: [theme.accent.opacity(0.32 + emphasis * 0.4),
+                                             theme.secondaryAccent.opacity(0.12 + emphasis * 0.2), .clear],
                                      center: .center, startRadius: 0, endRadius: size))
                 .frame(width: size * 2, height: size * 2)
-                .scaleEffect(0.85 + phase * 0.15)
+                .scaleEffect(0.85 + phase * 0.15 + emphasis * 0.35)
                 .opacity(0.65 + phase * 0.35)
 
             silhouette
@@ -180,10 +213,8 @@ private struct StreakStar: View {
                         .mask(silhouette)
                         .blendMode(.screen)
                 }
-                .shadow(color: theme.accent.opacity(0.35 + phase * 0.2), radius: 2 + phase * 2)
-                .rotationEffect(.degrees((phase - 0.5) * 5))
-                .scaleEffect(0.98 + phase * 0.04)
-                .offset(y: (0.5 - phase) * 0.6)
+                .shadow(color: theme.accent.opacity(0.35 + phase * 0.2 + emphasis * 0.35),
+                        radius: 2 + phase * 2 + emphasis * 5)
         }
         .frame(width: size + 4, height: size + 4)
     }

@@ -12,14 +12,26 @@ public struct GoalChange: Codable, Equatable, Sendable {
 }
 
 public struct GoalHistory: Codable, Equatable, Sendable {
-    public static let defaultGoal = 8_000
+    public static let defaultGoal = 6_000
     public private(set) var changes: [GoalChange]
-    public init(changes: [GoalChange] = []) { self.changes = changes }
+    public private(set) var initialGoal: Int
+    public init(changes: [GoalChange] = [], initialGoal: Int = Self.defaultGoal) {
+        self.changes = changes
+        self.initialGoal = (500...100_000).contains(initialGoal) ? initialGoal : Self.defaultGoal
+    }
+
+    private enum CodingKeys: String, CodingKey { case changes, initialGoal }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        // Older installations used 8,000 before their first dated change.
+        self.init(changes: try values.decode([GoalChange].self, forKey: .changes),
+                  initialGoal: try values.decodeIfPresent(Int.self, forKey: .initialGoal) ?? 8_000)
+    }
 
     public func value(on date: Date, calendar: Calendar = .current) -> Int {
         let day = calendar.startOfDay(for: date)
         return changes.filter { calendar.startOfDay(for: $0.effectiveDate) <= day && (500...100_000).contains($0.steps) }
-            .max { $0.effectiveDate < $1.effectiveDate }?.steps ?? Self.defaultGoal
+            .max { $0.effectiveDate < $1.effectiveDate }?.steps ?? initialGoal
     }
 
     public mutating func set(_ steps: Int, on date: Date = .now, calendar: Calendar = .current, modifiedAt: Date = .now) {
@@ -104,7 +116,7 @@ public struct StatisticsWidgetLayout: Codable, Equatable, Sendable {
     public var hidden: Set<StatisticsWidget>
     public var visible: [StatisticsWidget] { order.filter { !hidden.contains($0) } }
 
-    public init(order: [StatisticsWidget] = StatisticsWidget.allCases, hidden: Set<StatisticsWidget> = []) {
+    public init(order: [StatisticsWidget] = StatisticsWidget.allCases, hidden: Set<StatisticsWidget> = [.clock]) {
         var seen = Set<StatisticsWidget>()
         // Introduce the daily overview first for saved layouts, preserving existing choices.
         let suppliedOrder = order.contains(.dailyGoal) ? order : [.dailyGoal] + order
@@ -130,9 +142,9 @@ extension ActivityMetric {
         switch self {
         case .steps: Double(GoalHistory.defaultGoal)
         case .distance: 5_000
-        case .energy: 400
+        case .energy: 500
         case .exerciseTime: 30
-        case .floors: 10
+        case .floors: 5
         }
     }
 
@@ -143,6 +155,15 @@ extension ActivityMetric {
         case .energy: 10...10_000
         case .exerciseTime: 1...1_440
         case .floors: 1...1_000
+        }
+    }
+
+    public var goalIncrement: Double {
+        switch self {
+        case .steps, .distance: 500
+        case .energy: 50
+        case .exerciseTime: 5
+        case .floors: 1
         }
     }
 
@@ -262,14 +283,18 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     public var activity: WidgetActivityDetail?
     public var display: WidgetDisplayPreferences?
     public var history: WidgetHistory?
+    public var activityGoals: ActivityGoals?
     public init(updatedAt: Date = .now, timeZoneIdentifier: String = TimeZone.current.identifier,
                 today: ActivityDay, goal: Int, week: [ActivityDay], theme: WalkunoTheme, unit: DistanceUnit,
                 activity: WidgetActivityDetail? = nil, display: WidgetDisplayPreferences? = nil,
-                history: WidgetHistory? = nil) {
+                history: WidgetHistory? = nil, activityGoals: ActivityGoals? = nil) {
         self.updatedAt = updatedAt; self.timeZoneIdentifier = timeZoneIdentifier
         self.today = today; self.goal = goal; self.week = Array(week.sorted { $0.date < $1.date }.suffix(7))
         self.theme = theme; self.unit = unit; self.activity = activity
-        self.display = display; self.history = history
+        self.display = display; self.history = history; self.activityGoals = activityGoals
+    }
+    public func goal(for metric: ActivityMetric) -> Double {
+        metric == .steps ? Double(goal) : (activityGoals ?? .init()).value(for: metric)
     }
     public func isCurrent(now: Date = .now, calendar: Calendar = .current) -> Bool {
         calendar.isDate(today.date, inSameDayAs: now) && timeZoneIdentifier == calendar.timeZone.identifier

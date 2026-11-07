@@ -956,6 +956,126 @@ private struct WidgetDailyRhythm: View {
 }
 
 #if os(iOS)
+// MARK: - Daily goals, matching the five Horizon counters in Statistics
+
+struct WalkunoDailyGoalView: View {
+    var entry: WalkunoEntry
+    @Environment(\.walkunoWidgetFamily) private var family
+    private var large: Bool { family == .systemLarge }
+    private var theme: WalkunoTheme { entry.snapshot?.theme ?? .mint }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            WidgetHeader(theme: theme, title: L("goals.daily"))
+            if large {
+                GeometryReader { geometry in
+                    let width = max(0, (geometry.size.width - 16) / 3)
+                    VStack(spacing: 8) {
+                        goalRow(Array(ActivityMetric.allCases.prefix(3)), width: width)
+                        goalRow(Array(ActivityMetric.allCases.suffix(2)), width: width)
+                    }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            } else {
+                HStack(alignment: .top, spacing: 4) {
+                    ForEach(ActivityMetric.allCases) { metric in
+                        WidgetDailyGoalCounter(metric: metric, snapshot: entry.snapshot, large: false)
+                    }
+                }.frame(maxHeight: .infinity, alignment: .center)
+            }
+            WidgetUpdatedLabel(date: entry.snapshot?.updatedAt)
+        }
+        .privacySensitive()
+        .widgetURL(URL(string: "walkuno://statistics"))
+        .modifier(WidgetSurface(theme: theme))
+        .accessibilityElement(children: .contain)
+    }
+
+    private func goalRow(_ metrics: [ActivityMetric], width: CGFloat) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            ForEach(metrics) { metric in
+                WidgetDailyGoalCounter(metric: metric, snapshot: entry.snapshot, large: true)
+                    .frame(width: width)
+            }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct WidgetDailyGoalCounter: View {
+    var metric: ActivityMetric
+    var snapshot: WidgetSnapshot?
+    var large: Bool
+    private var theme: WalkunoTheme { snapshot?.theme ?? .mint }
+    private var unit: DistanceUnit { snapshot?.unit ?? .kilometers }
+    // As in Statistics, an absent measurement within a current snapshot is zero.
+    // With no current snapshot, keep the unavailable state visible until the app refreshes.
+    private var value: Double? { snapshot.map { metric.value(in: $0.today) ?? 0 } }
+    private var goal: Double { snapshot?.goal(for: metric) ?? metric.defaultGoal }
+    private var progress: CounterProgress { .init(value: value ?? 0, goal: goal) }
+
+    var body: some View {
+        VStack(spacing: 3) {
+            Color.clear.aspectRatio(1, contentMode: .fit)
+                .overlay {
+                    GeometryReader { geometry in
+                        let size = geometry.size.width
+                        let stroke = max(3, size * 0.055)
+                        ZStack {
+                            arc(1)
+                                .stroke(theme.accent.opacity(0.18), style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+                            arc(progress.fraction)
+                                .stroke(LinearGradient(colors: [theme.secondaryAccent, theme.accent],
+                                                       startPoint: .leading, endPoint: .trailing),
+                                        style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+                                .opacity((value ?? 0) > 0 ? 1 : 0)
+                            if progress.ratio > 1 {
+                                arc(progress.overflowFraction)
+                                    .stroke(progress.overflowLap.truncatingRemainder(dividingBy: 2) == 1
+                                            ? Color.white.opacity(0.88) : WalkunoStyle.ink.opacity(0.85),
+                                            style: StrokeStyle(lineWidth: stroke * 0.4, lineCap: .round))
+                            }
+                            Text(metric.clockNumber(value, unit: unit))
+                                .font(.system(size: size * 0.26, weight: .bold, design: .rounded))
+                                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.4)
+                                .frame(width: size * 0.7)
+                            Text(metric.clockUnit(unit))
+                                .font(.system(size: max(7, size * 0.11), weight: .medium, design: .rounded))
+                                .foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.6)
+                                .frame(width: size * 0.7)
+                                .offset(y: size * 0.28)
+                        }.padding(stroke)
+                    }
+                }
+                .widgetAccentable()
+            Text(L(metric.shortTitleKey))
+                .font(.system(size: large ? 12 : 9, weight: .semibold))
+                .foregroundStyle(theme.accent)
+            Text(metric.clockText(goal, unit: unit))
+                .font(.system(size: large ? 10 : 8)).monospacedDigit().foregroundStyle(.secondary)
+        }
+        .lineLimit(1).minimumScaleFactor(0.6)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(L(metric.titleKey)))
+        .accessibilityValue(Text(metric.clockText(value, unit: unit)) + Text(", ") +
+                            Text("goals.target \(metric.clockText(goal, unit: unit))"))
+    }
+
+    private func arc(_ fraction: Double) -> some Shape {
+        Circle().trim(from: 0, to: 2.0 / 3 * min(1, max(0, fraction))).rotation(.degrees(150))
+    }
+}
+
+struct WalkunoDailyGoalWidget: Widget {
+    let kind = "WalkunoDailyGoal"
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: WalkunoProvider()) { entry in
+            WidgetProGate(access: entry.access, date: entry.date) { WalkunoDailyGoalView(entry: entry) }
+        }
+        .configurationDisplayName("widget.dailyGoal.name").description("widget.dailyGoal.description")
+        .supportedFamilies([.systemMedium, .systemLarge])
+    }
+}
+
 // MARK: - At-a-glance dashboard
 
 struct WalkunoDashboardView: View {

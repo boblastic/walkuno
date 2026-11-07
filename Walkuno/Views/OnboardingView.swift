@@ -5,7 +5,7 @@ struct OnboardingView: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var step = 0
-    @State private var goal = 8000
+    @State private var goal = GoalHistory.defaultGoal
     @State private var connecting = false
     private var theme: WalkunoTheme { model.effectiveTheme }
     var body: some View {

@@ -371,6 +371,7 @@ struct ExplorerView: View {
                                     .font(.system(size: 10, weight: .semibold, design: .rounded)).monospacedDigit()
                                     .foregroundStyle(progress.map { $0 >= 1 } == true ? model.effectiveTheme.tint(for: scheme) : Color.secondary)
                                     .lineLimit(1).minimumScaleFactor(0.6)
+                                    .goalSurpassingStars(isActive: progress.map { $0 >= 1 } == true, theme: model.effectiveTheme)
                                 }
                                 .frame(maxWidth: .infinity, minHeight: 44)
                                 .contentShape(Rectangle())
@@ -398,7 +399,7 @@ struct ExplorerView: View {
                             .font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
                         CompactStepCounterFace(progress: month.progress,
                                                text: month.progress.map(calendarPercentageText) ?? "—",
-                                               theme: model.effectiveTheme, style: model.effectiveCounter)
+                                               theme: model.effectiveTheme, style: model.effectiveCounter, celebratesGoal: true)
                             .frame(height: 76)
                         HStack(spacing: 3) {
                             if let progress = month.progress, progress >= 1 {

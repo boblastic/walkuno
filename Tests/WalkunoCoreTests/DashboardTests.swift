@@ -179,7 +179,7 @@ struct DashboardTests {
         ], goals: .init(), earliest: earliest, now: now, calendar: calendar)
         #expect(activity.days.count == 27)
         #expect(activity.summary.total == 4_000)
-        #expect(activity.goal == 27 * 8_000)
+        #expect(activity.goal == 27 * GoalHistory.defaultGoal)
     }
 
     @Test func navigationHandlesMonthEndsAndBlocksFuturePeriods() {

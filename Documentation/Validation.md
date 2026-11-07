@@ -717,3 +717,50 @@ La galerie des réglages utilise des captures générées depuis les vues réell
 - Deux tests UI supplémentaires des réglages gratuits réussis : styles et effets désactivés, maintien d’Horizon / Étoiles et ouverture de Pro depuis le bouton dédié.
 
 Preuves locales : `/tmp/walkuno-widget-centered.xcresult`, `/tmp/walkuno-widget-centered-preview/`, `/tmp/walkuno-widget-centered-install.log`, `/tmp/walkuno-commit-core.log` et `/tmp/walkuno-commit-free-settings.xcresult`.
+
+
+## Widget iPhone Objectifs quotidiens — 7 novembre 2026
+
+- Nouvelle famille WidgetKit `WalkunoDailyGoal`, réservée à Pro comme les autres widgets : cinq compteurs Horizon en format moyen (une ligne) et grand (trois puis deux). Fond, marque, palette, unités, heure de mesure et dépassements suivent le style existant. Le toucher ouvre Statistiques.
+- Les quatre objectifs supplémentaires sont transmis dans le cache partagé avec compatibilité des anciens caches. Les mesures absentes d’un cache courant sont affichées à zéro comme dans la carte Statistiques ; sans cache courant, les valeurs restent indisponibles. Aucun nouvel accès Santé.
+- Galerie Réglages → Widgets : description et captures des deux tailles générées par la vue réelle, avec palette, unités et objectifs actifs. Les libellés sont partagés entre l’application et les extensions et traduits dans les sept langues.
+- 150 tests Foundation dans 14 suites réussis, dont la conservation des cinq objectifs et la lecture d’un cache sans `activityGoals` : `/tmp/walkuno-daily-goal-core.log`.
+- Compilation Debug pour simulateur des cibles iPhone, Watch et widgets réussie : `/tmp/walkuno-daily-goal-build.log`. Validation des 542 textes dans les sept langues et des ressources des quatre bundles, et `git diff --check` réussis.
+- Test UI de la galerie réussi sur iOS 27 : captures des deux nouveaux formats dans l’écran, absence de recadrage et parcours gratuit/Pro. Résultat : `/tmp/walkuno-daily-goal-gallery.xcresult`. Captures contrôlées visuellement : [moyen](Captures/Widgets-Objectifs-quotidiens-medium.png) et [grand](Captures/Widgets-Objectifs-quotidiens-large.png).
+- Ces captures utilisent ImageRenderer, comme le reste de la galerie. Le placement dans l’hôte WidgetKit d’un iPhone physique reste à vérifier après installation ; aucune livraison sur appareil physique n’a été effectuée pour cette modification.
+
+## Étoiles de dépassement et livraison iPhone/Watch — 7 novembre 2026, version 21
+
+- Les pourcentages d’objectif strictement supérieurs à 100 % dans les calendriers Explorer (jours et mois) et l’horloge des statistiques émettent huit petites étoiles, avec scintillement, déplacement vers l’extérieur et extinction en 1,6 seconde. L’effet reprend la palette, respecte Réduire les animations et ne redémarre pas à chaque pas. Aucun ajout sur l’accueil.
+- Compilation simulateur iPhone/Watch réussie : `/tmp/walkuno-stars-build.log`. Test UI de l’horloge réussi pour les cinq mesures ; test Explorer en échec dans le geste de défilement destiné à atteindre une cellule du calendrier. La validation UI Explorer reste partielle : `/tmp/walkuno-stars-ui-verified.xcresult`.
+- Version 1.0.0 (21) synchronisée dans les quatre cibles et le générateur. Compilation Debug signée réussie ; signatures strictes et profils embarqués vérifiés pour les quatre bundles. Les 542 textes et les autorisations Santé sont vérifiés dans les sept langues des quatre bundles compilés.
+- Mise à jour sans désinstallation installée et lancée, sans argument de démonstration, sur l’iPhone iBoblastic et l’Apple Watch de Damien. La première connexion d’installation Watch a expiré ; la seconde tentative a réussi. Les métadonnées relues sur les deux appareils confirment le build 21. Aucun contrôle visuel de l’animation sur matériel n’est revendiqué.
+
+Preuves : `/tmp/walkuno-device-21-build.log`, `/tmp/walkuno-device-21-iphone-{install,launch,after}.json`, `/tmp/walkuno-device-21-watch-install-retry.json` et `/tmp/walkuno-device-21-watch-{launch,after}.json`. `git diff --check` réussi.
+
+### Ajustement après livraison — accueil et seuil à 100 %
+
+- À la demande de l’utilisateur, les étoiles sont retirées du pourcentage de l’horloge des statistiques et activées sur le pourcentage de l’accueil, dans les cinq styles. Le seuil devient supérieur ou égal à 100 %, y compris dans les calendriers Explorer. L’effet est prolongé de 1,6 à 2,4 secondes, avec une durée de vie des particules étendue.
+- Le compteur conserve la même vue lorsque le remplissage se termine ; son horloge se met en pause au repos. Les étoiles peuvent ainsi finir leur mouvement sans interruption ni seconde émission lors du passage à la valeur fixe. Les aperçus de style et le compteur Watch ne reçoivent pas cette célébration de l’accueil iPhone.
+- Compilation simulateur iPhone/Watch réussie : `/tmp/walkuno-stars-home-build.log`. Deux tests UI réussis : galerie des cinq styles avec changements de période, défilement vertical sur le compteur d’accueil et ouverture du détail au toucher. Résultat : `/tmp/walkuno-stars-home-ui.xcresult`.
+- Capture vidéo du simulateur sur données de démonstration examinée, notamment le scintillement autour de 107 % et sa disparition : `/tmp/walkuno-stars-home-preview.mov`. `git diff --check` réussi. Cet ajustement n’a pas fait l’objet d’une nouvelle installation physique.
+
+### Livraison iPhone — 7 novembre 2026, version 22
+
+À la demande de l’utilisateur, les étoiles de l’accueil dès 100 %, leur durée de 2,4 secondes et leur retrait de l’horloge des statistiques sont livrés sur iBoblastic. Version 1.0.0 (22) synchronisée dans les quatre cibles et le générateur ; compilation Debug signée, signatures strictes, profils embarqués et traductions des quatre bundles vérifiés. Mise à jour sans désinstallation et lancement sans argument de démonstration réussis ; les métadonnées de l’iPhone confirment le build 22. Aucune installation directe sur la Watch n’a été demandée pendant cette livraison.
+
+Preuves : `/tmp/walkuno-device-22-build.log` et `/tmp/walkuno-device-22-iphone-{install,launch,after}.json`. Produits signés : `/tmp/walkuno-device-21/Build/Products/` (dossier de compilation réutilisé). `git diff --check` réussi.
+
+
+## Livraison iPhone/Watch et GitHub — 7 novembre 2026, version 23
+
+La version 1.0.0 (23) reprend les objectifs quotidiens compacts, leur widget iPhone et l’éditeur commun aux cinq objectifs. Les cartes des statistiques sont renommées « Les meilleurs scores » (titre fixe pour les quatre périodes) et « Tendance par période », avec les repères raccourcis « Précédente » et « Actuelle ». La célébration étoilée dès 100 % est étirée d’un facteur deux, y compris le mouvement, le scintillement et l’extinction des particules ; son cycle passe de 2,4 à 4,8 secondes.
+
+- 150 tests métier dans 14 suites réussis depuis un dossier de compilation temporaire neuf. Le premier essai dans le cache existant avait échoué à la signature du bundle de tests à cause d’attributs Finder ; aucun échec de test métier.
+- Compilation Debug signée des quatre composants en build 23 ; signatures strictes et profils embarqués vérifiés avec accès au trousseau. Les 542 textes et l’autorisation Santé sont validés dans les sept langues, y compris dans les quatre bundles compilés.
+- Mise à jour sans désinstallation sur l’iPhone ; les métadonnées relues confirment 1.0.0 (23). Le premier lancement automatique a été refusé parce que l’écran était verrouillé ; une nouvelle tentative a ensuite lancé l’application sans argument de démonstration.
+- Après un échec initial de montage du service de développement et plusieurs délais de connexion, la montre est redevenue joignable. Mise à jour directe sans désinstallation et lancement sans argument de démonstration réussis ; les métadonnées relues confirment 1.0.0 (23) sur la Watch également.
+- Trois scénarios UI réussis lors d’exécutions ciblées distinctes : les cinq styles de compteur et les périodes ; les mesures, tendances, historiques et le titre fixe des meilleurs scores pour les quatre périodes ; l’édition des cinq objectifs, leur reprise dans l’horloge et l’annulation depuis l’accueil. Les premières exécutions avaient échoué dans les gestes de défilement des tests puis dans le nettoyage du scénario des objectifs : ces tests ont été corrigés et les scénarios concernés ont ensuite réussi. Aucun code applicatif n’a changé après la compilation signée.
+- Les 155 fichiers applicatifs préparés dans l’index Git correspondent au manifeste des sources compilées.
+
+Preuves locales : `/tmp/walkuno-release-23-core.log`, `/tmp/walkuno-device-23-build.log`, `/tmp/walkuno-release-23-manifest.json`, `/tmp/walkuno-device-23-iphone-{install,launch,after}.json`, `/tmp/walkuno-device-23-iphone-launch-final.json`, `/tmp/walkuno-device-23-watch-install-connected.json`, `/tmp/walkuno-device-23-watch-{launch,after}.json`, `/tmp/walkuno-release-23-ui.xcresult` (compteurs), `/tmp/walkuno-release-23-ui-retry.xcresult` (statistiques), `/tmp/walkuno-release-23-goals-final.xcresult` (objectifs) et `/tmp/walkuno-release-23-devices-current.json` (état de connexion avant rétablissement).

@@ -3,6 +3,33 @@ import Testing
 @testable import WalkunoCore
 
 struct WidgetTests {
+    @Test func dailyGoalsUseSavedTargetsAndPreserveLegacySnapshots() throws {
+        var original = snapshot(at: date("2026-11-05T13:37:12Z"))
+        var goals = ActivityGoals()
+        for (metric, value): (ActivityMetric, Double) in [(.distance, 7500), (.energy, 650), (.exerciseTime, 45), (.floors, 15)] {
+            goals.set(value, for: metric)
+        }
+        original.activityGoals = goals
+        let data = try JSONEncoder().encode(original)
+        let restored = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+        #expect(restored == original)
+        #expect(restored.goal(for: .steps) == 8000)
+        #expect(restored.goal(for: .distance) == 7500)
+        #expect(restored.goal(for: .energy) == 650)
+        #expect(restored.goal(for: .exerciseTime) == 45)
+        #expect(restored.goal(for: .floors) == 15)
+
+        var legacy = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        legacy.removeValue(forKey: "activityGoals")
+        let old = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONSerialization.data(withJSONObject: legacy))
+        #expect(old.activityGoals == nil)
+        #expect(old.goal(for: .steps) == 8000)
+        for metric in ActivityMetric.allCases where metric != .steps {
+            #expect(old.goal(for: metric) == metric.defaultGoal)
+        }
+        #expect(old.today == original.today)
+    }
+
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "Europe/Paris")!
@@ -23,6 +50,13 @@ struct WidgetTests {
         var snapshot = snapshot(at: date("2026-11-05T13:37:12Z"))
         // Yesterday's full-day total deliberately differs from the exact partial-day total.
         snapshot.week = [.init(date: date("2026-11-04T00:00:00Z"), steps: 12000, meters: 9000)]
+        // The full current-hour bucket also includes steps after 14:37 local time.
+        // Neither summing it nor prorating it may replace the exact cutoff query.
+        snapshot.activity?.yesterdayHours = [
+            .init(date: date("2026-11-04T08:00:00Z"), steps: 3000),
+            .init(date: date("2026-11-04T13:00:00Z"), steps: 4000),
+            .init(date: date("2026-11-04T19:00:00Z"), steps: 5000)
+        ]
         #expect(snapshot.change(for: .steps, calendar: calendar) == 0.5)
         #expect(snapshot.change(for: .distance, calendar: calendar) == 0.5)
         #expect(snapshot.change(for: .floors, calendar: calendar) == -0.25)

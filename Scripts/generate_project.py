@@ -80,7 +80,7 @@ for name, bundle_id, sdk, product_type, sources, resources in specs:
     settings = dict(PRODUCT_BUNDLE_IDENTIFIER=bundle_id, PRODUCT_NAME='$(TARGET_NAME)', SDKROOT=sdk,
                     INFOPLIST_FILE='Config/' + name + '-Info.plist', GENERATE_INFOPLIST_FILE='NO',
                     CODE_SIGN_ENTITLEMENTS='Config/' + name + '.entitlements', CODE_SIGN_STYLE='Automatic',
-                    CURRENT_PROJECT_VERSION='20', MARKETING_VERSION='1.0.0', SWIFT_VERSION='5.0',
+                    CURRENT_PROJECT_VERSION='23', MARKETING_VERSION='1.0.0', SWIFT_VERSION='5.0',
                     SWIFT_EMIT_LOC_STRINGS='YES', ENABLE_USER_SCRIPT_SANDBOXING='YES',
                     TARGETED_DEVICE_FAMILY='4' if watch else '1',
                     SUPPORTED_PLATFORMS='watchos watchsimulator' if watch else 'iphoneos iphonesimulator',

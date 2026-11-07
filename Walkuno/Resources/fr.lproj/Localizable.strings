@@ -26,7 +26,7 @@
 "today.rhythm.accessibility" = "Activité de 0 à 24 heures, avec la veille en barres grises côte à côte";
 "today.peak %@" = "Votre moment le plus actif : %@";
 "today.comparison" = "Par rapport à hier";
-"today.comparison.note" = "Aujourd’hui en cours · hier complet";
+"today.comparison.note" = "Aujourd’hui et hier à la même heure";
 "today.updated %@" = "Dernière actualisation à %@";
 "today.cached" = "Dernières données en cache · actualisation en cours si possible";
 "metric.steps" = "Pas";
@@ -52,7 +52,7 @@
 "chart.hourly" = "Les pas, heure par heure";
 "chart.values" = "Consulter les valeurs horaires";
 "goal.title" = "Objectif quotidien";
-"goal.edit" = "Modifier l’objectif";
+"goal.edit" = "Modifier les objectifs";
 "goal.range" = "Entre 500 et 100 000 pas.";
 "goal.presets" = "Choisir un rythme";
 "goal.note" = "Un objectif à votre mesure, sans recommandation médicale. Les objectifs des journées passées sont conservés.";
@@ -228,18 +228,18 @@
 "insights.day.ahead" = "À cette heure, votre activité dépasse vos habitudes. Chaque effort compte !";
 "insights.day.behind" = "À cette heure, votre activité est en dessous de vos habitudes. La journée continue.";
 "insights.day.basis" = "Moyenne de %ld journées récentes avec des mesures horaires, à %@. Jusqu’à 7 journées sur les 28 derniers jours.";
-"insights.trends" = "Tendances";
+"insights.trends" = "Tendance par période";
 "insights.daily.average" = "Moyenne par jour";
 "insights.average" = "Moyenne";
-"insights.current" = "Période actuelle";
-"insights.previous" = "Période précédente";
+"insights.current" = "Actuelle";
+"insights.previous" = "Précédente";
 "insights.trend.note" = "Comparaison des journées terminées, sur le même nombre de jours calendaires. Les jours sans mesure sont exclus des moyennes.";
 "insights.trend.coverage" = "%ld jours observés sur la période actuelle · %ld sur la précédente.";
 "insights.weekday" = "Votre semaine type";
 "insights.best.weekday" = "Jour le plus actif";
 "insights.weekday.summary" = "Votre jour le plus actif est le %@ : %@ en moyenne (%@).";
 "insights.weekday.note" = "Moyenne de chaque jour de la semaine sur l’historique accessible, hors journée en cours.";
-"insights.records" = "Records";
+"insights.records" = "Les meilleurs scores";
 "insights.record" = "Record";
 "insights.chart.record %@" = "Record : %@";
 "insights.record.day" = "Meilleure journée";
@@ -547,6 +547,7 @@
 "statistics.widgets.instructions" = "Choisissez les widgets à afficher et déplacez les poignées pour changer leur ordre. Les modifications sont enregistrées automatiquement.";
 
 /* Configurable daily objectives and metric-aware activity clock. */
+"goals.title" = "Objectifs";
 "goals.daily" = "Objectifs quotidiens";
 "goals.target %@" = "Objectif %@";
 "goals.range %@ %@" = "Entre %@ et %@.";
@@ -579,3 +580,8 @@
 "widgets.gallery.unlocked" = "Tous vos widgets sont débloqués";
 "widgets.gallery.cta" = "Débloquer mes widgets avec Pro";
 "widgets.gallery.pro.note" = "Tous les widgets et complications sont réservés à Walkuno Pro.";
+
+/* Daily goals Home Screen widget */
+"widget.dailyGoal.name" = "Walkuno · Objectifs quotidiens";
+"widget.dailyGoal.description" = "Vos cinq objectifs du jour : pas, distance, énergie, exercice et étages.";
+"widgets.gallery.dailyGoal.body" = "Retrouvez les cinq compteurs de vos statistiques sur votre écran d’accueil. Suivez chaque mesure et son objectif dans les formats moyen et grand, avec votre palette et vos unités.";

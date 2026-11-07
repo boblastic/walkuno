@@ -1,59 +1,6 @@
 import SwiftUI
 import Charts
 
-extension ActivityMetric {
-    var shortTitleKey: String {
-        switch self {
-        case .energy: "metric.energy.short"
-        case .exerciseTime: "metric.exercise.short"
-        case .floors: "metric.floors.short"
-        case .steps, .distance: titleKey
-        }
-    }
-
-    var titleKey: String {
-        switch self {
-        case .steps: "metric.steps"
-        case .distance: "metric.distance"
-        case .energy: "metric.energy"
-        case .exerciseTime: "metric.exercise"
-        case .floors: "metric.floors"
-        }
-    }
-
-    func clockNumber(_ value: Double?, unit: DistanceUnit) -> String {
-        guard let value else { return "—" }
-        let number = self == .distance ? unit.convert(meters: value) : value
-        return number.formatted(.number.precision(.fractionLength(self == .distance ? 1 : 0)))
-    }
-
-    func clockUnit(_ unit: DistanceUnit) -> String {
-        switch self {
-        case .distance: unit.symbol
-        case .energy: "kcal"
-        case .exerciseTime: "min"
-        case .steps: L("unit.steps")
-        case .floors: L("unit.floors")
-        }
-    }
-
-    func clockText(_ value: Double?, unit: DistanceUnit) -> String {
-        clockNumber(value, unit: unit) + " " + clockUnit(unit)
-    }
-
-    func text(_ value: Double?, unit: DistanceUnit, signed: Bool = false) -> String {
-        guard let value else { return "—" }
-        let sign = signed && value > 0 ? "+" : ""
-        switch self {
-        case .distance: return sign + distanceText(value, unit: unit)
-        case .exerciseTime:
-            let minutes = Int(abs(value).rounded())
-            return (value < 0 ? "−" : sign) + String(format: "%d:%02d", minutes / 60, minutes % 60) + " h"
-        case .energy: return sign + value.formatted(.number.precision(.fractionLength(0))) + " kcal"
-        case .floors, .steps: return sign + value.formatted(.number.precision(.fractionLength(0)))
-        }
-    }
-}
 
 private struct InsightHeader: View {
     var title: String
@@ -185,62 +132,14 @@ private struct DailyComparisonCard: View {
                     dayLegend(title: "insights.today", value: comparison?.current, color: accent, dashed: false)
                     dayLegend(title: "insights.usual", value: comparison?.usual, color: baseline, dashed: true)
                 }
-                Chart {
-                    RuleMark(y: .value(L("goal.title"), model.preferences.goal(for: metric)))
-                            .foregroundStyle(Color.secondary.opacity(0.5))
-                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 4]))
-                            .annotation(position: .bottom, alignment: .trailing, spacing: 3) {
-                                Text("goals.target \(metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))")
-                                    .font(.caption2).foregroundStyle(.secondary)
-                            }
-                    ForEach(comparison?.usualDayPoints ?? []) { point in
-                        if let usual = point.usual {
-                            LineMark(x: .value(L("chart.hour"), point.hour), y: .value(L("insights.usual"), usual), series: .value("series", "usual"))
-                                .foregroundStyle(baseline).lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5, 4]))
-                        }
+                if let comparison {
+                    CounterPlayback(value: comparison.current == nil ? nil : 1, goal: 1,
+                                    animateEntry: true, animateUpdates: false, replayOnAppear: true) { progress, trail in
+                        activityChart(progress: progress, trail: trail)
                     }
-                    ForEach(comparison?.points ?? []) { point in
-                        if let current = point.current {
-                            LineMark(x: .value(L("chart.hour"), point.hour), y: .value(L("insights.today"), current), series: .value("series", "today"))
-                                .foregroundStyle(accent).lineStyle(StrokeStyle(lineWidth: 4, lineCap: .round))
-                        }
-                    }
-                    if let last = comparison?.points.last, let value = last.current {
-                        RuleMark(x: .value(L("chart.hour"), last.hour)).foregroundStyle(Color.secondary.opacity(0.2))
-                        PointMark(x: .value(L("chart.hour"), last.hour), y: .value(L("insights.today"), value))
-                            .foregroundStyle(accent).symbolSize(55)
-                    }
-                }
-                .chartXScale(domain: 0...24, range: .plotDimension(padding: 0))
-                .chartYScale(domain: 0...chartMaximum).chartYAxis(.hidden)
-                .chartXAxis {
-                    AxisMarks(values: [0, 6, 12, 18, 24]) { value in
-                        AxisGridLine().foregroundStyle(Color.primary.opacity(0.07))
-                        AxisValueLabel(anchor: value.index == 0 ? .topLeading : value.index == 4 ? .topTrailing : .top,
-                                       collisionResolution: .disabled) {
-                            if let hour = value.as(Int.self) { Text("\(hour):00").font(.caption2) }
-                        }
-                    }
-                }
-                .frame(height: 180)
-                .accessibilityIdentifier("insights.day.chart")
-                .overlay { if loading { ProgressView() } }
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel(Text("\(L(metric.titleKey)), \(L("insights.today")) \(metric.text(comparison?.current, unit: model.preferences.unit)), \(L("insights.usual")) \(metric.text(comparison?.usual, unit: model.preferences.unit))"))
-                .accessibilityValue(Text("goals.target \(metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))"))
-                .chartInspection("insights.day.chart", resetKey: metric.rawValue) { proxy in
-                    let usual = comparison?.usualDayPoints ?? []
-                    let current = comparison?.points ?? []
-                    let hours = Set(usual.map(\.hour) + current.map(\.hour)).sorted()
-                    return hours.compactMap { hour in
-                        let today = current.first { $0.hour == hour }?.current
-                        let baselineValue = usual.first { $0.hour == hour }?.usual
-                        guard today != nil || baselineValue != nil else { return nil }
-                        let label = String(format: "%d:%02d", Int(hour), Int((hour * 60).rounded()) % 60)
-                        let value = "\(L("insights.today")): \(metric.text(today, unit: model.preferences.unit))\n\(L("insights.usual")): \(metric.text(baselineValue, unit: model.preferences.unit))"
-                        return ChartInspectionPoint(proxy: proxy, x: hour, y: today ?? baselineValue,
-                                                    title: label, value: value, color: accent)
-                    }
+                    .id(metric)
+                } else {
+                    activityChart(progress: 0, trail: nil)
                 }
                 if failed {
                     Text("health.refresh.error").font(.subheadline).foregroundStyle(.secondary)
@@ -248,6 +147,110 @@ private struct DailyComparisonCard: View {
             }
         }
 
+    }
+
+    private struct ActivityPlotPoint: Identifiable {
+        var hour: Double
+        var value: Double
+        var id: Double { hour }
+    }
+
+    private var activityPoints: [ActivityPlotPoint] {
+        (comparison?.points ?? []).compactMap { point in
+            point.current.map { ActivityPlotPoint(hour: point.hour, value: $0) }
+        }
+    }
+
+    // Interpolate the leading segment so the trace advances smoothly between hourly samples.
+    private func activityPoint(at hour: Double, in points: [ActivityPlotPoint]) -> ActivityPlotPoint {
+        guard let first = points.first else { return .init(hour: 0, value: 0) }
+        guard hour > first.hour else { return first }
+        for (start, end) in zip(points, points.dropFirst()) where hour <= end.hour {
+            let fraction = (hour - start.hour) / (end.hour - start.hour)
+            return .init(hour: hour, value: start.value + (end.value - start.value) * fraction)
+        }
+        return points.last ?? first
+    }
+
+    private func activityChart(progress: Double, trail: CounterTrailFrame?) -> some View {
+        let points = activityPoints
+        let hour = (points.last?.hour ?? 0) * min(1, max(0, progress))
+        let revealedPoints = points.filter { $0.hour < hour }
+            + (points.isEmpty ? [] : [activityPoint(at: hour, in: points)])
+        return Chart {
+            RuleMark(y: .value(L("goal.title"), model.preferences.goal(for: metric)))
+                    .foregroundStyle(Color.secondary.opacity(0.5))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 4]))
+                    .annotation(position: .bottom, alignment: .trailing, spacing: 3) {
+                        Text("goals.target \(metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+            ForEach(comparison?.usualDayPoints ?? []) { point in
+                if let usual = point.usual {
+                    LineMark(x: .value(L("chart.hour"), point.hour), y: .value(L("insights.usual"), usual), series: .value("series", "usual"))
+                        .foregroundStyle(baseline).lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5, 4]))
+                }
+            }
+            ForEach(revealedPoints) { point in
+                LineMark(x: .value(L("chart.hour"), point.hour), y: .value(L("insights.today"), point.value), series: .value("series", "today"))
+                    .foregroundStyle(accent).lineStyle(StrokeStyle(lineWidth: 4, lineCap: .round))
+            }
+            if let last = comparison?.points.last, last.current != nil {
+                RuleMark(x: .value(L("chart.hour"), last.hour)).foregroundStyle(Color.secondary.opacity(0.2))
+                if let tip = revealedPoints.last {
+                    PointMark(x: .value(L("chart.hour"), tip.hour), y: .value(L("insights.today"), tip.value))
+                        .foregroundStyle(accent).symbolSize(55)
+                }
+            }
+        }
+        .chartXScale(domain: 0...24, range: .plotDimension(padding: 0))
+        .chartYScale(domain: 0...chartMaximum).chartYAxis(.hidden)
+        .chartXAxis {
+            AxisMarks(values: [0, 6, 12, 18, 24]) { value in
+                AxisGridLine().foregroundStyle(Color.primary.opacity(0.07))
+                AxisValueLabel(anchor: value.index == 0 ? .topLeading : value.index == 4 ? .topTrailing : .top,
+                               collisionResolution: .disabled) {
+                    if let hour = value.as(Int.self) { Text("\(hour):00").font(.caption2) }
+                }
+            }
+        }
+        .chartBackground { proxy in
+            GeometryReader { geometry in
+                if let anchor = proxy.plotFrame, let last = points.last, last.value > 0 {
+                    let frame = geometry[anchor]
+                    CounterStarlight(trail: trail, effect: model.effectiveEffect,
+                                     accent: accent, secondary: baseline) { fraction in
+                        let point = activityPoint(at: fraction * last.hour, in: points)
+                        return CGPoint(x: proxy.position(forX: point.hour) ?? 0,
+                                       y: proxy.position(forY: point.value) ?? frame.height)
+                    }
+                    .frame(width: frame.width, height: frame.height)
+                    .offset(x: frame.minX, y: frame.minY)
+                }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+        .frame(height: 180)
+        .accessibilityIdentifier("insights.day.chart")
+        .overlay { if loading { ProgressView() } }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("\(L(metric.titleKey)), \(L("insights.today")) \(metric.text(comparison?.current, unit: model.preferences.unit)), \(L("insights.usual")) \(metric.text(comparison?.usual, unit: model.preferences.unit))"))
+        .accessibilityValue(Text("goals.target \(metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))"))
+        .chartInspection("insights.day.chart", resetKey: metric.rawValue) { proxy in
+            let usual = comparison?.usualDayPoints ?? []
+            let current = comparison?.points ?? []
+            let hours = Set(usual.map(\.hour) + current.map(\.hour)).sorted()
+            return hours.compactMap { hour in
+                let today = current.first { $0.hour == hour }?.current
+                let baselineValue = usual.first { $0.hour == hour }?.usual
+                guard today != nil || baselineValue != nil else { return nil }
+                let label = String(format: "%d:%02d", Int(hour), Int((hour * 60).rounded()) % 60)
+                let value = "\(L("insights.today")): \(metric.text(today, unit: model.preferences.unit))\n\(L("insights.usual")): \(metric.text(baselineValue, unit: model.preferences.unit))"
+                return ChartInspectionPoint(proxy: proxy, x: hour, y: today ?? baselineValue,
+                                            title: label, value: value, color: accent)
+            }
+        }
     }
 
     private func dayLegend(title: String, value: Double?, color: Color, dashed: Bool) -> some View {
@@ -290,6 +293,7 @@ private struct TrendsCard: View {
     var metric: ActivityMetric
     @State private var period: TrendPeriod = .sevenDays
     @Environment(\.colorScheme) private var scheme
+    @ScaledMetric(relativeTo: .caption2) private var referenceLabelHeight = 20
     private var accent: Color { model.effectiveTheme.tint(for: scheme) }
     private var trend: ActivityTrend { ActivityStatistics.trend(days: days, metric: metric, period: period) }
     private func bars(_ slots: [TrendChartSlot]) -> [TrendBar] {
@@ -333,6 +337,15 @@ private struct TrendsCard: View {
         let trend = trend
         let slots = ActivityStatistics.trendChart(days: days, period: period)
         let chartBars = bars(slots)
+        let chartMaximum = max(chartBars.compactMap(\.value).max() ?? 0, trend.current.average ?? 0, trend.previous.average ?? 0, 1)
+        // Leave room at both ends for labels, including a zero-valued average.
+        let referencePadding = referenceLabelHeight + 4
+        let chartHeight = 175 + referencePadding * 2
+        // Allow for the date axis when estimating the distance between reference lines.
+        let referencePlotHeight = max(1, 175 - referenceLabelHeight)
+        let averagesAreClose = abs((trend.current.average ?? 0) - (trend.previous.average ?? 0)) / chartMaximum * referencePlotHeight < referenceLabelHeight + 8
+        let currentBelow = averagesAreClose && (trend.current.average ?? 0) < (trend.previous.average ?? 0)
+        let previousBelow = averagesAreClose && !currentBelow
         WalkunoCard {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .center, spacing: 12) {
@@ -368,13 +381,20 @@ private struct TrendsCard: View {
                     if let average = trend.current.average {
                         RuleMark(y: .value(L("insights.daily.average"), average)).foregroundStyle(accent)
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                            .annotation(position: currentBelow ? .bottom : .top, alignment: .leading, spacing: 4) {
+                                trendReferenceLabel(title: "insights.current", value: average, color: accent)
+                            }
                     }
                     if let average = trend.previous.average {
                         RuleMark(y: .value(L("insights.previous"), average)).foregroundStyle(Color.secondary)
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                            .annotation(position: previousBelow ? .bottom : .top, alignment: .leading, spacing: 4) {
+                                trendReferenceLabel(title: "insights.previous", value: average, color: .secondary)
+                            }
                     }
                 }
                 .chartXScale(domain: -0.5...max(0.5, Double(chartBars.count) - 0.5), range: .plotDimension(padding: 0))
+                .chartYScale(domain: 0...chartMaximum, range: .plotDimension(startPadding: referencePadding, endPadding: referencePadding))
                 .chartForegroundStyleScale(domain: ["previous", "current"], range: [Color.secondary.opacity(0.35), accent])
                 .chartLegend(.hidden)
                 .chartXAxis {
@@ -387,7 +407,7 @@ private struct TrendsCard: View {
                         }
                     }
                 }
-                .chartYAxis(.hidden).frame(height: 175)
+                .chartYAxis(.hidden).frame(height: chartHeight)
                 .accessibilityIdentifier("insights.trend.chart")
                 .chartInspection("insights.trend.chart", resetKey: "\(metric.rawValue)-\(period.rawValue)") { proxy in
                     chartBars.compactMap { bar in
@@ -397,35 +417,23 @@ private struct TrendsCard: View {
                     }
                 }
                 .overlay { if chartBars.allSatisfy({ $0.value == nil }) { Text("chart.no.data").font(.caption).foregroundStyle(.secondary) } }
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 16) {
-                        trendLegend(title: "insights.previous", value: trend.previous.average, color: .secondary)
-                            .fixedSize(horizontal: true, vertical: false)
-                        Spacer(minLength: 0)
-                        trendLegend(title: "insights.current", value: trend.current.average, color: accent)
-                            .fixedSize(horizontal: true, vertical: false)
-                    }
-                    VStack(spacing: 6) {
-                        trendLegend(title: "insights.previous", value: trend.previous.average, color: .secondary, expanded: true)
-                        trendLegend(title: "insights.current", value: trend.current.average, color: accent, expanded: true)
-                    }
-                }
             }
         }
         .onChange(of: model.purchases.isPremium) { _, premium in if !premium && period != .sevenDays { period = .sevenDays } }
     }
 
-    private func trendLegend(title: String, value: Double?, color: Color, expanded: Bool = false) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Label(L(title), systemImage: "circle.fill").font(.caption2).foregroundStyle(color)
-                .lineLimit(1).minimumScaleFactor(0.65)
-            if expanded { Spacer(minLength: 8) }
-            Text(metric.text(value, unit: model.preferences.unit)).font(.caption.weight(.semibold))
-                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.8).layoutPriority(1)
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(L(title)))
-        .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
+    private func trendReferenceLabel(title: String, value: Double, color: Color) -> some View {
+        Text(L(title) + " · " + metric.text(value, unit: model.preferences.unit))
+            .font(.caption2.weight(.semibold)).monospacedDigit()
+            .foregroundStyle(color)
+            .lineLimit(1).minimumScaleFactor(0.65)
+            .padding(.horizontal, 5).padding(.vertical, 2)
+            .background(WalkunoStyle.card(scheme), in: RoundedRectangle(cornerRadius: 4))
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(L(title)))
+            .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
+            .accessibilityIdentifier("insights.trend.reference." + title)
     }
 }
 
@@ -443,7 +451,7 @@ private struct ActivityRecordCard: View {
         let record = ActivityStatistics.record(days: days, metric: metric, period: effectivePeriod)
         WalkunoCard {
             VStack(alignment: .leading, spacing: 20) {
-                InsightHeader(title: "insights.record.\(effectivePeriod.rawValue)", metric: metric)
+                InsightHeader(title: "insights.records", metric: metric)
                 Picker("insights.records", selection: Binding(get: { effectivePeriod }, set: { value in
                     if value != .day && !model.purchases.isPremium { onPremium() } else { period = value }
                 })) {
@@ -653,8 +661,8 @@ private struct YearHistoryCard: View {
                     .accessibilityIdentifier("insights.history.orientation")
                 }
                 Picker("insights.aggregation", selection: $averages) {
-                    Text("insights.totals").tag(false)
                     Text("insights.averages").tag(true)
+                    Text("insights.totals").tag(false)
                 }.pickerStyle(.segmented).accessibilityIdentifier("insights.history.mode")
                 if !averages {
                     InsightValue(title: "insights.total", value: metric.text(MetricSummary(days: days, metric: metric).total, unit: model.preferences.unit))

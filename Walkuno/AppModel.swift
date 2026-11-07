@@ -88,6 +88,16 @@ final class AppModel {
     }
     var progress: Double { ActivityMath.progress(steps: today.steps, goal: goal) }
 
+    var todayChange: Double? {
+        guard let lastUpdated, Calendar.current.isDateInToday(lastUpdated) else { return nil }
+        guard !usingCache || loadedSnapshot?.isCurrent() == true else { return nil }
+        // Reuse the exact same-time baseline and refresh validation as the widgets.
+        let snapshot = WidgetSnapshot(updatedAt: lastUpdated, today: today, goal: goal,
+                                      week: [], theme: effectiveTheme, unit: preferences.unit,
+                                      activity: widgetActivity)
+        return snapshot.change(for: .steps)
+    }
+
     func activityClock(metric: ActivityMetric, data: DailyActivitySnapshot?) -> ActivityClockSnapshot {
         let calendar = Calendar.current
         let sampledAt = data?.sampledAt ?? lastUpdated.flatMap { calendar.isDateInToday($0) ? $0 : nil } ?? .now
@@ -297,6 +307,17 @@ final class AppModel {
         persist()
     }
 
+    func setGoals(_ values: [ActivityMetric: Double]) {
+        guard values.allSatisfy({ $0.key.acceptsGoal($0.value) }) else { return }
+        var updated = preferences
+        for (metric, value) in values where preferences.goal(for: metric) != value {
+            if metric == .steps { updated.goals.set(Int(value)) }
+            else { updated.activityGoals.set(value, for: metric) }
+        }
+        preferences = updated
+        persist()
+    }
+
     func persist(sync: Bool = true) {
         guard !isDemo else { return }
         LocalStore.save(preferences)
@@ -320,7 +341,8 @@ final class AppModel {
             goals: preferences.goals, includeYear: purchases.isPremium && hasLoadedWidgetHistory, now: lastUpdated ?? .now)
         let snapshot = WidgetSnapshot(updatedAt: lastUpdated ?? .now, today: today, goal: goal,
                                       week: days, theme: effectiveTheme, unit: preferences.unit, activity: widgetActivity,
-                                      display: .init(counter: effectiveCounter), history: history)
+                                      display: .init(counter: effectiveCounter), history: history,
+                                      activityGoals: preferences.activityGoals)
         do {
             try LocalStore.save(snapshot)
             loadedSnapshot = snapshot
@@ -339,7 +361,15 @@ final class AppModel {
                                exerciseMinutes: Double(steps) / 180, floors: Double(steps / 650))
         }
         hours = demoHours(on: .now)
-        lastUpdated = .now
+        let sampledAt = Date.now
+        lastUpdated = sampledAt
+        if let cutoff = WidgetActivityDetail.previousDayCutoff(for: sampledAt, calendar: calendar) {
+            let partial = demoHours(on: cutoff, through: cutoff).compactMap(\.steps)
+            widgetActivity = .init(sampledAt: sampledAt, previousCutoff: cutoff, todayHours: hours,
+                                   yesterdayHours: demoHours(on: cutoff),
+                                   yesterdayAtSameTime: .init(date: calendar.startOfDay(for: cutoff),
+                                                             steps: partial.isEmpty ? nil : partial.reduce(0, +)))
+        } else { widgetActivity = nil }
     }
     #endif
 

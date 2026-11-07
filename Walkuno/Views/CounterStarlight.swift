@@ -1,5 +1,84 @@
 import SwiftUI
 
+extension View {
+    /// A brief celebration attached to an objective percentage, without changing its layout.
+    func goalSurpassingStars(isActive: Bool, theme: WalkunoTheme) -> some View {
+        modifier(GoalSurpassingStars(isActive: isActive, theme: theme))
+    }
+}
+
+private struct GoalSurpassingStars: ViewModifier {
+    var isActive: Bool
+    var theme: WalkunoTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var started: Date?
+
+    private let durationMultiplier = 2.0
+    private var shouldAnimate: Bool { isActive && !reduceMotion && scenePhase == .active }
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if let started, shouldAnimate {
+                TimelineView(.animation(minimumInterval: 1.0 / 30)) { timeline in
+                    Canvas { context, size in
+                        let elapsed = timeline.date.timeIntervalSince(started) / durationMultiplier
+                        let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                        // Padding leaves room for the stars while the label keeps its original bounds.
+                        let radiusX = max(4, (size.width - 36) / 2)
+                        let radiusY = max(4, (size.height - 36) / 2)
+                        for index in 0..<8 {
+                            let age = elapsed - Double(index % 4) * 0.10
+                            let life = 1.6 + Double(index % 3) * 0.15
+                            guard age >= 0, age < life else { continue }
+                            let t = age / life
+                            let angle = Double(index) * .pi / 4 + 0.18
+                            let flight = (10 + Double(index % 3) * 3) * (1 - pow(1 - t, 2))
+                            let point = CGPoint(x: center.x + cos(angle) * (radiusX + 3 + flight),
+                                                y: center.y + sin(angle) * (radiusY + 3 + flight))
+                            let shimmer = 0.75 + 0.25 * sin(age * 23 + Double(index))
+                            let opacity = min(1, age / 0.08) * pow(1 - t, 1.2) * shimmer
+                            let half = (2.4 + Double(index % 3) * 0.55) * (1 - t * 0.45)
+                            var star = Path()
+                            star.move(to: CGPoint(x: 0, y: -half))
+                            star.addQuadCurve(to: CGPoint(x: half * 0.75, y: 0), control: CGPoint(x: half * 0.12, y: -half * 0.12))
+                            star.addQuadCurve(to: CGPoint(x: 0, y: half), control: CGPoint(x: half * 0.12, y: half * 0.12))
+                            star.addQuadCurve(to: CGPoint(x: -half * 0.75, y: 0), control: CGPoint(x: -half * 0.12, y: half * 0.12))
+                            star.addQuadCurve(to: CGPoint(x: 0, y: -half), control: CGPoint(x: -half * 0.12, y: -half * 0.12))
+                            star.closeSubpath()
+                            var particle = context
+                            particle.opacity = opacity
+                            particle.translateBy(x: point.x, y: point.y)
+                            particle.rotate(by: .radians(t * 0.8 + angle))
+                            let halo = half * 2.2
+                            particle.fill(Path(ellipseIn: CGRect(x: -halo, y: -halo, width: halo * 2, height: halo * 2)),
+                                          with: .radialGradient(Gradient(colors: [theme.accent.opacity(0.3), .clear]),
+                                                                center: .zero, startRadius: 0, endRadius: halo))
+                            particle.fill(star, with: .linearGradient(Gradient(colors: [.white, theme.accent, theme.secondaryAccent]),
+                                                                      startPoint: CGPoint(x: 0, y: -half), endPoint: CGPoint(x: 0, y: half)))
+                        }
+                    }
+                }
+                .padding(-18)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            }
+        }
+        // A Boolean trigger avoids replaying the burst for every step above the objective.
+        .task(id: shouldAnimate) {
+            started = nil
+            guard shouldAnimate else { return }
+            started = .now
+            do {
+                try await Task.sleep(for: .seconds(2.4 * durationMultiplier))
+                guard !Task.isCancelled else { return }
+                started = nil
+            } catch { return }
+        }
+        .onDisappear { started = nil }
+    }
+}
+
 /// Four materials share the counter's finite playback and historical positions.
 /// The animation driver supplies time; no clock or decorative layer survives at rest.
 struct CounterStarlight: View {

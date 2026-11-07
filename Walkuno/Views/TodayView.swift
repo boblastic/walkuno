@@ -156,6 +156,7 @@ struct TodayView: View {
                 if period == .day { hourlyCard } else { periodSummary }
                 HStack(spacing: 12) {
                     Button { showGoal = true } label: { Label("goal.edit", systemImage: "scope").frame(maxWidth: .infinity) }
+                        .accessibilityIdentifier("today.goals.edit")
                     Button { showShare = true } label: { Label("share.title", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity) }
                         .disabled(activity.summary.total == nil)
                 }.buttonStyle(.bordered).controlSize(.large).font(.subheadline)
@@ -214,7 +215,7 @@ struct TodayView: View {
             current: AnimatedStepCounter(steps: activity.summary.total, goal: activity.goal, title: title,
                                           theme: model.effectiveTheme, style: model.effectiveCounter, effect: model.effectiveEffect,
                                           distance: distanceText(for: activity), replay: counterReplay,
-                                          animateEntry: true, animateUpdates: true)
+                                          animateEntry: true, animateUpdates: true, celebratesGoal: true)
                 .id("\(period.rawValue)-\(activity.interval.start.timeIntervalSinceReferenceDate)")
                 .frame(height: counterHeight),
             previous: preparedCounter(pageWindow?.previous), next: preparedCounter(pageWindow?.next), paging: paging)
@@ -250,7 +251,7 @@ struct TodayView: View {
                 // Match the incoming counter's first frame: never reveal its target before a replay.
                 StepCounterFace(displayedSteps: !reduceMotion
                                     ? 0 : Double(page.activity.summary.total ?? 0),
-                                  hasSteps: page.activity.summary.total != nil, goal: page.activity.goal,
+                                  hasSteps: page.activity.summary.total != nil, goal: Double(page.activity.goal),
                                   title: title(for: page.anchor, activity: page.activity), theme: model.effectiveTheme,
                                   style: model.effectiveCounter, effect: model.effectiveEffect,
                                   distance: distanceText(for: page.activity))
@@ -318,7 +319,9 @@ struct TodayView: View {
     }
 
     private var comparisonBadge: some View {
-        let change = ActivityMath.change(current: activity.summary.total, previous: previousSteps)
+        let change = period == .day && isCurrentPeriod
+            ? model.todayChange
+            : ActivityMath.change(current: activity.summary.total, previous: previousSteps)
         let value = change.map {
             $0.formatted(.percent.precision(.fractionLength(0)).sign(strategy: .always(includingZero: false)))
         }
@@ -645,7 +648,7 @@ private struct DailyRhythmChart: View {
                     }
                     if let currentHour = rhythm.currentHour {
                         RuleMark(x: .value(L("today.rhythm.now"), currentHour))
-                            .foregroundStyle(accent.opacity(0.65))
+                            .foregroundStyle(.secondary)
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
                             .accessibilityLabel(Text("today.rhythm.now"))
                     }

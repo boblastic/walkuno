@@ -247,3 +247,57 @@ func distanceText(_ meters: Double?, unit: DistanceUnit) -> String {
     guard let meters else { return "—" }
     return unit.convert(meters: meters).formatted(.number.precision(.fractionLength(1))) + " " + unit.symbol
 }
+
+extension ActivityMetric {
+    var shortTitleKey: String {
+        switch self {
+        case .energy: "metric.energy.short"
+        case .exerciseTime: "metric.exercise.short"
+        case .floors: "metric.floors.short"
+        case .steps, .distance: titleKey
+        }
+    }
+
+    var titleKey: String {
+        switch self {
+        case .steps: "metric.steps"
+        case .distance: "metric.distance"
+        case .energy: "metric.energy"
+        case .exerciseTime: "metric.exercise"
+        case .floors: "metric.floors"
+        }
+    }
+
+    func clockNumber(_ value: Double?, unit: DistanceUnit) -> String {
+        guard let value else { return "—" }
+        let number = self == .distance ? unit.convert(meters: value) : value
+        return number.formatted(.number.precision(.fractionLength(self == .distance ? 1 : 0)))
+    }
+
+    func clockUnit(_ unit: DistanceUnit) -> String {
+        switch self {
+        case .distance: unit.symbol
+        case .energy: "kcal"
+        case .exerciseTime: "min"
+        case .steps: L("unit.steps")
+        case .floors: L("unit.floors")
+        }
+    }
+
+    func clockText(_ value: Double?, unit: DistanceUnit) -> String {
+        clockNumber(value, unit: unit) + " " + clockUnit(unit)
+    }
+
+    func text(_ value: Double?, unit: DistanceUnit, signed: Bool = false) -> String {
+        guard let value else { return "—" }
+        let sign = signed && value > 0 ? "+" : ""
+        switch self {
+        case .distance: return sign + distanceText(value, unit: unit)
+        case .exerciseTime:
+            let minutes = Int(abs(value).rounded())
+            return (value < 0 ? "−" : sign) + String(format: "%d:%02d", minutes / 60, minutes % 60) + " h"
+        case .energy: return sign + value.formatted(.number.precision(.fractionLength(0))) + " kcal"
+        case .floors, .steps: return sign + value.formatted(.number.precision(.fractionLength(0)))
+        }
+    }
+}

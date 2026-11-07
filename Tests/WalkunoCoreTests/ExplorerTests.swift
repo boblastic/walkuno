@@ -124,7 +124,7 @@ struct ExplorerTests {
         let jan = calendar.startOfDay(for: date("2026-01-10T12:00:00Z"))
         let feb = calendar.startOfDay(for: date("2026-02-10T12:00:00Z"))
         let march = calendar.startOfDay(for: now)
-        var goals = GoalHistory()
+        var goals = GoalHistory(initialGoal: 8_000)
         goals.set(4_000, on: jan, calendar: calendar)
         goals.set(10_000, on: feb, calendar: calendar)
         let page = ExplorerActivity(period: .year, anchor: now, available: [
@@ -143,7 +143,7 @@ struct ExplorerTests {
         let january = calendar.startOfDay(for: date("2026-01-01T12:00:00Z"))
         let february = calendar.startOfDay(for: date("2026-02-01T12:00:00Z"))
         let march = calendar.startOfDay(for: date("2026-03-01T12:00:00Z"))
-        var goals = GoalHistory()
+        var goals = GoalHistory(initialGoal: 8_000)
         goals.set(10_000, on: february, calendar: calendar)
         let days: [ActivityDay] = [
             .init(date: january, steps: 248_000), // One day can compensate for the rest of the month.
