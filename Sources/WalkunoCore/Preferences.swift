@@ -95,7 +95,7 @@ public enum CounterEffect: String, CaseIterable, Codable, Identifiable, Sendable
 }
 
 public enum StatisticsWidget: String, CaseIterable, Codable, Identifiable, Sendable {
-    case clock, day, trends, history, records
+    case dailyGoal, clock, day, trends, history, records
     public var id: String { rawValue }
 }
 
@@ -106,7 +106,9 @@ public struct StatisticsWidgetLayout: Codable, Equatable, Sendable {
 
     public init(order: [StatisticsWidget] = StatisticsWidget.allCases, hidden: Set<StatisticsWidget> = []) {
         var seen = Set<StatisticsWidget>()
-        self.order = (order + StatisticsWidget.allCases).filter { seen.insert($0).inserted }
+        // Introduce the daily overview first for saved layouts, preserving existing choices.
+        let suppliedOrder = order.contains(.dailyGoal) ? order : [.dailyGoal] + order
+        self.order = (suppliedOrder + StatisticsWidget.allCases).filter { seen.insert($0).inserted }
         self.hidden = hidden
     }
 

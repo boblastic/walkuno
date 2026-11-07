@@ -239,6 +239,8 @@
 "insights.weekday.summary" = "最も活動的な曜日は%@です。平均 %@（%@）。";
 "insights.weekday.note" = "利用可能な履歴の曜日ごとの平均です。今日は含みません。";
 "insights.records" = "記録";
+"insights.record" = "最高記録";
+"insights.chart.record %@" = "最高記録：%@";
 "insights.record.day" = "最高の1日";
 "insights.record.week" = "最高の週";
 "insights.record.month" = "最高の月";
@@ -387,6 +389,8 @@
 
 "widget.chart.hourly" = "1時間ごとの歩数";
 "widget.chart.goalTracking" = "目標の進捗";
+"widget.goal.currentValue" = "現在の値";
+"widget.goal.usualValue" = "通常の値";
 "widget.charts.configuration" = "Walkunoのグラフ";
 "widget.charts.name" = "Walkuno・グラフ";
 "widget.charts.description" = "過去24時間、今日の累計歩数と普段の比較、または過去7日間を表示します。";
@@ -503,8 +507,28 @@
 "motivation.message.progressing" = "目標に届く前でも、最近の積み重ねには価値があります。";
 "motivation.message.easing" = "過去の日々を取り戻そうとせず、ゆっくり再開できます。";
 "motivation.message.nearGoal" = "目標はもうすぐです。気が向いたら、短い散歩もよさそうです。";
-"motivation.message.achieved" = "今日もよく歩きました。達成を喜びましょう。";
+"motivation.message.achieved" = "目標を達成しました。ここまでの歩みを喜びましょう。";
+"motivation.message.exceeded" = "目標を超えました。ここまで歩いた自分をねぎらいましょう。";
+"motivation.message.farExceeded" = "目標を大きく超えました。たくさん歩いた今日の自分に拍手を送りましょう。";
 "motivation.message.evening" = "一日の終わりはゆっくりと。これまでの一歩一歩が大切です。";
+"motivation.message.morningFarAheadNearGoal" = "今朝はこの時間の普段の歩数を大きく上回り、もう目標が近づいています。";
+"motivation.message.morningAheadNearGoal" = "今朝は普段のペースを上回り、すでに目標に近づいています。";
+"motivation.message.morningNearGoal" = "今朝はもう目標が近づいています。自分のペースで重ねた歩みを喜びましょう。";
+"motivation.message.aheadNearGoal" = "目標が近づき、この時間の普段のペースも上回っています。ここまでの歩みに拍手を。";
+"motivation.message.eveningNearGoal" = "今夜は目標まであと少しです。無理をせず、ここまでの一歩一歩を大切にしましょう。";
+"motivation.message.morningAchieved" = "今朝はもう目標を達成しました。すてきな一日の始まりに拍手を送りましょう。";
+"motivation.message.morningExceeded" = "今朝はもう目標を超えました。ここまで歩いた自分をねぎらいましょう。";
+"motivation.message.morningFarExceeded" = "今朝はもう目標を大きく超えました。十分に歩いた自分をねぎらいましょう。";
+"motivation.message.consistentNearGoal" = "ここ数日の積み重ねが続いています。今日も目標に近づいています。";
+"motivation.message.consistentAchieved" = "ここ数日に続き、今日も目標を達成しました。日々の積み重ねに拍手を。";
+"motivation.message.morningFarAhead" = "今朝はこの時間の普段の歩数を大きく上回っています。すてきな歩み出しです。";
+"motivation.message.morningAhead" = "今朝は普段のペースを上回っています。ここまでの歩みを喜びましょう。";
+"motivation.message.ahead" = "この時間の普段のペースを上回っています。ここまでの一歩一歩が大切です。";
+"motivation.message.progressingAhead" = "最近の前進が今日にもつながり、この時間の普段のペースを上回っています。";
+"motivation.message.behindGentle" = "今日はこの時間の普段の歩数より少なめです。取り戻そうとせず、自分のペースを大切に。";
+"motivation.message.morningStarting" = "今朝も自分のペースで。一歩一歩の積み重ねが大切です。";
+"motivation.message.afternoonSteady" = "今日の午後は、気が向いたら短い散歩を楽しむのもよさそうです。";
+"motivation.message.eveningSteady" = "今夜はここまでの歩みをねぎらいましょう。一歩一歩に意味があります。";
 "motivation.action %@" = "気が向いたら、あと%@歩";
 "motivation.basis %ld %ld" = "目標達成は%ld日。直近の終了した7日間で、計測のある%ld日を対象にしています。";
 "motivation.average %@ %ld" = "最近の平均：%@歩（計測のある%ld日）。";

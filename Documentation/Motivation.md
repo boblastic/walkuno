@@ -13,12 +13,44 @@ En français, Walkuno utilise le vouvoiement dans toute l’interface, avec un t
 - Une tendance est présentée avec au moins quatre jours mesurés par fenêtre et une moyenne précédente strictement positive. Une hausse d’au moins 10 % valorise la progression, même si peu d’objectifs sont atteints. Une baisse d’au moins 15 %, ou peu d’objectifs atteints sans progression établie, conduit à une reprise plus douce.
 - La comparaison à la même heure réutilise `WidgetActivityDetail.usual` : au moins trois références, jusqu’à sept jours récents parmi les vingt-huit derniers, requêtes arrêtées à la même heure locale. Elle est omise si les données horaires et quotidiennes ne proviennent pas de la même actualisation, si le cache disque est utilisé ou si l’actualisation date de plus de deux heures. L’heure de la mesure est précisée. La tolérance est le maximum entre 300 pas et 15 % de la référence.
 - Le palier est plafonné à 1 000 pas supplémentaires, ou 500 lors d’une reprise, sans dépasser les pas restant vers l’objectif. Il disparaît lorsque l’objectif est atteint et entre 22 h et 6 h. Aucun objectif, paramètre ou rappel n’est modifié.
+- L’encouragement distingue la proximité de l’objectif (dès 80 %, en journée), l’objectif atteint, l’objectif dépassé et l’objectif largement dépassé (dès 150 %). Les réussites restent célébrées le soir, sans proposer de pas supplémentaires. Chaque situation possède une phrase locale dans les sept langues et peut être reformulée par Apple Intelligence.
+
+## Encouragements contextuels
+
+La phrase locale et la phrase fournie à Apple Intelligence partagent le même contexte. Les 18 variantes croisent l’heure locale, l’avancement vers l’objectif, le rythme habituel à la même heure et les jours récents. Elles restent disponibles sans génération.
+
+| Scénario | Exemple de formulation française |
+| --- | --- |
+| Matin, objectif proche et activité au moins triple de la référence | Ce matin, vous marchez bien plus que d’habitude à cette heure et votre objectif est déjà tout proche. |
+| Matin, objectif proche et rythme en avance | Ce matin, vous êtes en avance sur votre rythme habituel et déjà proche de votre objectif. |
+| Matin, objectif proche sans avance établie | Votre objectif est déjà proche ce matin ; appréciez les pas accomplis à votre rythme. |
+| Objectif proche et rythme en avance, après le matin | Vous êtes proche de votre objectif et en avance sur votre rythme habituel à cette heure ; bravo pour cet élan. |
+| Soir, objectif proche | Ce soir, vous êtes proche de votre objectif ; les pas déjà faits comptent, sans pression pour la suite. |
+| Objectif atteint le matin | Votre objectif est déjà atteint ce matin ; bravo pour ce beau début de journée. |
+| Objectif dépassé le matin | Votre objectif est déjà dépassé ce matin ; profitez du chemin parcouru. |
+| Objectif largement dépassé le matin | Vous avez déjà largement dépassé votre objectif ce matin ; bravo, sans besoin d’en faire davantage. |
+| Objectif proche et régularité récente | Votre régularité des derniers jours se poursuit ; vous êtes proche de votre objectif. |
+| Objectif atteint et régularité récente | Encore un objectif atteint, dans la continuité des derniers jours ; bravo pour votre régularité. |
+| Matin très en avance, objectif encore éloigné | Ce matin, vous marchez bien plus que d’habitude à cette heure ; bravo pour ce bel élan. |
+| Matin en avance, objectif encore éloigné | Ce matin, vous êtes en avance sur votre rythme habituel ; appréciez ce bel élan. |
+| En avance à la même heure, après le matin | Vous êtes en avance sur votre rythme habituel à cette heure ; chaque pas déjà fait compte. |
+| Progression hebdomadaire et avance aujourd’hui | Vos progrès récents se prolongent aujourd’hui ; vous êtes en avance sur votre rythme habituel à cette heure. |
+| Activité plus calme à la même heure, objectif encore éloigné | Votre journée est plus calme que d’habitude à cette heure ; avancez à votre rythme, sans rien rattraper. |
+| Matin sans autre contexte établi | Ce matin, avancez à votre rythme ; chaque petit pas compte. |
+| Après-midi sans autre contexte établi | Cet après-midi, une petite marche reste une option, si vous en avez envie. |
+| Soir sans autre contexte établi | Ce soir, appréciez les pas déjà faits ; chaque petit pas compte. |
+
+Le matin va de 6 h à midi, l’après-midi de midi à 18 h, le soir de 18 h à 22 h. De 22 h à 6 h, la phrase de fin de journée est conservée, sauf si l’objectif est déjà atteint ou dépassé. La réussite et la proximité de l’objectif passent avant les messages de rythme. Le matin, l’avance passe avant la régularité. En dehors du matin, une avance près de l’objectif passe avant la régularité, puis vient la variante du soir. Une tendance hebdomadaire établie conserve sa phrase lorsqu’aucune comparaison horaire ne justifie un message plus précis.
+
+L’avance marquée du matin demande au moins trois fois la référence horaire, une référence d’au moins 500 pas et une avance dépassant la tolérance habituelle. Toutes les affirmations de rythme utilisent les contrôles de fraîcheur et de couverture décrits plus haut ; une référence absente, périmée ou insuffisante n’autorise aucune comparaison. La régularité demande au moins quatre objectifs atteints parmi les sept derniers jours terminés. Elle ne suppose pas une série de jours consécutifs.
+
+Le contexte fait partie de la clé de formulation : franchir le seuil d’avance marquée invalide le texte même au sein d’une tranche de 500 pas. Le changement de période et la péremption des références sont également réévalués. Les nouveaux scénarios changent uniquement la phrase, pas les calculs des mesures ou du palier facultatif.
 
 ## Apple Intelligence
 
 `Walkuno/MotivationWriter.swift` utilise explicitement `SystemLanguageModel.default` avec Foundation Models à partir d’iOS 26. La disponibilité et la langue de l’application sont contrôlées avant chaque nouvelle tentative. Les versions antérieures, appareils incompatibles, erreurs, refus et réponses rejetées conservent immédiatement les textes locaux.
 
-Seuls un encouragement traduit et des catégories de situation, tendance et rythme sont fournis au modèle. Aucun historique brut, identifiant, valeur de mesure ou date précise n’est nécessaire au prompt. Le modèle reformule une phrase ; les chiffres et le palier restent calculés et affichés par l’app. La génération utilise une structure `@Generable`, des instructions limitant son rôle et un contrôle de longueur, chiffres, liens, balisage et caractères de contrôle. Ce contrôle de forme ne prouve pas à lui seul la pertinence sémantique d’une phrase.
+Seuls un encouragement traduit et des catégories de situation, de contexte, de moment de la journée, de tendance et de rythme sont fournis au modèle. Aucun historique brut, identifiant, valeur de mesure ou date précise n’est nécessaire au prompt. Le modèle reformule une phrase en conservant son contexte ; les chiffres et le palier restent calculés et affichés par l’app. La génération utilise une structure `@Generable`, des instructions limitant son rôle et un contrôle de longueur, chiffres, liens, balisage et caractères de contrôle. Ce contrôle de forme ne prouve pas à lui seul la pertinence sémantique d’une phrase.
 
 Une seule réponse, ou l’absence de réponse en cas d’indisponibilité, est conservée en mémoire. La clé évolue avec la journée, le fuseau, la langue, les tranches de six heures, les paliers de 500 pas, l’objectif et le contexte analysé. Les chiffres visibles restent actualisés indépendamment de cette clé. Un réveil de la carte toutes les cinq minutes permet de réévaluer le moment de la journée et la fraîcheur des données. La génération se limite au premier plan ; les résultats annulés sont ignorés. Aucune notification n’est ajoutée.
 

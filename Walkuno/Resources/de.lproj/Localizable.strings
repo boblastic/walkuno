@@ -239,6 +239,8 @@
 "insights.weekday.summary" = "Dein aktivster Wochentag ist %@: durchschnittlich %@ (%@).";
 "insights.weekday.note" = "Durchschnitt je Wochentag über den verfügbaren Verlauf, ohne den heutigen Tag.";
 "insights.records" = "Rekorde";
+"insights.record" = "Rekord";
+"insights.chart.record %@" = "Rekord: %@";
 "insights.record.day" = "Bester Tag";
 "insights.record.week" = "Beste Woche";
 "insights.record.month" = "Bester Monat";
@@ -387,6 +389,8 @@
 
 "widget.chart.hourly" = "Schritte pro Stunde";
 "widget.chart.goalTracking" = "Zielverfolgung";
+"widget.goal.currentValue" = "Aktueller Wert";
+"widget.goal.usualValue" = "Üblicher Wert";
 "widget.charts.configuration" = "Deine Walkuno-Diagramme";
 "widget.charts.name" = "Walkuno · Diagramme";
 "widget.charts.description" = "Die letzten 24 Stunden, die kumulierten Schritte heute im Vergleich zu deinen Gewohnheiten oder die letzten sieben Tage.";
@@ -503,8 +507,28 @@
 "motivation.message.progressing" = "Deine jüngsten Fortschritte zählen, auch bevor du dein Ziel erreichst.";
 "motivation.message.easing" = "Du kannst behutsam wieder anfangen, ohne frühere Tage nachzuholen.";
 "motivation.message.nearGoal" = "Du bist nahe am Ziel; ein kleiner Spaziergang ist eine Möglichkeit, wenn du magst.";
-"motivation.message.achieved" = "Gut gemacht mit den heutigen Schritten, freue dich über das Erreichte.";
+"motivation.message.achieved" = "Dein Ziel ist erreicht; freue dich über das, was du geschafft hast.";
+"motivation.message.exceeded" = "Du hast dein Ziel übertroffen; freue dich über deinen zurückgelegten Weg.";
+"motivation.message.farExceeded" = "Du hast dein Ziel weit übertroffen; toll, was du heute beim Gehen geschafft hast.";
 "motivation.message.evening" = "Dein Tag darf ruhig ausklingen; jeder bereits gegangene Schritt zählt.";
+"motivation.message.morningFarAheadNearGoal" = "Du bist heute Morgen viel mehr gegangen als sonst um diese Zeit und deinem Ziel schon ganz nah.";
+"motivation.message.morningAheadNearGoal" = "Du bist heute Morgen deinem üblichen Tempo voraus und deinem Ziel schon nah.";
+"motivation.message.morningNearGoal" = "Dein Ziel ist heute Morgen schon nah; freue dich über die Schritte in deinem eigenen Tempo.";
+"motivation.message.aheadNearGoal" = "Du bist deinem Ziel nah und deinem üblichen Tempo um diese Zeit voraus; gut gemacht.";
+"motivation.message.eveningNearGoal" = "Du bist heute Abend deinem Ziel nah; die Schritte zählen, ohne Druck, noch mehr zu tun.";
+"motivation.message.morningAchieved" = "Dein Ziel ist heute Morgen schon erreicht; ein schöner Start in den Tag.";
+"motivation.message.morningExceeded" = "Du hast dein Ziel heute Morgen schon übertroffen; freue dich über deinen zurückgelegten Weg.";
+"motivation.message.morningFarExceeded" = "Du hast dein Ziel heute Morgen schon weit übertroffen; gut gemacht, mehr muss es nicht sein.";
+"motivation.message.consistentNearGoal" = "Deine Regelmäßigkeit der letzten Tage setzt sich fort; dein Ziel ist nah.";
+"motivation.message.consistentAchieved" = "Wieder ein Ziel erreicht, passend zu den letzten Tagen; toll, wie regelmäßig du gehst.";
+"motivation.message.morningFarAhead" = "Du bist heute Morgen viel mehr gegangen als sonst um diese Zeit; ein schöner Schwung.";
+"motivation.message.morningAhead" = "Du bist heute Morgen deinem üblichen Tempo voraus; freue dich über diesen Schwung.";
+"motivation.message.ahead" = "Du bist deinem üblichen Tempo um diese Zeit voraus; jeder gegangene Schritt zählt.";
+"motivation.message.progressingAhead" = "Deine jüngsten Fortschritte setzen sich heute fort; du bist deinem üblichen Tempo um diese Zeit voraus.";
+"motivation.message.behindGentle" = "Dein Tag ist um diese Zeit ruhiger als sonst; gehe in deinem Tempo, ohne etwas nachholen zu müssen.";
+"motivation.message.morningStarting" = "Gehe heute Morgen in deinem eigenen Tempo; jeder kleine Schritt zählt.";
+"motivation.message.afternoonSteady" = "Ein kleiner Spaziergang heute Nachmittag ist eine Möglichkeit, wenn du Lust hast.";
+"motivation.message.eveningSteady" = "Freue dich heute Abend über die Schritte, die du gegangen bist; jeder kleine Schritt zählt.";
 "motivation.action %@" = "Wenn du möchtest: %@ weitere Schritte";
 "motivation.basis %ld %ld" = "Ziel an %ld von %ld gemessenen Tagen der letzten 7 abgeschlossenen Tage erreicht.";
 "motivation.average %@ %ld" = "Aktueller Durchschnitt: %@ Schritte an %ld gemessenen Tagen.";

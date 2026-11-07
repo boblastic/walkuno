@@ -47,7 +47,7 @@ private struct MotivationCardContent: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(fact).font(.subheadline.weight(.semibold))
                         .accessibilityIdentifier("motivation.fact")
-                    Text(personalizedText ?? L("motivation.message.\(snapshot.situation.rawValue)"))
+                    Text(personalizedText ?? L(snapshot.messageKey))
                         .font(.subheadline).foregroundStyle(.secondary)
                         .accessibilityIdentifier("motivation.message")
                 }

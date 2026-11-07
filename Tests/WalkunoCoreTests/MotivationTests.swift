@@ -18,9 +18,11 @@ struct MotivationTests {
     }
     func detail(reference: Int = 4_000, count: Int = 5, sampledAt: Date? = nil) -> WidgetActivityDetail {
         let sample = sampledAt ?? now
-        let hour = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: sample)!
+        let hour = calendar.date(byAdding: .hour, value: -1, to: sample)!
+        let clock = calendar.dateComponents([.hour, .minute, .second], from: sample)
+        let cutoff = Double(clock.hour!) + Double(clock.minute!) / 60 + Double(clock.second!) / 3_600
         let comparison = DayComparison(today: [], history: (0..<count).map { _ in [.init(date: hour, steps: reference)] },
-                                       metric: .steps, cutoffHour: 15.5, calendar: calendar)
+                                       metric: .steps, cutoffHour: cutoff, calendar: calendar)
         return .init(sampledAt: sample, previousCutoff: nil, todayHours: [], yesterdayHours: [],
                      yesterdayAtSameTime: day(-1, nil), usual: .init(comparison: comparison))
     }
@@ -32,7 +34,7 @@ struct MotivationTests {
         #expect(result.recentAverage == 4_000)
         #expect(result.previousAverage == nil)
         #expect(result.trendPercent == nil)
-        #expect(result.situation == .achieved)
+        #expect(result.situation == .farExceeded)
         #expect(result.suggestedSteps == nil)
         let empty = snapshot([day(-1, 9_000)])
         #expect(empty.todaySteps == nil)
@@ -82,6 +84,35 @@ struct MotivationTests {
         #expect(snapshot([day(0, 8_000)], at: late).situation == .achieved)
     }
 
+    @Test(arguments: [8_000, 9_000, 12_501])
+    func goalMilestonesHaveDistinctEncouragements(goal: Int) {
+        var goals = GoalHistory()
+        goals.set(goal, on: now, calendar: calendar)
+        let near = Int(ceil(Double(goal) * 0.8))
+        let far = Int(ceil(Double(goal) * 1.5))
+        #expect(snapshot([day(0, near - 1)], goals: goals).situation == .starting)
+        for steps in [near, goal - 1] {
+            let result = snapshot([day(0, steps)], goals: goals)
+            #expect(result.situation == .nearGoal)
+            #expect(result.remaining == goal - steps)
+            #expect(result.suggestedSteps == min(1_000, goal - steps))
+        }
+        let late = calendar.date(bySettingHour: 22, minute: 30, second: 0, of: now)!
+        for at in [now, late] {
+            for (steps, expected) in [(goal, MotivationSituation.achieved), (goal + 1, .exceeded),
+                                      (far - 1, .exceeded), (far, .farExceeded), (goal * 2, .farExceeded)] {
+                let result = snapshot([day(0, steps)], goals: goals, at: at)
+                #expect(result.situation == expected)
+                #expect(result.remaining == 0)
+                #expect(result.suggestedSteps == nil)
+            }
+        }
+        // Crossing the goal must invalidate the wording even within one step band.
+        let reachedKey = snapshot([day(0, goal)], goals: goals).wordingKey(locale: "fr", now: now, calendar: calendar)
+        let exceededKey = snapshot([day(0, goal + 1)], goals: goals).wordingKey(locale: "fr", now: now, calendar: calendar)
+        #expect(reachedKey != exceededKey)
+    }
+
     @Test func sameTimePaceRequiresRecentReliableMeasurements() {
         #expect(snapshot([day(0, 5_000)], detail: detail()).pace == .ahead)
         #expect(snapshot([day(0, 3_000)], detail: detail()).pace == .behind)
@@ -93,6 +124,95 @@ struct MotivationTests {
         var wrongClockTime = detail()
         wrongClockTime.sampledAt = now.addingTimeInterval(-3_600)
         #expect(snapshot([day(0, 5_000)], detail: wrongClockTime).pace == nil)
+    }
+
+    func time(_ hour: Int, minute: Int = 0) -> Date {
+        calendar.date(bySettingHour: hour, minute: minute, second: 0, of: now)!
+    }
+
+    @Test func morningCombinesReliablePaceWithGoalProgress() {
+        let morning = time(10)
+        for (steps, reference, expected) in [
+            (6_600, 2_200, MotivationContext.morningFarAheadNearGoal),
+            (6_599, 2_200, .morningAheadNearGoal),
+            (6_600, 6_500, .morningNearGoal),
+            (3_000, 1_000, .morningFarAhead),
+            (2_999, 1_000, .morningAhead),
+            (1_000, 100, .morningAhead),
+            (1_000, 0, .morningAhead)
+        ] {
+            let result = snapshot([day(0, steps)], detail: detail(reference: reference, sampledAt: morning), at: morning)
+            #expect(result.context == expected)
+            #expect(result.timeOfDay == .morning)
+        }
+        for (steps, expected) in [(8_000, MotivationContext.morningAchieved),
+                                   (8_001, .morningExceeded), (12_000, .morningFarExceeded)] {
+            let result = snapshot([day(0, steps)], at: morning)
+            #expect(result.context == expected)
+            #expect(result.suggestedSteps == nil)
+        }
+    }
+
+    @Test func contextCombinesWeeklyProgressConsistencyAndTimeOfDay() {
+        let progressing = (-14 ... -8).map { day($0, 5_000) } + (-7 ... -1).map { day($0, 6_000) }
+        let consistent = (-7 ... -1).map { day($0, 8_000) }
+        let growing = snapshot(progressing + [day(0, 5_000)], detail: detail())
+        #expect(growing.context == .progressingAhead)
+        #expect(snapshot(progressing + [day(0, 5_000)]).context == nil)
+        #expect(snapshot(consistent + [day(0, 6_600)]).context == .consistentNearGoal)
+        #expect(snapshot(consistent + [day(0, 8_000)]).context == .consistentAchieved)
+        #expect(snapshot([day(-1, 8_000), day(0, 8_000)]).context == nil)
+        #expect(snapshot([day(0, 6_600)], detail: detail()).context == .aheadNearGoal)
+        #expect(snapshot([day(0, 5_000)], detail: detail()).context == .ahead)
+        #expect(snapshot([day(0, 3_000)], detail: detail()).context == .behindGentle)
+        let easing = (-14 ... -8).map { day($0, 9_000) } + (-7 ... -1).map { day($0, 4_000) }
+        #expect(snapshot(easing + [day(0, 2_000)]).context == nil)
+        for (hour, expected) in [(6, MotivationContext.morningStarting), (11, .morningStarting),
+                                (12, .afternoonSteady), (17, .afternoonSteady),
+                                (18, .eveningSteady), (21, .eveningSteady)] {
+            #expect(snapshot([day(0, 2_000)], at: time(hour)).context == expected)
+        }
+        #expect(snapshot([day(0, 6_600)], at: time(20)).context == .eveningNearGoal)
+        for hour in [0, 5, 22, 23] {
+            let result = snapshot([day(0, 6_600)], at: time(hour))
+            #expect(result.context == nil)
+            #expect(result.situation == .evening)
+            #expect(result.suggestedSteps == nil)
+        }
+    }
+
+    @Test func unreliableHourlyDataNeverProducesPaceClaims() {
+        let morning = time(10)
+        var wrongEndpoint = detail(reference: 2_200, sampledAt: morning)
+        wrongEndpoint.sampledAt = morning.addingTimeInterval(-3_600)
+        for hourly in [nil, detail(reference: 2_200, count: 2, sampledAt: morning),
+                       detail(reference: 2_200, sampledAt: morning.addingTimeInterval(-7_201)),
+                       detail(reference: 2_200, sampledAt: morning.addingTimeInterval(1)), wrongEndpoint] {
+            let result = snapshot([day(0, 6_600)], detail: hourly, at: morning)
+            #expect(result.pace == nil)
+            #expect(result.context == .morningNearGoal)
+        }
+        let empty = snapshot([], detail: detail(reference: 2_200, sampledAt: morning), at: morning)
+        #expect(empty.context == nil)
+        #expect(empty.messageKey == "motivation.message.noData")
+    }
+
+    @Test func contextualWordingInvalidatesAtRatioAndTimeBoundaries() {
+        let morning = time(10)
+        let hourly = detail(reference: 2_200, sampledAt: morning)
+        let before = snapshot([day(0, 6_599)], detail: hourly, at: morning)
+        let after = snapshot([day(0, 6_600)], detail: hourly, at: morning)
+        #expect(before.wordingKey(locale: "fr", now: morning, calendar: calendar) !=
+                after.wordingKey(locale: "fr", now: morning, calendar: calendar))
+        #expect(before.situation == after.situation)
+        #expect(before.pace == after.pace)
+        #expect(before.messageKey != after.messageKey)
+        let noon = time(12)
+        let atNoon = snapshot([day(0, 6_600)], detail: hourly, at: noon)
+        #expect(atNoon.context == .aheadNearGoal)
+        let stale = snapshot([day(0, 6_600)], detail: hourly, at: noon.addingTimeInterval(1))
+        #expect(stale.context == nil)
+        #expect(stale.messageKey == "motivation.message.nearGoal")
     }
 
     @Test func calendarWindowsSurviveDaylightSavingAndDeduplicateDays() {

@@ -370,6 +370,7 @@ private struct WidgetGoalChart: View {
     var compact: Bool
     var body: some View {
         let points = snapshot?.activity?.goalTracking(todaySteps: snapshot?.today.steps) ?? []
+        let currentPoint = snapshot?.activity?.cumulative(todaySteps: snapshot?.today.steps).last
         let maximum = max(Double(snapshot?.goal ?? 8000), points.flatMap { [$0.current, $0.usual].compactMap { $0 } }.max() ?? 1)
         Group {
             if points.compactMap(\.current).isEmpty && points.compactMap(\.usual).isEmpty {
@@ -380,9 +381,22 @@ private struct WidgetGoalChart: View {
                         RuleMark(y: .value("Goal", goal)).foregroundStyle(Color.primary.opacity(0.2))
                             .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [5, 3]))
                             .annotation(position: .overlay, alignment: .topLeading) {
-                                Text("\(L("widget.goal.short")) \(WidgetNumbers.steps(goal, abbreviateFrom: 1000))")
-                                    .font(.system(size: compact ? 6 : 8)).foregroundStyle(.secondary)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("\(L("widget.goal.short")) \(WidgetNumbers.steps(goal, abbreviateFrom: 1000))")
+                                        .foregroundStyle(.secondary)
+                                    Text("\(L("widget.goal.currentValue")) \(stepsText(currentPoint?.current.map { Int($0.rounded()) }))")
+                                        .foregroundStyle(accent)
+                                    Text("\(L("widget.goal.usualValue")) \(stepsText(currentPoint?.usual.map { Int($0.rounded()) }))")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .font(.system(size: compact ? 6 : 8)).monospacedDigit()
+                                .lineLimit(1).minimumScaleFactor(0.65)
                             }
+                    }
+                    if let currentPoint {
+                        RuleMark(x: .value("Hour", currentPoint.hour))
+                            .foregroundStyle(Color.primary.opacity(0.25))
+                            .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [2, 3]))
                     }
                     ForEach(points) { point in
                         if let usual = point.usual {
@@ -412,6 +426,7 @@ private struct WidgetGoalChart: View {
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text("widget.chart.goal.accessibility"))
+                .accessibilityValue("\(L("widget.goal.short")) \(stepsText(snapshot?.goal)); \(L("widget.goal.currentValue")) \(stepsText(currentPoint?.current.map { Int($0.rounded()) })); \(L("widget.goal.usualValue")) \(stepsText(currentPoint?.usual.map { Int($0.rounded()) }))")
             }
         }.frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -535,7 +550,7 @@ private struct WidgetWeekCurve: View {
         .accessibilityLabel(Text("widget.style.weeklyLine"))
         .accessibilityValue(days.map {
             "\($0.date.formatted(.dateTime.weekday(.wide).day().month())): \(stepsText($0.steps)) \(L("today.steps"))"
-        }.joined(separator: ", ") + (goal.map { "; \(L("widget.goal.short")): \($0.formatted()); \(L("widget.average")): \(stepsText(average))" } ?? ""))
+        }.joined(separator: ", ") + (goal.map { "; \(L("widget.goal.short")) \($0.formatted()); \(L("widget.average")) \(stepsText(average))" } ?? ""))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -740,10 +755,10 @@ private struct WidgetWeekReferences: View {
                     .monospacedDigit().frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 HStack(spacing: compact ? 3 : 4) {
+                    Spacer(minLength: 0)
                     Path { path in path.move(to: .init(x: 0, y: 3)); path.addLine(to: .init(x: compact ? 9 : 14, y: 3)) }
                         .stroke(color, style: StrokeStyle(lineWidth: 1, dash: dash)).frame(width: compact ? 9 : 14, height: 6)
                     Text(L(title)).foregroundStyle(.secondary)
-                    Spacer(minLength: 0)
                     Text(stepsText(value)).bold().monospacedDigit()
                 }
             }

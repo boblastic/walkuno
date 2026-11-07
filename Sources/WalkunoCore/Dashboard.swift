@@ -157,16 +157,19 @@ public struct DashboardTrendActivity: Sendable {
 }
 
 extension ActivityMath {
-    /// Today's unfinished goal keeps yesterday's streak alive. A missing day breaks the chain.
+    /// Today counts only once its goal is reached. Until then, even without today's
+    /// measurements, keep yesterday's streak alive. A missing past day breaks the chain.
     public static func currentStreak(days: [ActivityDay], goals: GoalHistory, endingOn date: Date,
                                      now: Date = .now, calendar: Calendar = .current) -> Int? {
         let lookup = Dictionary(days.map { (calendar.startOfDay(for: $0.date), $0) }, uniquingKeysWith: { _, new in new })
         var cursor = calendar.startOfDay(for: date)
-        guard let steps = lookup[cursor]?.steps else { return nil }
-        if steps < goals.value(on: cursor, calendar: calendar) {
+        let steps = lookup[cursor]?.steps
+        if (steps ?? -1) < goals.value(on: cursor, calendar: calendar) {
             guard calendar.isDate(cursor, inSameDayAs: now),
-                  let previous = calendar.date(byAdding: .day, value: -1, to: cursor) else { return 0 }
+                  let previous = calendar.date(byAdding: .day, value: -1, to: cursor) else { return steps == nil ? nil : 0 }
             cursor = previous
+            // Preserve the unavailable state when neither day has a measurement.
+            guard steps != nil || lookup[cursor]?.steps != nil else { return nil }
         }
         var count = 0
         while let steps = lookup[cursor]?.steps, steps >= goals.value(on: cursor, calendar: calendar) {

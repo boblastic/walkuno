@@ -530,9 +530,11 @@ final class WalkunoUITests: XCTestCase {
         let goal = app.buttons["widgets.chart.goalTracking"]
         goal.tap()
         XCTAssertTrue(goal.isSelected)
-        let chartCapture = app.images["widgets.capture.chart.medium"]
-        revealCapture(chartCapture)
-        capture("Widgets-Compteurs-Graphiques")
+        for family in ["medium", "small", "large"] {
+            let chartCapture = app.images["widgets.capture.chart." + family]
+            revealCapture(chartCapture)
+            capture("Widgets-Suivi-objectif-" + family)
+        }
         for family in ["small", "medium", "large"] {
             let image = app.images["widgets.capture.dashboard." + family]
             revealCapture(image)
@@ -683,6 +685,21 @@ final class WalkunoUITests: XCTestCase {
         }
         XCTAssertTrue(app.tabBars.buttons["Statistiques"].waitForExistence(timeout: 15))
         app.tabBars.buttons["Statistiques"].tap()
+        let dailyGoal = app.staticTexts["statistics.dailyGoal.title"]
+        XCTAssertTrue(dailyGoal.waitForExistence(timeout: 5))
+        XCTAssertEqual(dailyGoal.label, "Objectif quotidien")
+        let overview = app.descendants(matching: .any)["statistics.dailyGoal"].firstMatch
+        let metrics = ["steps", "distance", "energy", "exerciseTime", "floors"].map {
+            app.descendants(matching: .any)["statistics.dailyGoal." + $0].firstMatch
+        }
+        for tile in metrics { XCTAssertTrue(tile.exists, app.debugDescription) }
+        XCTAssertLessThan(metrics[0].frame.minY, metrics[1].frame.minY)
+        let values = metrics.map { $0.value as? String }
+        app.buttons["statistics.metric.distance"].tap()
+        XCTAssertEqual(metrics.map { $0.value as? String }, values)
+        XCTAssertGreaterThan(overview.frame.height, 0)
+        capture("Statistiques-Objectif-quotidien")
+        app.buttons["statistics.metric.steps"].tap()
         let customize = app.buttons["statistics.widgets.customize"]
         for _ in 0..<12 {
             if customize.isHittable { break }
@@ -705,13 +722,14 @@ final class WalkunoUITests: XCTestCase {
         dayHandle.press(forDuration: 0.8, thenDragTo: clockHandle)
         XCTAssertLessThan(day.frame.minY, clock.frame.minY, app.debugDescription)
         capture("Statistiques-personnalisation")
-        for widget in ["clock", "day", "trends", "history", "records"] {
+        for widget in ["dailyGoal", "clock", "day", "trends", "history", "records"] {
             let toggle = app.switches["statistics.widgets.toggle." + widget]
             toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)).tap()
             XCTAssertEqual(toggle.value as? String, "0")
         }
         app.buttons["Terminé"].tap()
         XCTAssertTrue(customize.isHittable)
+        XCTAssertFalse(dailyGoal.exists)
         XCTAssertFalse(app.staticTexts["insights.clock.title"].exists)
         XCTAssertFalse(app.staticTexts["insights.header.insights.day"].exists)
         XCTAssertFalse(app.buttons["insights.history.unlock"].exists)
@@ -722,7 +740,7 @@ final class WalkunoUITests: XCTestCase {
         XCTAssertTrue(customize.waitForExistence(timeout: 5))
         customize.tap()
         XCTAssertLessThan(day.frame.minY, clock.frame.minY)
-        for widget in ["clock", "day", "trends", "history", "records"] {
+        for widget in ["dailyGoal", "clock", "day", "trends", "history", "records"] {
             let toggle = app.switches["statistics.widgets.toggle." + widget]
             XCTAssertEqual(toggle.value as? String, "0")
             toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)).tap()
@@ -741,6 +759,7 @@ final class WalkunoUITests: XCTestCase {
         app.tabBars.buttons["Statistiques"].tap()
         let title = app.staticTexts["insights.clock.title"]
         XCTAssertTrue(title.waitForExistence(timeout: 5))
+        reveal(title, in: app)
         assertBelowHeader(title, in: app)
         let current = app.descendants(matching: .any)["insights.clock.today"].firstMatch
         let usual = app.descendants(matching: .any)["insights.clock.usual"].firstMatch
@@ -758,6 +777,7 @@ final class WalkunoUITests: XCTestCase {
             let dailyUsual = app.descendants(matching: .any)["insights.day.legend.insights.usual"].firstMatch
             XCTAssertTrue(dailyUsual.waitForExistence(timeout: 5))
             XCTAssertFalse(dailyUsual.label.contains("—"), dailyUsual.label)
+            XCTAssertEqual(dailyUsual.label, usual.label)
             XCTAssertTrue((chart.value as? String)?.contains("au même moment de la journée") == true,
                           chart.value as? String ?? "")
             XCTAssertTrue((chart.value as? String)?.contains(unit) == true, chart.value as? String ?? "")

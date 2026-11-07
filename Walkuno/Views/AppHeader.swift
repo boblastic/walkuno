@@ -39,7 +39,6 @@ private struct AppHeader: View {
     private var streak: Int? {
         ActivityMath.currentStreak(days: model.days, goals: model.preferences.goals, endingOn: model.today.date)
     }
-    private var streakSymbol: String { model.effectiveEffect == .fire ? "flame.fill" : "star.fill" }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -64,10 +63,7 @@ private struct AppHeader: View {
             showsStreak = true
         } label: {
             HStack(spacing: 5) {
-                Image(systemName: streakSymbol)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(model.effectiveTheme.accent.gradient)
-                    .accessibilityHidden(true)
+                StreakStar(active: (streak ?? 0) > 0, theme: model.effectiveTheme, size: 15)
                 Text(stepsText(streak))
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .monospacedDigit()
@@ -87,7 +83,7 @@ private struct AppHeader: View {
         .accessibilityHint(Text("streak.hint"))
         .accessibilityIdentifier("app.streak")
         .popover(isPresented: $showsStreak, arrowEdge: .top) {
-            StreakPopover(streak: streak, symbol: streakSymbol)
+            StreakPopover(streak: streak)
                 .presentationCompactAdaptation(.popover)
         }
     }
@@ -125,12 +121,79 @@ private struct AppHeader: View {
     }
 }
 
+/// A slow pearlescent glow marks an active streak, independently of the counter effect.
+private struct StreakStar: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    let active: Bool
+    let theme: WalkunoTheme
+    let size: CGFloat
+
+    var body: some View {
+        Group {
+            if active {
+                if !reduceMotion, scenePhase == .active {
+                    PhaseAnimator([0.0, 1.0]) { phase in
+                        glowingStar(phase: phase)
+                    } animation: { _ in
+                        .easeInOut(duration: 3.2)
+                    }
+                } else {
+                    glowingStar(phase: 0.5)
+                }
+            } else {
+                Image(systemName: "star")
+                    .font(.system(size: size, weight: .medium))
+                    .foregroundStyle(theme.accent.opacity(0.65))
+            }
+        }
+        .frame(width: size + 4, height: size + 4)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityHidden(true)
+    }
+
+    private var silhouette: some View {
+        Image(systemName: "star.fill")
+            .font(.system(size: size, weight: .medium))
+            .frame(width: size + 4, height: size + 4)
+    }
+
+    private func glowingStar(phase: Double) -> some View {
+        ZStack {
+            Circle()
+                .fill(RadialGradient(colors: [theme.accent.opacity(0.32), theme.secondaryAccent.opacity(0.12), .clear],
+                                     center: .center, startRadius: 0, endRadius: size))
+                .frame(width: size * 2, height: size * 2)
+                .scaleEffect(0.85 + phase * 0.15)
+                .opacity(0.65 + phase * 0.35)
+
+            silhouette
+                .foregroundStyle(LinearGradient(colors: [.white.opacity(0.95), theme.accent, theme.secondaryAccent],
+                                                startPoint: .topLeading, endPoint: .bottomTrailing))
+                .overlay {
+                    LinearGradient(stops: [.init(color: .clear, location: 0.2),
+                                           .init(color: .white.opacity(0.7), location: 0.48),
+                                           .init(color: .clear, location: 0.75)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                        .offset(x: size * (phase - 0.5), y: size * (phase - 0.5) * 0.4)
+                        .mask(silhouette)
+                        .blendMode(.screen)
+                }
+                .shadow(color: theme.accent.opacity(0.35 + phase * 0.2), radius: 2 + phase * 2)
+                .rotationEffect(.degrees((phase - 0.5) * 5))
+                .scaleEffect(0.98 + phase * 0.04)
+                .offset(y: (0.5 - phase) * 0.6)
+        }
+        .frame(width: size + 4, height: size + 4)
+    }
+}
+
 private struct StreakPopover: View {
     @Environment(AppModel.self) private var model
     @Environment(\.colorScheme) private var scheme
     @Environment(\.dismiss) private var dismiss
     let streak: Int?
-    let symbol: String
 
     private var ink: Color { model.effectiveTheme.tint(for: scheme) }
     private var encouragement: String {
@@ -160,6 +223,7 @@ private struct StreakPopover: View {
         }
         .frame(width: 300)
         .background(WalkunoStyle.card(scheme))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("streak.popover")
     }
 
@@ -191,12 +255,9 @@ private struct StreakPopover: View {
             }
 
             HStack(spacing: 14) {
-                Image(systemName: symbol)
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(model.effectiveTheme.accent.gradient)
+                StreakStar(active: (streak ?? 0) > 0, theme: model.effectiveTheme, size: 30)
                     .frame(width: 64, height: 64)
                     .background(ink.opacity(0.10), in: RoundedRectangle(cornerRadius: 22))
-                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(stepsText(streak))
                         .font(.system(.largeTitle, design: .rounded, weight: .bold))

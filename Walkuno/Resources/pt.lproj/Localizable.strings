@@ -239,6 +239,8 @@
 "insights.weekday.summary" = "O teu dia da semana mais ativo é %@: uma média de %@ (%@).";
 "insights.weekday.note" = "Média de cada dia da semana no histórico disponível, excluindo hoje.";
 "insights.records" = "Recordes";
+"insights.record" = "Recorde";
+"insights.chart.record %@" = "Recorde: %@";
 "insights.record.day" = "Melhor dia";
 "insights.record.week" = "Melhor semana";
 "insights.record.month" = "Melhor mês";
@@ -387,6 +389,8 @@
 
 "widget.chart.hourly" = "Passos por hora";
 "widget.chart.goalTracking" = "Acompanhamento do objetivo";
+"widget.goal.currentValue" = "Valor atual";
+"widget.goal.usualValue" = "Valor habitual";
 "widget.charts.configuration" = "Os seus gráficos Walkuno";
 "widget.charts.name" = "Walkuno · Gráficos";
 "widget.charts.description" = "As últimas 24 horas, os passos acumulados de hoje comparados com os seus hábitos ou os últimos sete dias.";
@@ -503,8 +507,28 @@
 "motivation.message.progressing" = "Os teus progressos recentes contam, mesmo antes de atingires o objetivo.";
 "motivation.message.easing" = "Podes retomar com calma, sem compensar os dias anteriores.";
 "motivation.message.nearGoal" = "Estás perto do objetivo; um pequeno passeio é uma opção, se te apetecer.";
-"motivation.message.achieved" = "Parabéns pelos passos de hoje, desfruta do que conseguiste.";
+"motivation.message.achieved" = "Atingiste o teu objetivo; desfruta do que conseguiste.";
+"motivation.message.exceeded" = "Ultrapassaste o teu objetivo; desfruta do caminho percorrido.";
+"motivation.message.farExceeded" = "Ultrapassaste largamente o teu objetivo; parabéns por este belo dia de caminhada.";
 "motivation.message.evening" = "O teu dia pode terminar com calma; cada passo já dado conta.";
+"motivation.message.morningFarAheadNearGoal" = "Esta manhã, caminhaste muito mais do que o habitual a esta hora e já estás perto do teu objetivo.";
+"motivation.message.morningAheadNearGoal" = "Esta manhã, estás à frente do teu ritmo habitual e já perto do teu objetivo.";
+"motivation.message.morningNearGoal" = "O teu objetivo já está perto esta manhã; desfruta dos passos dados ao teu ritmo.";
+"motivation.message.aheadNearGoal" = "Estás perto do teu objetivo e à frente do teu ritmo habitual a esta hora; parabéns.";
+"motivation.message.eveningNearGoal" = "Esta noite, estás perto do teu objetivo; os passos já dados contam, sem pressão para fazer mais.";
+"motivation.message.morningAchieved" = "Já atingiste o teu objetivo esta manhã; parabéns por este belo início de dia.";
+"motivation.message.morningExceeded" = "Já ultrapassaste o teu objetivo esta manhã; desfruta do caminho percorrido.";
+"motivation.message.morningFarExceeded" = "Já ultrapassaste largamente o teu objetivo esta manhã; parabéns, sem precisares de fazer mais.";
+"motivation.message.consistentNearGoal" = "A tua regularidade dos últimos dias continua; estás perto do teu objetivo.";
+"motivation.message.consistentAchieved" = "Mais um objetivo atingido, na continuidade dos últimos dias; parabéns pela tua regularidade.";
+"motivation.message.morningFarAhead" = "Esta manhã, caminhaste muito mais do que o habitual a esta hora; parabéns por este belo começo.";
+"motivation.message.morningAhead" = "Esta manhã, estás à frente do teu ritmo habitual; desfruta deste belo começo.";
+"motivation.message.ahead" = "Estás à frente do teu ritmo habitual a esta hora; cada passo já dado conta.";
+"motivation.message.progressingAhead" = "Os teus progressos recentes continuam hoje; estás à frente do teu ritmo habitual a esta hora.";
+"motivation.message.behindGentle" = "O teu dia está mais calmo do que o habitual a esta hora; avança ao teu ritmo, sem nada para compensar.";
+"motivation.message.morningStarting" = "Esta manhã, avança ao teu ritmo; cada pequeno passo conta.";
+"motivation.message.afternoonSteady" = "Esta tarde, um pequeno passeio é uma opção, se te apetecer.";
+"motivation.message.eveningSteady" = "Esta noite, desfruta dos passos já dados; cada pequeno passo conta.";
 "motivation.action %@" = "Se quiseres: mais %@ passos";
 "motivation.basis %ld %ld" = "Objetivo atingido em %ld de %ld dias com medições nos últimos 7 dias completos.";
 "motivation.average %@ %ld" = "Média recente: %@ passos em %ld dias com medições.";

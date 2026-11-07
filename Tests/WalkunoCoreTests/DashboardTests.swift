@@ -210,6 +210,26 @@ struct DashboardTests {
         #expect(ActivityMath.currentStreak(days: [], goals: .init(), endingOn: now, now: now, calendar: calendar) == nil)
         #expect(ActivityMath.currentStreak(days: [.init(date: yesterday, steps: 0)], goals: .init(), endingOn: yesterday, now: now, calendar: calendar) == 0)
     }
+
+    @Test func currentStreakPreservesYesterdayUntilTodaysGoalIsReached() {
+        let yesterday = date("2026-11-03T12:00:00Z")
+        let today = date("2026-11-04T12:00:00Z")
+        let tomorrow = date("2026-11-05T12:00:00Z")
+        let history: [ActivityDay] = [.init(date: yesterday, steps: 8_000)]
+        var goals = GoalHistory()
+        goals.set(10_000, on: today, calendar: calendar)
+
+        // Before the first measurement, yesterday's successful day still counts.
+        #expect(ActivityMath.currentStreak(days: history, goals: goals, endingOn: today, now: today, calendar: calendar) == 1)
+        for steps: Int? in [nil, 0, 9_999, 10_000, 12_000] {
+            let rows = history + [ActivityDay(date: today, steps: steps)]
+            let expected = (steps ?? 0) >= 10_000 ? 2 : 1
+            #expect(ActivityMath.currentStreak(days: rows, goals: goals, endingOn: today, now: today, calendar: calendar) == expected)
+            // Once this day has ended, only a completed goal can preserve the series.
+            let nextDay = rows + [ActivityDay(date: tomorrow, steps: 0)]
+            #expect(ActivityMath.currentStreak(days: nextDay, goals: goals, endingOn: tomorrow, now: tomorrow, calendar: calendar) == (expected == 2 ? 2 : 0))
+        }
+    }
 }
 
 struct DashboardTrendTests {

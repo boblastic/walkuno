@@ -240,6 +240,8 @@
 "insights.weekday.summary" = "Your most active weekday is %@: an average of %@ (%@).";
 "insights.weekday.note" = "Average for each weekday across available history, excluding today.";
 "insights.records" = "Records";
+"insights.record" = "Record";
+"insights.chart.record %@" = "Record: %@";
 "insights.record.day" = "Best day";
 "insights.record.week" = "Best week";
 "insights.record.month" = "Best month";
@@ -388,6 +390,8 @@
 
 "widget.chart.hourly" = "Steps per hour";
 "widget.chart.goalTracking" = "Goal tracking";
+"widget.goal.currentValue" = "Current value";
+"widget.goal.usualValue" = "Usual value";
 "widget.charts.configuration" = "Your Walkuno charts";
 "widget.charts.name" = "Walkuno · Charts";
 "widget.charts.description" = "The last 24 hours, today’s cumulative steps compared with your usual activity, or the last seven days.";
@@ -504,8 +508,28 @@
 "motivation.message.progressing" = "Your recent progress counts, even before you reach your goal.";
 "motivation.message.easing" = "You can ease back into walking, without making up for previous days.";
 "motivation.message.nearGoal" = "You’re close to your goal; a short walk is an option if you feel like it.";
-"motivation.message.achieved" = "Well done for today’s steps, enjoy what you’ve accomplished.";
+"motivation.message.achieved" = "Well done on reaching your goal; enjoy what you’ve accomplished.";
+"motivation.message.exceeded" = "Well done, you’ve gone beyond your goal; enjoy what you’ve accomplished.";
+"motivation.message.farExceeded" = "You’ve gone well beyond your goal; well done on a lovely day of walking.";
 "motivation.message.evening" = "Your day can wind down peacefully; every step already taken counts.";
+"motivation.message.morningFarAheadNearGoal" = "This morning, you’ve walked far more than usual by this time, and your goal is already close.";
+"motivation.message.morningAheadNearGoal" = "This morning, you’re ahead of your usual pace and already close to your goal.";
+"motivation.message.morningNearGoal" = "Your goal is already close this morning; enjoy the steps you’ve taken at your own pace.";
+"motivation.message.aheadNearGoal" = "You’re close to your goal and ahead of your usual pace by this time; well done.";
+"motivation.message.eveningNearGoal" = "You’re close to your goal this evening; the steps you’ve taken count, with no pressure to do more.";
+"motivation.message.morningAchieved" = "You’ve already reached your goal this morning; well done on this lovely start to the day.";
+"motivation.message.morningExceeded" = "You’ve already gone beyond your goal this morning; enjoy what you’ve accomplished.";
+"motivation.message.morningFarExceeded" = "You’ve already gone well beyond your goal this morning; well done, with no need to do more.";
+"motivation.message.consistentNearGoal" = "Your consistency over recent days continues; you’re close to your goal.";
+"motivation.message.consistentAchieved" = "Another goal reached, building on recent days; well done on your consistency.";
+"motivation.message.morningFarAhead" = "This morning, you’ve walked far more than usual by this time; well done on this lovely start.";
+"motivation.message.morningAhead" = "This morning, you’re ahead of your usual pace; enjoy this lovely start.";
+"motivation.message.ahead" = "You’re ahead of your usual pace by this time; every step you’ve taken counts.";
+"motivation.message.progressingAhead" = "Your recent progress continues today; you’re ahead of your usual pace by this time.";
+"motivation.message.behindGentle" = "Your day is quieter than usual by this time; go at your own pace, with nothing to make up for.";
+"motivation.message.morningStarting" = "This morning, go at your own pace; every little step counts.";
+"motivation.message.afternoonSteady" = "This afternoon, a little walk is an option if you feel like it.";
+"motivation.message.eveningSteady" = "This evening, enjoy the steps you’ve already taken; every little step counts.";
 "motivation.action %@" = "Optional next step: %@ more steps";
 "motivation.basis %ld %ld" = "Goal reached on %ld of %ld measured days in the last 7 completed days.";
 "motivation.average %@ %ld" = "Recent average: %@ steps across %ld measured days.";

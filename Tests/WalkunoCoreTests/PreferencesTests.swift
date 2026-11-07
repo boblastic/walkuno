@@ -91,8 +91,21 @@ struct PreferencesTests {
                                       "hidden": ["clock", "future-widget"]]
         let restored = try JSONDecoder().decode(Preferences.self, from: JSONSerialization.data(withJSONObject: saved))
         #expect(restored.unit == .miles)
-        #expect(restored.statisticsWidgets.order == [.records, .day, .clock, .trends, .history])
+        #expect(restored.statisticsWidgets.order == [.dailyGoal, .records, .day, .clock, .trends, .history])
         #expect(restored.statisticsWidgets.hidden == [.clock])
+    }
+
+    @Test func dailyGoalIsInsertedFirstInLegacyLayoutsAndCanBeReordered() throws {
+        let legacy = Data(#"{"order":["records","day","clock","trends","history"],"hidden":["day","history"]}"#.utf8)
+        let restored = try JSONDecoder().decode(StatisticsWidgetLayout.self, from: legacy)
+        #expect(restored.order == [.dailyGoal, .records, .day, .clock, .trends, .history])
+        #expect(restored.hidden == [.day, .history])
+        #expect(restored.visible.first == .dailyGoal)
+        let customized = StatisticsWidgetLayout(order: [.clock, .dailyGoal], hidden: [.dailyGoal])
+        let saved = try JSONDecoder().decode(StatisticsWidgetLayout.self, from: JSONEncoder().encode(customized))
+        #expect(saved == customized)
+        #expect(saved.order.prefix(2) == [.clock, .dailyGoal])
+        #expect(!saved.visible.contains(.dailyGoal))
     }
 
     @Test func watchSettingsCarryEveryCounterStyleAndEffect() throws {

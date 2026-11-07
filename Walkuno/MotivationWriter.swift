@@ -34,14 +34,18 @@ final class MotivationWriter {
                     Maximum 160 characters, one sentence, plain text, no heading or quotation marks.
                     Rephrase the supplied encouragement without adding facts, numbers (including spelled-out
                     quantities), targets, durations, health claims, comparisons, instructions or promises.
+                    Preserve the supplied time-of-day, goal status and habitual-pace context when present.
+                    Do not turn a past weekly trend into a claim about today's pace, or ask for more effort after success.
                     Never pressure, shame, diagnose, suggest catching up or increasing a goal.
                     The app displays all measurements and its optional action separately.
                     """)
                     // Only trusted, localized copy and categorical context enter the model.
                     // Raw Health history and personal identifiers never enter its transcript.
                     let prompt = """
-                    Encouragement to rephrase: \(L("motivation.message.\(snapshot.situation.rawValue)"))
+                    Encouragement to rephrase: \(L(snapshot.messageKey))
                     Situation: \(snapshot.situation.rawValue)
+                    Context: \(snapshot.context?.rawValue ?? "general")
+                    Time of day: \(snapshot.timeOfDay.rawValue)
                     Recent trend: \(snapshot.trendPercent.map { $0 > 0 ? "increasing" : $0 < 0 ? "decreasing" : "stable" } ?? "insufficient history")
                     Same-time pace: \(snapshot.pace?.rawValue ?? "unavailable")
                     Preserve the meaning of the encouragement. Respond only in \(key.locale).
@@ -67,7 +71,7 @@ final class MotivationWriter {
 @available(iOS 26.0, *)
 @Generable
 private struct WalkingEncouragement {
-    @Guide(description: "One brief, kind sentence, without numbers, factual claims or suggested effort.")
+    @Guide(description: "One brief, kind sentence preserving the supplied context, without numbers, new factual claims or extra suggested effort.")
     var encouragement: String
 }
 #endif

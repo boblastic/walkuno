@@ -80,15 +80,16 @@ private struct InsightValue: View {
     }
 }
 
-private struct RecordAverageLabel: View {
+private struct RecordChartReferenceLabel: View {
     @Environment(\.colorScheme) private var scheme
-    var value: String
+    var label: LocalizedStringKey
+    var color: Color = .secondary
 
     var body: some View {
-        Text("today.chart.average \(value)")
+        Text(label)
             .font(.caption2.weight(.semibold))
             .monospacedDigit()
-            .foregroundStyle(Color.secondary)
+            .foregroundStyle(color)
             .padding(.horizontal, 5)
             .padding(.vertical, 2)
             .background(WalkunoStyle.card(scheme), in: RoundedRectangle(cornerRadius: 4))
@@ -140,6 +141,8 @@ struct StatisticsInsightsView: View {
 
     @ViewBuilder private func widgetView(_ widget: StatisticsWidget) -> some View {
         switch widget {
+        case .dailyGoal:
+            DailyGoalCard()
         case .clock:
             StepsClockCard(snapshot: clock, loading: loading, failed: failed).id(metric)
         case .day:
@@ -180,7 +183,7 @@ private struct DailyComparisonCard: View {
                     InsightHeader(title: "insights.day", metric: metric, font: .subheadline.weight(.semibold))
                         .lineLimit(2).minimumScaleFactor(0.8)
                     dayLegend(title: "insights.today", value: comparison?.current, color: accent, dashed: false)
-                    dayLegend(title: "insights.usual", value: comparison?.usualDayTotal, color: baseline, dashed: true)
+                    dayLegend(title: "insights.usual", value: comparison?.usual, color: baseline, dashed: true)
                 }
                 Chart {
                     RuleMark(y: .value(L("goal.title"), model.preferences.goal(for: metric)))
@@ -223,7 +226,7 @@ private struct DailyComparisonCard: View {
                 .accessibilityIdentifier("insights.day.chart")
                 .overlay { if loading { ProgressView() } }
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel(Text("\(L(metric.titleKey)), \(L("insights.today")) \(metric.text(comparison?.current, unit: model.preferences.unit)), \(L("insights.usual")) \(metric.text(comparison?.usualDayTotal, unit: model.preferences.unit))"))
+                .accessibilityLabel(Text("\(L(metric.titleKey)), \(L("insights.today")) \(metric.text(comparison?.current, unit: model.preferences.unit)), \(L("insights.usual")) \(metric.text(comparison?.usual, unit: model.preferences.unit))"))
                 .accessibilityValue(Text("goals.target \(metric.clockText(model.preferences.goal(for: metric), unit: model.preferences.unit))"))
                 .chartInspection("insights.day.chart", resetKey: metric.rawValue) { proxy in
                     let usual = comparison?.usualDayPoints ?? []
@@ -330,7 +333,6 @@ private struct TrendsCard: View {
         let trend = trend
         let slots = ActivityStatistics.trendChart(days: days, period: period)
         let chartBars = bars(slots)
-        let boundary = Double(chartBars.first(where: \.current)?.position ?? chartBars.count) - 0.5
         WalkunoCard {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .center, spacing: 12) {
@@ -364,15 +366,11 @@ private struct TrendsCard: View {
                         }
                     }
                     if let average = trend.current.average {
-                        RuleMark(xStart: .value(L("chart.date"), boundary),
-                                 xEnd: .value(L("chart.date"), Double(chartBars.count) - 0.5),
-                                 y: .value(L("insights.daily.average"), average)).foregroundStyle(accent)
+                        RuleMark(y: .value(L("insights.daily.average"), average)).foregroundStyle(accent)
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     }
                     if let average = trend.previous.average {
-                        RuleMark(xStart: .value(L("chart.date"), -0.5),
-                                 xEnd: .value(L("chart.date"), boundary),
-                                 y: .value(L("insights.previous"), average)).foregroundStyle(Color.secondary)
+                        RuleMark(y: .value(L("insights.previous"), average)).foregroundStyle(Color.secondary)
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     }
                 }
@@ -399,21 +397,35 @@ private struct TrendsCard: View {
                     }
                 }
                 .overlay { if chartBars.allSatisfy({ $0.value == nil }) { Text("chart.no.data").font(.caption).foregroundStyle(.secondary) } }
-                HStack {
-                    trendLegend(title: "insights.previous", value: trend.previous.average, color: .secondary)
-                    Spacer()
-                    trendLegend(title: "insights.current", value: trend.current.average, color: accent)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 16) {
+                        trendLegend(title: "insights.previous", value: trend.previous.average, color: .secondary)
+                            .fixedSize(horizontal: true, vertical: false)
+                        Spacer(minLength: 0)
+                        trendLegend(title: "insights.current", value: trend.current.average, color: accent)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
+                    VStack(spacing: 6) {
+                        trendLegend(title: "insights.previous", value: trend.previous.average, color: .secondary, expanded: true)
+                        trendLegend(title: "insights.current", value: trend.current.average, color: accent, expanded: true)
+                    }
                 }
             }
         }
         .onChange(of: model.purchases.isPremium) { _, premium in if !premium && period != .sevenDays { period = .sevenDays } }
     }
 
-    private func trendLegend(title: String, value: Double?, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    private func trendLegend(title: String, value: Double?, color: Color, expanded: Bool = false) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
             Label(L(title), systemImage: "circle.fill").font(.caption2).foregroundStyle(color)
+                .lineLimit(1).minimumScaleFactor(0.65)
+            if expanded { Spacer(minLength: 8) }
             Text(metric.text(value, unit: model.preferences.unit)).font(.caption.weight(.semibold))
+                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.8).layoutPriority(1)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(L(title)))
+        .accessibilityValue(Text(metric.text(value, unit: model.preferences.unit)))
     }
 }
 
@@ -480,10 +492,19 @@ private struct ActivityRecordCard: View {
                 RuleMark(y: .value(L("insights.average"), average)).foregroundStyle(Color.secondary)
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     .annotation(position: .top, alignment: .trailing, spacing: 4) {
-                        RecordAverageLabel(value: metric.text(average, unit: model.preferences.unit))
+                        RecordChartReferenceLabel(label: "today.chart.average \(metric.text(average, unit: model.preferences.unit))")
                     }
                     .accessibilityLabel(Text("insights.average"))
                     .accessibilityValue(Text(metric.text(average, unit: model.preferences.unit)))
+            }
+            if let maximum = values.max() {
+                RuleMark(y: .value(L("insights.record"), maximum)).foregroundStyle(Color.green)
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    .annotation(position: .top, alignment: .leading, spacing: 4) {
+                        RecordChartReferenceLabel(label: "insights.chart.record \(metric.text(maximum, unit: model.preferences.unit))", color: .green)
+                    }
+                    .accessibilityLabel(Text("insights.record"))
+                    .accessibilityValue(Text(metric.text(maximum, unit: model.preferences.unit)))
             }
         }
         .chartXScale(domain: record.interval.start...record.interval.end.addingTimeInterval(-1))
@@ -545,10 +566,19 @@ private struct RecordHourlyChart: View {
                     RuleMark(y: .value(L("insights.average"), average)).foregroundStyle(Color.secondary)
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                         .annotation(position: .top, alignment: .trailing, spacing: 4) {
-                            RecordAverageLabel(value: metric.text(average, unit: model.preferences.unit))
+                            RecordChartReferenceLabel(label: "today.chart.average \(metric.text(average, unit: model.preferences.unit))")
                         }
                         .accessibilityLabel(Text("insights.average"))
                         .accessibilityValue(Text(metric.text(average, unit: model.preferences.unit)))
+                }
+                if let maximum = values.max() {
+                    RuleMark(y: .value(L("insights.record"), maximum)).foregroundStyle(Color.green)
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                        .annotation(position: .top, alignment: .leading, spacing: 4) {
+                            RecordChartReferenceLabel(label: "insights.chart.record \(metric.text(maximum, unit: model.preferences.unit))", color: .green)
+                        }
+                        .accessibilityLabel(Text("insights.record"))
+                        .accessibilityValue(Text(metric.text(maximum, unit: model.preferences.unit)))
                 }
             }
             .chartXScale(domain: interval.start...interval.end)

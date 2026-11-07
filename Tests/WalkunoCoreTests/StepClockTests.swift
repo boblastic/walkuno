@@ -3,7 +3,7 @@ import Testing
 @testable import WalkunoCore
 
 struct StepClockTests {
-    @Test func clockUsesTheSameTimeReferenceWhileTheDailyCardKeepsCompleteDays() {
+    @Test func clockUsesTheSameTimeReferenceWhileTheDailyCurveKeepsCompleteDays() {
         let now = date("2026-11-04T09:30:00Z")
         let morning = HourActivity(date: date("2026-11-03T09:00:00Z"), steps: 200, meters: 150,
                                    kilocalories: 25, exerciseMinutes: 2.5, floors: 1)
